@@ -296,10 +296,11 @@ components:
 
     Languages:
       enum:
-        - ita
-        - eng
-        - deu
-        - fra
+        - it
+        - en
+        - de
+        - fr
+        - sl
     Problem:
       type: object
       additionalProperties: false

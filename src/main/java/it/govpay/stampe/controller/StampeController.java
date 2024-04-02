@@ -13,6 +13,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import it.govpay.stampe.api.DefaultApi;
 import it.govpay.stampe.beans.CdsViolation;
@@ -27,7 +29,8 @@ import it.govpay.stampe.service.AvvisoPostaleService;
 import it.govpay.stampe.service.AvvisoSempliceService;
 import it.govpay.stampe.service.ViolazioneCdsService;
 
-@Controller
+//@Controller
+@RestController
 public class StampeController implements DefaultApi{
 	
 	private static Logger logger = LoggerFactory.getLogger(StampeController.class);
@@ -58,7 +61,7 @@ public class StampeController implements DefaultApi{
 	AvvisoBilingueService avvisoBilingueService;
 
 	@Override
-	public ResponseEntity<Resource> cdsViolationPost(@Valid CdsViolation cdsViolation) {
+	public ResponseEntity<Resource> cdsViolationPost(@Valid @RequestBody CdsViolation cdsViolation) {
 		logger.info("Creazione avviso di violazione codice della strada ...");
 		
 		AvvisoPagamentoInput avvisoPagamentoInput = this.violazioneCdsMapper.toViolazioneAvvisoPagamentoInput(cdsViolation, labelAvvisiProperties);

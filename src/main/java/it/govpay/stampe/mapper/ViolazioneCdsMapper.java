@@ -21,11 +21,11 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 	public default String nomePdf(CdsViolation cdsViolation) {
 		return cdsViolation.getCreditor().getFiscalCode() + "_" + cdsViolation.getDiscountedAmount().getNoticeNumber() + ".pdf";
 	}
-	
+
 
 	public default AvvisoPagamentoInput toViolazioneAvvisoPagamentoInput(CdsViolation cdsViolation, LabelAvvisiProperties labelAvvisiProperties) {
 		Map<String, String> labelItaliano = getLabelLingua(cdsViolation.getLanguage(), labelAvvisiProperties);
-		
+
 		AvvisoPagamentoInput avvisoPagamentoInput = toViolazioneAvvisoPagamentoInputBase(cdsViolation);
 
 		if(avvisoPagamentoInput != null) {
@@ -33,7 +33,7 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 			Amount reducedAmount = cdsViolation.getReducedAmount();
 			RataAvviso rataRidotto = amountToRata(reducedAmount);
 			rataRidotto.setTipo(Costanti.TIPO_RATA_RIDOTTO);
-			
+
 			// importo scontato
 			Amount discountedAmount = cdsViolation.getDiscountedAmount();
 			RataAvviso rataScontato = amountToRata(discountedAmount);
@@ -44,19 +44,32 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 			rataScontato.setQrCode2(rataRidotto.getQrCode());
 			rataScontato.setImportoRidotto(rataRidotto.getImporto());
 
-			
-			// label da leggere da properties
-			avvisoPagamentoInput.setScadenzaRidotto(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_RIDOTTO));
-			avvisoPagamentoInput.setScadenzaScontato(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_SCONTATO));
-			
-			
-			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-			pagina.setRata(rataScontato);
-			
 			if(avvisoPagamentoInput.getPagine() == null)
 				avvisoPagamentoInput.setPagine(new PagineAvviso());
-			
-			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+
+			Boolean postal = cdsViolation.getPostal();
+			if(postal != null && postal.booleanValue()) { // avviso postale
+				
+				PaginaAvvisoSingola pagina1 = new PaginaAvvisoSingola();
+				pagina1.setRata(rataRidotto);
+				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina1);
+
+				PaginaAvvisoSingola pagina2 = new PaginaAvvisoSingola();
+				pagina2.setRata(rataScontato);
+				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina2);
+
+			} else {
+
+				// label da leggere da properties
+				avvisoPagamentoInput.setScadenzaRidotto(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_RIDOTTO));
+				avvisoPagamentoInput.setScadenzaScontato(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_SCONTATO));
+
+
+				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+				pagina.setRata(rataScontato);
+
+				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+			}
 		}
 
 		return avvisoPagamentoInput;
@@ -79,9 +92,9 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 	@Mapping(target = "delTuoEnte", source="cdsViolation.postal", qualifiedByName = "mapDelTuoEnte")
 	public AvvisoPagamentoInput toViolazioneAvvisoPagamentoInputBase(CdsViolation cdsViolation);
 
-	
 
 
-	
+
+
 }
 

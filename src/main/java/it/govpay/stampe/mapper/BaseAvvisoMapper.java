@@ -3,6 +3,7 @@ package it.govpay.stampe.mapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -12,6 +13,7 @@ import org.mapstruct.Named;
 
 import it.govpay.stampe.beans.Amount;
 import it.govpay.stampe.beans.Creditor;
+import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.costanti.Costanti;
@@ -128,5 +130,13 @@ public interface BaseAvvisoMapper {
 		}
 
 		return null;
+	}
+	
+	public default boolean isMultipla(List<Instalment> elencoRate) {
+		return elencoRate.size() > 3;
+	}
+	
+	public default boolean isPaginaPrincipaleDoppia(List<Instalment> elencoRate) {
+		return ((elencoRate.size() - 4) %9 ==0) ||((elencoRate.size() - 8) %9 == 0);
 	}
 }

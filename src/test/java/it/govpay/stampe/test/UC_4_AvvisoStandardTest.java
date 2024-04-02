@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.PaymentNotice;
-import it.govpay.stampe.mapper.AvvisoPagamentoBilingueMapper;
 import it.govpay.stampe.mapper.AvvisoPagamentoMapper;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
@@ -36,18 +35,15 @@ class UC_4_AvvisoStandardTest {
 	private MockMvc mockMvc;
 
 	private ObjectMapper mapper = ObjectMapperUtils.createObjectMapper();
-	
+
 	@Autowired
 	AvvisoPagamentoMapper avvisoPagamentoMapper;
-	
-	@Autowired
-	AvvisoPagamentoBilingueMapper avvisoPagamentoBilingueMapper;
 
 	@Test
-	void UC_4_01_AvvisoStandardOk() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+	void UC_4_01_AvvisoSempliceRataUnicaOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
-		
+
 		String body = mapper.writeValueAsString(avvisoRataUnica);
 
 		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
@@ -63,11 +59,13 @@ class UC_4_AvvisoStandardTest {
 		assertNotNull(headerContentDisposition);
 		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
 	}
-	
+
 	@Test
-	void UC_4_02_AvvisoBilingueOk() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
-		
+	void UC_4_02_AvvisoPostaleRataUnicaOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
+		avvisoRataUnica.setPostal(true);
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
 		String body = mapper.writeValueAsString(avvisoRataUnica);
 
 		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
@@ -81,7 +79,189 @@ class UC_4_AvvisoStandardTest {
 		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
 		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
 		assertNotNull(headerContentDisposition);
-		assertEquals(avvisoPagamentoBilingueMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+	}
+
+	@Test
+	void UC_4_03_AvvisoSempliceDoppiaRataOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeDueRate();
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+	}
+
+	@Test
+	void UC_4_04_AvvisoPostaleDoppiaRataOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeDueRate();
+		avvisoRataUnica.setPostal(true);
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+	}
+
+	@Test
+	void UC_4_05_AvvisoSempliceTriplaRataOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeTreRate();
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+	}
+
+	@Test
+	void UC_4_06_AvvisoPostaleTripleRataOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeTreRate();
+		avvisoRataUnica.setPostal(true);
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+	}
+
+	@Test
+	void UC_4_07_AvvisoSempliceRateMultipleOk() throws Exception {
+
+		for (int i = 0; i < 15; i++) {
+			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate((i+1), false);
+			avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+			String body = mapper.writeValueAsString(avvisoRataUnica);
+
+			MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+					.content(body)
+					.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isCreated())
+					.andReturn();
+
+			String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+			assertNotNull(headerContentType);
+			assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+			String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+			assertNotNull(headerContentDisposition);
+			assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+		}
+	}
+
+	@Test
+	void UC_4_08_AvvisoPostaleRateMultipleOk() throws Exception {
+		for (int i = 0; i < 15; i++) {
+			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate((i+1), false);
+			avvisoRataUnica.setPostal(true);
+			avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+			String body = mapper.writeValueAsString(avvisoRataUnica);
+
+			MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+					.content(body)
+					.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isCreated())
+					.andReturn();
+
+			String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+			assertNotNull(headerContentType);
+			assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+			String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+			assertNotNull(headerContentDisposition);
+			assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+		}
+	}
+	
+	@Test
+	void UC_4_09_AvvisoSempliceRateMultipleConRataUnicaOk() throws Exception {
+
+		for (int i = 0; i < 15; i++) {
+			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate((i+1), true);
+			avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+			String body = mapper.writeValueAsString(avvisoRataUnica);
+
+			MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+					.content(body)
+					.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isCreated())
+					.andReturn();
+
+			String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+			assertNotNull(headerContentType);
+			assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+			String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+			assertNotNull(headerContentDisposition);
+			assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+		}
+	}
+
+	@Test
+	void UC_4_10_AvvisoPostaleRateMultipleConRataUnicaOk() throws Exception {
+		for (int i = 0; i < 15; i++) {
+			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate((i+1), true);
+			avvisoRataUnica.setPostal(true);
+			avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+
+			String body = mapper.writeValueAsString(avvisoRataUnica);
+
+			MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+					.content(body)
+					.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isCreated())
+					.andReturn();
+
+			String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+			assertNotNull(headerContentType);
+			assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+			String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+			assertNotNull(headerContentDisposition);
+			assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
+		}
 	}
 }
 

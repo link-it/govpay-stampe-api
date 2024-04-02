@@ -19,17 +19,17 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
-import it.govpay.stampe.beans.CdsViolation;
-import it.govpay.stampe.mapper.ViolazioneCdsMapper;
+import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.mapper.AvvisoPagamentoBilingueMapper;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.Utils;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
-@DisplayName("Test Avvisi Violazione CDS")
+@DisplayName("Test Avvisi Bilingue")
 @ActiveProfiles("test")
-class UC_2_ViolazioneCdsTest {
+class UC_5_AvvisoBilingueTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -37,16 +37,15 @@ class UC_2_ViolazioneCdsTest {
 	private ObjectMapper mapper = ObjectMapperUtils.createObjectMapper();
 	
 	@Autowired
-	ViolazioneCdsMapper violazioneCdsMapper;
+	AvvisoPagamentoBilingueMapper avvisoPagamentoBilingueMapper;
 
 	@Test
-	void UC_2_01_ViolazioneCdsOk() throws Exception {
-		CdsViolation cdsViolation = Utils.creaCdsViolation();
+	void UC_5_01_AvvisoBilingueOk() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		
-		
-		String body = mapper.writeValueAsString(cdsViolation);
+		String body = mapper.writeValueAsString(avvisoRataUnica);
 
-		MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
 				.content(body)
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isCreated())
@@ -57,29 +56,7 @@ class UC_2_ViolazioneCdsTest {
 		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
 		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
 		assertNotNull(headerContentDisposition);
-		assertEquals(violazioneCdsMapper.nomePdf(cdsViolation), Utils.extractFilename(headerContentDisposition));
-	}
-	
-	@Test
-	void UC_2_02_ViolazioneCdsPostaleOk() throws Exception {
-		CdsViolation cdsViolation = Utils.creaCdsViolation();
-		cdsViolation.setPostal(true);
-		
-		
-		String body = mapper.writeValueAsString(cdsViolation);
-
-		MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
-				.content(body)
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isCreated())
-				.andReturn();
-
-		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
-		assertNotNull(headerContentType);
-		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
-		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
-		assertNotNull(headerContentDisposition);
-		assertEquals(violazioneCdsMapper.nomePdf(cdsViolation), Utils.extractFilename(headerContentDisposition));
+		assertEquals(avvisoPagamentoBilingueMapper.nomePdf(avvisoRataUnica), Utils.extractFilename(headerContentDisposition));
 	}
 }
 

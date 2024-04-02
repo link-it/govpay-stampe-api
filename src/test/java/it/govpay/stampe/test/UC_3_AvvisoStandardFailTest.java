@@ -28,6 +28,7 @@ import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
+import it.govpay.stampe.test.utils.Utils;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -87,7 +88,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_03_AvvisoStandard_MissingLanguage() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.setLanguage(null);
 		
 		
@@ -112,7 +113,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_04_AvvisoStandard_MissingFirstLogo() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.setFirstLogo(null);
 		
 		
@@ -137,7 +138,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_05_AvvisoStandard_MissingCreditor() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.setCreditor(null);
 		
 		
@@ -162,7 +163,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_06_AvvisoStandard_MissingDebtor() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.setDebtor(null);
 		
 		
@@ -208,7 +209,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_10_AvvisoStandard_InvalidTitleSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.setTitle(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -233,7 +234,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_11_AvvisoStandard_MissingCreditorCF() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setFiscalCode(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -257,7 +258,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_12_AvvisoStandard_MissingCreditorBusinessName() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setBusinessName(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -281,7 +282,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_13_AvvisoStandard_InvalidCreditorCFSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setFiscalCode(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -306,7 +307,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_14_AvvisoStandard_InvalidCreditorBusinessNameSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setBusinessName(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -331,7 +332,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_15_AvvisoStandard_InvalidCreditorDepartmentNameSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setDepartmentName(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -356,7 +357,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_16_AvvisoStandard_InvalidCreditorInfoLine1Size() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setInfoLine1(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -381,7 +382,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_17_AvvisoStandard_InvalidCreditorInfoline2Size() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setInfoLine2(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -406,7 +407,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_18_AvvisoStandard_InvalidCreditorCbillPattern() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setCbillCode("123456");
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -431,7 +432,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_19_AvvisoStandard_MissingDebtorCF() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getDebtor().setFiscalCode(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -455,7 +456,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_20_AvvisoStandard_MissingDebtorFullname() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getDebtor().setFullName(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -479,7 +480,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_21_AvvisoStandard_InvalidDebtorCFSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getDebtor().setFiscalCode(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -504,7 +505,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_22_AvvisoStandard_InvalidDebtorFullnameSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getDebtor().setFullName(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -529,7 +530,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_23_AvvisoStandard_InvalidDebtorAddress1Size() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getDebtor().setAddressLine1(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -554,7 +555,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_24_AvvisoStandard_InvalidDebtorAddress2Size() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getDebtor().setAddressLine2(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -579,7 +580,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_25_AvvisoStandard_MissingFullAmount() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getFull().setAmount(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -603,7 +604,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_26_AvvisoStandard_MissingFullNoticeNumber() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getFull().setNoticeNumber(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -627,7 +628,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_27_AvvisoStandard_MissingFullQrcode() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getFull().setQrcode(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -651,7 +652,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_28_AvvisoStandard_InvalidFullNoticeNumberPattern() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getFull().setNoticeNumber(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -676,7 +677,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_29_AvvisoStandard_InvalidFullAmount() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getFull().setAmount(Double.valueOf(0d));	
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -701,7 +702,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_30_AvvisoStandard_MissingSecondLanguageLanguage() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getSecondLanguage().setLanguage(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -725,7 +726,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_31_AvvisoStandard_MissingSecondLanguageTitle() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getSecondLanguage().setTitle(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -749,7 +750,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_32_AvvisoStandard_MissingSecondLanguageBilinguism() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getSecondLanguage().setBilinguism(null);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -773,7 +774,7 @@ class UC_3_AvvisoStandardFailTest {
 	
 	@Test
 	void UC_3_33_AvvisoStandard_InvalidSecondLanguageTitleSize() throws Exception {
-		PaymentNotice avvisoRataUnica = Costanti.creaPaymentNoticeFull();
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
 		avvisoRataUnica.getSecondLanguage().setTitle(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(avvisoRataUnica);

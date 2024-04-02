@@ -28,6 +28,7 @@ import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
+import it.govpay.stampe.test.utils.Utils;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -90,7 +91,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_03_ViolazioneCds_MissingLanguage() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setLanguage(null);
 		
 		
@@ -115,7 +116,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_04_ViolazioneCds_MissingFirstLogo() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setFirstLogo(null);
 		
 		
@@ -140,7 +141,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_05_ViolazioneCds_MissingCreditor() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setCreditor(null);
 		
 		
@@ -165,7 +166,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_06_ViolazioneCds_MissingDebtor() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setDebtor(null);
 		
 		
@@ -190,7 +191,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_07_ViolazioneCds_MissingDiscountedAmount() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setDiscountedAmount(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -214,7 +215,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_08_ViolazioneCds_MissingReducedAmount() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setReducedAmount(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -259,7 +260,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_10_ViolazioneCds_InvalidTitleSize() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.setTitle(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -284,7 +285,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_11_ViolazioneCds_MissingCreditorCF() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setFiscalCode(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -308,7 +309,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_12_ViolazioneCds_MissingCreditorBusinessName() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setBusinessName(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -332,7 +333,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_13_ViolazioneCds_InvalidCreditorCFSize() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setFiscalCode(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -357,7 +358,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_14_ViolazioneCds_InvalidCreditorBusinessNameSize() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setBusinessName(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -382,7 +383,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_15_ViolazioneCds_InvalidCreditorDepartmentNameSize() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setDepartmentName(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -407,7 +408,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_16_ViolazioneCds_InvalidCreditorInfoLine1Size() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setInfoLine1(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -432,7 +433,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_17_ViolazioneCds_InvalidCreditorInfoline2Size() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setInfoLine2(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -457,7 +458,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_18_ViolazioneCds_InvalidCreditorCbillPattern() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getCreditor().setCbillCode("123456");
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -482,7 +483,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_19_ViolazioneCds_MissingDebtorCF() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDebtor().setFiscalCode(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -506,7 +507,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_20_ViolazioneCds_MissingDebtorFullname() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDebtor().setFullName(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -530,7 +531,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_21_ViolazioneCds_InvalidDebtorCFSize() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDebtor().setFiscalCode(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -555,7 +556,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_22_ViolazioneCds_InvalidDebtorFullnameSize() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDebtor().setFullName(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -580,7 +581,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_23_ViolazioneCds_InvalidDebtorAddress1Size() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDebtor().setAddressLine1(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -605,7 +606,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_24_ViolazioneCds_InvalidDebtorAddress2Size() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDebtor().setAddressLine2(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -630,7 +631,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_25_ViolazioneCds_MissingDiscountedAmountAmount() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDiscountedAmount().setAmount(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -654,7 +655,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_26_ViolazioneCds_MissingDiscountedAmountNoticeNumber() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDiscountedAmount().setNoticeNumber(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -678,7 +679,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_27_ViolazioneCds_MissingDiscountedAmountQrcode() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDiscountedAmount().setQrcode(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -702,7 +703,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_28_ViolazioneCds_InvalidDiscountedAmountNoticeNumberPattern() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDiscountedAmount().setNoticeNumber(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -727,7 +728,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_29_ViolazioneCds_InvalidDiscountedAmountAmount() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getDiscountedAmount().setAmount(Double.valueOf(0d));	
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -752,7 +753,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_30_ViolazioneCds_MissingReducedAmountAmount() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getReducedAmount().setAmount(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -776,7 +777,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_31_ViolazioneCds_MissingReducedAmountNoticeNumber() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getReducedAmount().setNoticeNumber(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -800,7 +801,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_32_ViolazioneCds_MissingReducedAmountQrcode() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getReducedAmount().setQrcode(null);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -824,7 +825,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_33_ViolazioneCds_InvalidReducedAmountNoticeNumberPattern() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getReducedAmount().setNoticeNumber(Costanti.STRING_256);
 		
 		String body = mapper.writeValueAsString(cdsViolation);
@@ -849,7 +850,7 @@ class UC_1_ViolazioneCdsFailTest {
 	
 	@Test
 	void UC_1_34_ViolazioneCds_InvalidReducedAmountAmount() throws Exception {
-		CdsViolation cdsViolation = Costanti.creaCdsViolation();
+		CdsViolation cdsViolation = Utils.creaCdsViolation();
 		cdsViolation.getReducedAmount().setAmount(Double.valueOf(0d));	
 		
 		String body = mapper.writeValueAsString(cdsViolation);

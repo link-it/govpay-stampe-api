@@ -12,7 +12,6 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -64,13 +63,22 @@ public class StampeController implements DefaultApi{
 	public ResponseEntity<Resource> cdsViolationPost(@Valid @RequestBody CdsViolation cdsViolation) {
 		logger.info("Creazione avviso di violazione codice della strada ...");
 		
+		// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
+		String nomePdf = this.violazioneCdsMapper.nomePdf(cdsViolation);
+		
 		AvvisoPagamentoInput avvisoPagamentoInput = this.violazioneCdsMapper.toViolazioneAvvisoPagamentoInput(cdsViolation, labelAvvisiProperties);
 		
 		logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf...");
 		
-		byte[] creaAvviso = this.violazioneCdsService.creaAvviso(avvisoPagamentoInput);
-
-        String nomePdf = this.violazioneCdsMapper.nomePdf(cdsViolation);
+		byte[] creaAvviso = null;
+		if(avvisoPagamentoInput.getDiPoste() != null) {
+			logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf con bollettino postale...");
+			creaAvviso = this.avvisoPostaleService.creaAvviso(avvisoPagamentoInput);
+		} else {
+			logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf senza bollettino postale...");
+			creaAvviso = this.violazioneCdsService.creaAvviso(avvisoPagamentoInput);
+		}
+        
 		logger.debug("Generazione del pdf [{}] completata.", nomePdf);
 		
         ByteArrayResource resource = new ByteArrayResource(creaAvviso);
@@ -94,7 +102,10 @@ public class StampeController implements DefaultApi{
 		String nomePdf = null;
 		// attualmente c'e' una divisione dei template senza bilinguismo
 		if(paymentNotice.getSecondLanguage() == null) {
-			AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoMapper.toViolazioneAvvisoPagamentoInput(paymentNotice, labelAvvisiProperties);
+			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
+			nomePdf = this.avvisoPagamentoMapper.nomePdf(paymentNotice);
+			
+			AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, labelAvvisiProperties);
 			
 			if(avvisoPagamentoInput.getDiPoste() != null) {
 				logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf con bollettino postale...");
@@ -103,16 +114,15 @@ public class StampeController implements DefaultApi{
 				logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf senza bollettino postale...");
 				creaAvviso = this.avvisoSempliceService.creaAvviso(avvisoPagamentoInput);
 			}
-			
-			nomePdf = this.avvisoPagamentoMapper.nomePdf(paymentNotice);
 		} else {
-			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toViolazioneAvvisoPagamentoInput(paymentNotice, labelAvvisiProperties);
+			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
+			nomePdf = this.avvisoPagamentoBilingueMapper.nomePdf(paymentNotice);
+			
+			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput(paymentNotice, labelAvvisiProperties);
 			
 			logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf bilingue...");
 			
 			creaAvviso = this.avvisoBilingueService.creaAvviso(avvisoPagamentoInput);
-			
-			nomePdf = this.avvisoPagamentoBilingueMapper.nomePdf(paymentNotice);
 		}
 		
 		logger.debug("Generazione del pdf [{}] completata.", nomePdf);

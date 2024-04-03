@@ -28,48 +28,45 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 
 		AvvisoPagamentoInput avvisoPagamentoInput = toViolazioneAvvisoPagamentoInputBase(cdsViolation);
 
-		if(avvisoPagamentoInput != null) {
-			// importo ridotto
-			Amount reducedAmount = cdsViolation.getReducedAmount();
-			RataAvviso rataRidotto = amountToRata(reducedAmount);
-			rataRidotto.setTipo(Costanti.TIPO_RATA_RIDOTTO);
+		// importo ridotto
+		Amount reducedAmount = cdsViolation.getReducedAmount();
+		RataAvviso rataRidotto = amountToRata(reducedAmount);
+		rataRidotto.setTipo(Costanti.TIPO_RATA_RIDOTTO);
 
-			// importo scontato
-			Amount discountedAmount = cdsViolation.getDiscountedAmount();
-			RataAvviso rataScontato = amountToRata(discountedAmount);
-			rataScontato.setTipo(Costanti.TIPO_RATA_SCONTATO);
-			rataScontato.setImportoScontato(rataScontato.getImporto());
-			// properties per completare la doppia pagina
-			rataScontato.setCodiceAvviso2(rataRidotto.getCodiceAvviso());
-			rataScontato.setQrCode2(rataRidotto.getQrCode());
-			rataScontato.setImportoRidotto(rataRidotto.getImporto());
+		// importo scontato
+		Amount discountedAmount = cdsViolation.getDiscountedAmount();
+		RataAvviso rataScontato = amountToRata(discountedAmount);
+		rataScontato.setTipo(Costanti.TIPO_RATA_SCONTATO);
+		rataScontato.setImportoScontato(rataScontato.getImporto());
+		// properties per completare la doppia pagina
+		rataScontato.setCodiceAvviso2(rataRidotto.getCodiceAvviso());
+		rataScontato.setQrCode2(rataRidotto.getQrCode());
+		rataScontato.setImportoRidotto(rataRidotto.getImporto());
 
-			if(avvisoPagamentoInput.getPagine() == null)
-				avvisoPagamentoInput.setPagine(new PagineAvviso());
+		avvisoPagamentoInput.setPagine(new PagineAvviso());
 
-			Boolean postal = cdsViolation.getPostal();
-			if(postal != null && postal.booleanValue()) { // avviso postale
-				
-				PaginaAvvisoSingola pagina1 = new PaginaAvvisoSingola();
-				pagina1.setRata(rataRidotto);
-				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina1);
+		Boolean postal = cdsViolation.getPostal();
+		if(postal != null && postal.booleanValue()) { // avviso postale
 
-				PaginaAvvisoSingola pagina2 = new PaginaAvvisoSingola();
-				pagina2.setRata(rataScontato);
-				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina2);
+			PaginaAvvisoSingola pagina1 = new PaginaAvvisoSingola();
+			pagina1.setRata(rataRidotto);
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina1);
 
-			} else {
+			PaginaAvvisoSingola pagina2 = new PaginaAvvisoSingola();
+			pagina2.setRata(rataScontato);
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina2);
 
-				// label da leggere da properties
-				avvisoPagamentoInput.setScadenzaRidotto(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_RIDOTTO));
-				avvisoPagamentoInput.setScadenzaScontato(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_SCONTATO));
+		} else {
+
+			// label da leggere da properties
+			avvisoPagamentoInput.setScadenzaRidotto(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_RIDOTTO));
+			avvisoPagamentoInput.setScadenzaScontato(labelItaliano.get(LabelAvvisiCostanti.LABEL_VIOLAZIONE_CDS_SCADENZA_SCONTATO));
 
 
-				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-				pagina.setRata(rataScontato);
+			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+			pagina.setRata(rataScontato);
 
-				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
-			}
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 		}
 
 		return avvisoPagamentoInput;

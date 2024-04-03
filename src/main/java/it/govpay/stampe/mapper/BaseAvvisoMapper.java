@@ -19,6 +19,7 @@ import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.CodificaInesistenteException;
 import it.govpay.stampe.model.v1.RataAvviso;
+import it.govpay.stampe.utils.AvvisoPagamentoUtils;
 
 public interface BaseAvvisoMapper {
 	
@@ -114,22 +115,7 @@ public interface BaseAvvisoMapper {
 
 	@Named("mapNumeroAvviso")
 	public default String mapNumeroAvviso(String numeroAvviso) {
-		// se non e' gia' diviso in gruppi di 4 cifre
-		if(numeroAvviso != null && !numeroAvviso.contains(" ")) {
-			// split del numero avviso a gruppi di 4 cifre
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < numeroAvviso.length(); i++) {
-				if(sb.length() > 0 && (i % 4 == 0)) {
-					sb.append(" ");
-				}
-
-				sb.append(numeroAvviso.charAt(i));
-			}
-
-			return sb.toString();
-		}
-
-		return null;
+		return AvvisoPagamentoUtils.splitNumeroAvviso(numeroAvviso);
 	}
 	
 	public default boolean isMultipla(List<Instalment> elencoRate) {

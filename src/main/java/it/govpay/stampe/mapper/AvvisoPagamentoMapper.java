@@ -2,7 +2,6 @@ package it.govpay.stampe.mapper;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Map;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -35,21 +34,17 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	}
 
 	public default AvvisoPagamentoInput toPaymentNoticeAvvisoPagamentoInput(Logger logger, PaymentNotice paymentNotice, LabelAvvisiProperties labelAvvisiProperties) {
-		Map<String, String> labelItaliano = getLabelLingua(paymentNotice.getLanguage(), labelAvvisiProperties);
 
 		AvvisoPagamentoInput avvisoPagamentoInput = toPaymentNoticeAvvisoPagamentoInput(paymentNotice);
 
-		if(avvisoPagamentoInput != null) {
-			Boolean postal = paymentNotice.getPostal();
+		Boolean postal = paymentNotice.getPostal();
 
-			if(avvisoPagamentoInput.getPagine() == null)
-				avvisoPagamentoInput.setPagine(new PagineAvviso());
+		avvisoPagamentoInput.setPagine(new PagineAvviso());
 
-			if(postal != null && postal.booleanValue()) { // avviso postale
-				creaRatePerAvvisoPostale(logger, paymentNotice, avvisoPagamentoInput);
-			} else { // avviso semplice
-				creaRatePerAvvisoSemplice(logger, paymentNotice, avvisoPagamentoInput);
-			}
+		if(postal != null && postal.booleanValue()) { // avviso postale
+			creaRatePerAvvisoPostale(logger, paymentNotice, avvisoPagamentoInput);
+		} else { // avviso semplice
+			creaRatePerAvvisoSemplice(logger, paymentNotice, avvisoPagamentoInput);
 		}
 
 		return avvisoPagamentoInput;
@@ -192,7 +187,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 				pagina.setRata(instalmentToRata(v1));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
-				log.debug("Aggiunta rata unica [idPendenza: "+v1.getNoticeNumber()+"]");
+				log.debug("Aggiunta rata unica");
 			}
 		} else {
 			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();

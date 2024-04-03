@@ -219,8 +219,8 @@ class UC_4_AvvisoStandardTest {
 	@Test
 	void UC_4_09_AvvisoSempliceRateMultipleConRataUnicaOk() throws Exception {
 
-		for (int i = 0; i < 15; i++) {
-			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate((i+1), true);
+		for (int i = 0; i < 16; i++) {
+			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate(i, true);
 			avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
 
 			String body = mapper.writeValueAsString(avvisoRataUnica);
@@ -242,8 +242,8 @@ class UC_4_AvvisoStandardTest {
 
 	@Test
 	void UC_4_10_AvvisoPostaleRateMultipleConRataUnicaOk() throws Exception {
-		for (int i = 0; i < 15; i++) {
-			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate((i+1), true);
+		for (int i = 0; i < 16; i++) {
+			PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate(i, true);
 			avvisoRataUnica.setPostal(true);
 			avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
 

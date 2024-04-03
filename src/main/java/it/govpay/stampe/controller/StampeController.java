@@ -118,7 +118,7 @@ public class StampeController implements DefaultApi{
 			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 			nomePdf = this.avvisoPagamentoBilingueMapper.nomePdf(paymentNotice);
 			
-			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput(paymentNotice, labelAvvisiProperties);
+			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, labelAvvisiProperties);
 			
 			logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf bilingue...");
 			

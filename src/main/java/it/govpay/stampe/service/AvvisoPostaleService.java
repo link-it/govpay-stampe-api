@@ -35,6 +35,8 @@ public class AvvisoPostaleService extends AvvisoPagamentoService {
 	
 	@Value("${stampe.debugInputJasper:false}")
 	private Boolean debugInputJasper;
+	
+	private String xmlRootName = Costanti.AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME;
 
     @Autowired
     public AvvisoPostaleService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento) {
@@ -65,12 +67,17 @@ public class AvvisoPostaleService extends AvvisoPagamentoService {
 			parameters.put("TriplaRataPostalePostale", this.templateTriplaRataPostale.getInputStream());
 			parameters.put("TriploFormatoPostale", this.templateTriploFormatoPostale.getInputStream());
 			
-			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", Costanti.AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME), AvvisoPagamentoInput.class, null, input);
+			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
 			
 			return creaAvvisoInner(jaxbElement, parameters, this.templateAvvisoPostale, this.debugInputJasper);
 		}catch (JAXBException | IOException | JRException e) {
 			throw new GenerazioneAvvisoException(e);
 		}
+	}
+	
+	@Override
+	protected String getXmlRootName() {
+		return this.xmlRootName;
 	}
 }
 

@@ -265,7 +265,6 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
 	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapLogo")
-	//	@Mapping(target = "oggettoDelPagamento", source="title")
 	@Mapping(target = "cfEnte", source="paymentNotice.creditor.fiscalCode")
 	@Mapping(target = "enteCreditore", source="paymentNotice.creditor.businessName")
 	@Mapping(target = "settoreEnte", source="paymentNotice.creditor.departmentName")

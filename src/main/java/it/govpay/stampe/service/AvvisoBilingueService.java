@@ -35,6 +35,8 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 	
 	@Value("${stampe.debugInputJasper:false}")
 	private Boolean debugInputJasper;
+	
+	private String xmlRootName = Costanti.AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME;
 
     @Autowired
     public AvvisoBilingueService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamentoBilingue) {
@@ -65,12 +67,17 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 			parameters.put("BollettinoRataV2", this.templateBollettinoRataV2.getInputStream());
 			parameters.put("DualBandV2", this.templateDualBandV2.getInputStream());
 			
-			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", Costanti.AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME), AvvisoPagamentoInput.class, null, input);
+			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
 			
 			return creaAvvisoInner(jaxbElement, parameters, this.templateAvvisoV2, this.debugInputJasper);
 		}catch (JAXBException | IOException | JRException e) {
 			throw new GenerazioneAvvisoException(e);
 		}
+	}
+	
+	@Override
+	protected String getXmlRootName() {
+		return this.xmlRootName;
 	}
 }
 

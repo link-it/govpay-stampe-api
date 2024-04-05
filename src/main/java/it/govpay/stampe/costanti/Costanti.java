@@ -15,15 +15,6 @@ public class Costanti {
 	public static final String AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME= "AvvisoPagamentoInput";
 	public static final String VIOLAZIONE_CDS_ROOT_ELEMENT_NAME= "ViolazioneInput";
 
-	// nomi properties loghi
-	public static final String LOGO_ENTE = "avvisoPagamento.logo.ente";
-	public static final String LOGO_PAGOPA = "avvisoPagamento.logo.pagopa";
-	public static final String LOGO_APP = "avvisoPagamento.logo.app";
-	public static final String LOGO_PLACE = "avvisoPagamento.logo.place";
-	public static final String LOGO_SCISSORS = "avvisoPagamento.logo.scissors";
-	public static final String LOGO_POSTA = "avvisoPagamento.logo.posta";
-	public static final String LOGO_EURO = "avvisoPagamento.logo.euro";
-
 	public static final String AVVISO_PAGAMENTO_TEMPLATE_JASPER = "/AvvisoPagamento.jasper";
 	public static final String RATA_DOPPIA_TEMPLATE_JASPER = "/DoppiaRata.jasper";
 	public static final String DOPPIO_FORMATO_TEMPLATE_JASPER = "/DoppioFormato.jasper";
@@ -59,17 +50,6 @@ public class Costanti {
 	public static final String DUALBAND_TEMPLATE_JASPER_V2 = "/DualBandV2.jasper";
 
 	public static final String AVVISO_PAGAMENTO_V2_DIR = "/avvisoPagamentoV2";
-
-	public static final String AVVISO_PAGAMENTO_TEMPLATE_JASPER_V3 = "/AvvisoPagamentoV3.jasper";
-	public static final String BOLLETTINORATA_TEMPLATE_JASPER_V3 = "/BollettinoRataV3.jasper";
-	public static final String RATADOPPIAPOSTALE_TEMPLATE_JASPER_V3 = "/DoppiaRataPostaleV3.jasper";
-	public static final String RATADOPPIA_TEMPLATE_JASPER_V3 = "/DoppiaRataV3.jasper";
-	public static final String DOPPIOFORMATO_TEMPLATE_JASPER_V3 = "/DoppioFormatoV3.jasper";
-	public static final String DUALBAND_TEMPLATE_JASPER_V3 = "/DualBandV3.jasper";
-	public static final String MONOBAND_TEMPLATE_JASPER_V3 = "/MonoBandV3.jasper";
-	public static final String RATAUNICA_TEMPLATE_JASPER_V3 = "/RataUnicaV3.jasper";
-
-	public static final String AVVISO_PAGAMENTO_V3_DIR = "/avvisoPagamentoV3";
 
 	public static final String DEL_TUO_ENTE_CREDITORE = "del tuo Ente Creditore";
 	public static final String DI_POSTE = "di Poste Italiane";

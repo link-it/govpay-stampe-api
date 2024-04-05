@@ -1,6 +1,7 @@
 package it.govpay.stampe.deserializer;
 
 import java.io.IOException;
+import java.util.Base64;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -26,7 +27,9 @@ public class ResourceDeserializer extends StdDeserializer<Resource> {
     public Resource deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
         String base64Data = node.asText(); 
-        byte[] data = base64Data.getBytes();
+//        byte[] data = base64Data.getBytes();
+        byte[] data = Base64.getDecoder().decode(base64Data);
+        
         return new ByteArrayResource(data);
     }
 }

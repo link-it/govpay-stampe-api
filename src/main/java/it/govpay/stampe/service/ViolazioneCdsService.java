@@ -31,6 +31,8 @@ public class ViolazioneCdsService extends AvvisoPagamentoService{
 	
 	@Value("${stampe.debugInputJasper:false}")
 	private Boolean debugInputJasper;
+	
+	private String xmlRootName = Costanti.VIOLAZIONE_CDS_ROOT_ELEMENT_NAME; 
 
     @Autowired
     public ViolazioneCdsService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento) {
@@ -53,12 +55,17 @@ public class ViolazioneCdsService extends AvvisoPagamentoService{
 			parameters.put("Sanzione", this.templateSanzione.getInputStream());
 			parameters.put("Formato", this.templateFormato.getInputStream());
 			
-			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", Costanti.VIOLAZIONE_CDS_ROOT_ELEMENT_NAME), AvvisoPagamentoInput.class, null, input);
+			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
 			
 			return creaAvvisoInner(jaxbElement, parameters, this.templateViolazioneCDS, this.debugInputJasper);
 		}catch (JAXBException | IOException | JRException e) {
 			throw new GenerazioneAvvisoException(e);
 		}
+	}
+	
+	@Override
+	protected String getXmlRootName() {
+		return this.xmlRootName;
 	}
 }
 

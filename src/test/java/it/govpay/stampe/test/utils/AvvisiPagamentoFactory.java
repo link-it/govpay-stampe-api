@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.stereotype.Component;
 
 import it.govpay.stampe.beans.Amount;
 import it.govpay.stampe.beans.CdsViolation;
@@ -17,7 +19,11 @@ import it.govpay.stampe.beans.NoticeMetadataSecondLanguage;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.test.costanti.Costanti;
 
-public class Utils {
+@Component
+public class AvvisiPagamentoFactory {
+	
+	@Value("${stampe.logoEnte}")
+	String logoEnte;
 
 	public static String extractFilename(String headerValue) {
         String[] parts = headerValue.split("; ");
@@ -37,7 +43,7 @@ public class Utils {
         return null;
     }
 	
-	public static CdsViolation creaCdsViolation() {
+	public CdsViolation creaCdsViolation() {
 		CdsViolation cdsViolation = new CdsViolation();
 		cdsViolation.setLanguage(Languages.IT);
 		cdsViolation.setTitle("Violazione del codice della strada"); 
@@ -45,16 +51,20 @@ public class Utils {
 		creditor.setCbillCode("ABC12");
 		creditor.setFiscalCode(Costanti.ID_DOMINIO_1);
 		creditor.setBusinessName("Ente Creditore Test");
+		creditor.setInfoLine1("Tel: 00 1234 5678 - Fax: 00 1234 5678");
+		creditor.setInfoLine2("pec: protocollo.generale@pec.entecreditore.it");
 		cdsViolation.setCreditor(creditor);
 		
 		Debtor debtor = new Debtor();
 		debtor.setFiscalCode("RSSMRA50A01A110X");
 		debtor.setFullName("Mario Rossi");
+		debtor.setAddressLine1("Viale Monterosa 11Bis");
+		debtor.setAddressLine2("340 Roma (RM)");
 		cdsViolation.setDebtor(debtor );
 		
 		cdsViolation.setPostal(false);
 		
-		String numeroAvviso = Utils.generaNumeroAvviso();
+		String numeroAvviso = this.generaNumeroAvviso();
 		Amount ridotto = new Amount();
 		ridotto.setAmount(Double.valueOf(50.00));
 		ridotto.setDueDate(LocalDate.now());
@@ -63,7 +73,7 @@ public class Utils {
 		ridotto.setIbanCode("IT60X0542811101000000123455");
 		cdsViolation.setReducedAmount(ridotto );
 		
-		numeroAvviso = Utils.generaNumeroAvviso();
+		numeroAvviso = this.generaNumeroAvviso();
 		Amount scontato = new Amount();
 		scontato.setAmount(Double.valueOf(150.00));
 		scontato.setDueDate(LocalDate.now());
@@ -72,24 +82,24 @@ public class Utils {
 		scontato.setIbanCode("IT60X0542811101000000123455");
 		cdsViolation.setDiscountedAmount(scontato );
 		
-		cdsViolation.setFirstLogo(new ByteArrayResource(Costanti.STRING_256.getBytes()));
+		cdsViolation.setFirstLogo(new ByteArrayResource(this.logoEnte.getBytes()));
 		
 		return cdsViolation;
 	}
 	
-	public static PaymentNotice creaPaymentNoticeFull() {
-		return Utils.creaPaymentNoticeConRate(0, true);
+	public PaymentNotice creaPaymentNoticeFull() {
+		return this.creaPaymentNoticeConRate(0, true);
 	}
 	
-	public static PaymentNotice creaPaymentNoticeDueRate() {
-		return Utils.creaPaymentNoticeConRate(2, false);
+	public PaymentNotice creaPaymentNoticeDueRate() {
+		return this.creaPaymentNoticeConRate(2, false);
 	}
 	
-	public static PaymentNotice creaPaymentNoticeTreRate() {
-		return Utils.creaPaymentNoticeConRate(3, false);
+	public PaymentNotice creaPaymentNoticeTreRate() {
+		return this.creaPaymentNoticeConRate(3, false);
 	}
 	
-	public static PaymentNotice creaPaymentNoticeConRate(int numeroRate, boolean rataUnica) {
+	public PaymentNotice creaPaymentNoticeConRate(int numeroRate, boolean rataUnica) {
 		PaymentNotice paymentNotice = new PaymentNotice();
 		paymentNotice.setLanguage(Languages.IT);
 		StringBuilder sb = new StringBuilder();
@@ -105,17 +115,21 @@ public class Utils {
 		creditor.setCbillCode("ABC12");
 		creditor.setFiscalCode(Costanti.ID_DOMINIO_1);
 		creditor.setBusinessName("Ente Creditore Test");
+		creditor.setInfoLine1("Tel: 00 1234 5678 - Fax: 00 1234 5678");
+		creditor.setInfoLine2("pec: protocollo.generale@pec.entecreditore.it");
 		paymentNotice.setCreditor(creditor);
 		
 		Debtor debtor = new Debtor();
 		debtor.setFiscalCode("RSSMRA50A01A110X");
 		debtor.setFullName("Mario Rossi");
+		debtor.setAddressLine1("Viale Monterosa 11Bis");
+		debtor.setAddressLine2("340 Roma (RM)");
 		paymentNotice.setDebtor(debtor );
 		
 		paymentNotice.setPostal(false);
 		
 		if(rataUnica) {
-			String numeroAvviso = Utils.generaNumeroAvviso();
+			String numeroAvviso = this.generaNumeroAvviso();
 			Amount full = new Amount();
 			full.setAmount(Double.valueOf(50.00));
 			full.setDueDate(LocalDate.now());
@@ -129,7 +143,7 @@ public class Utils {
 		
 		if(numeroRate > 0) {
 			for (int i = 0; i < numeroRate; i++) {
-				String numeroAvviso = Utils.generaNumeroAvviso();
+				String numeroAvviso = this.generaNumeroAvviso();
 				
 				Instalment rata1 = new Instalment();
 				rata1.setAmount(Double.valueOf(50.00));
@@ -144,18 +158,18 @@ public class Utils {
 		
 		paymentNotice.setInstalments(rate);
 		
-		paymentNotice.setFirstLogo(new ByteArrayResource(Costanti.STRING_256.getBytes()));
+		paymentNotice.setFirstLogo(new ByteArrayResource(this.logoEnte.getBytes()));
 		
 		NoticeMetadataSecondLanguage secondLanguage = new NoticeMetadataSecondLanguage();
 		secondLanguage.setBilinguism(true);
-		secondLanguage.setLanguage(Languages.EN);
+		secondLanguage.setLanguage(Languages.SL);
 		secondLanguage.setTitle(sb.toString() + "ma nella seconda lingua");
 		paymentNotice.setSecondLanguage(secondLanguage );
 		
 		return paymentNotice;
 	}
 	
-	public static String generaNumeroAvviso() {
+	public String generaNumeroAvviso() {
         Random random = new Random();
         StringBuilder stringBuilder = new StringBuilder();
 

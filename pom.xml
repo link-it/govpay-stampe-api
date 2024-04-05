@@ -484,11 +484,6 @@
 			<version>${xalan.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-		</dependency>
-
 		<!-- Integration Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

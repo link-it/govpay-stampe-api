@@ -35,6 +35,8 @@ public abstract class AvvisoPagamentoService {
 
 	private final Jaxb2Marshaller jaxb2Marshaller;
 	
+	protected abstract String getXmlRootName();
+	
 	protected AvvisoPagamentoService(Jaxb2Marshaller jaxb2Marshaller) {
         this.jaxb2Marshaller = jaxb2Marshaller;
     }
@@ -62,7 +64,7 @@ public abstract class AvvisoPagamentoService {
 
 			try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArray);){
 
-				JRDataSource dataSource = new JRXmlDataSource(defaultJasperReportsContext, byteArrayInputStream,Costanti.VIOLAZIONE_CDS_ROOT_ELEMENT_NAME);
+				JRDataSource dataSource = new JRXmlDataSource(defaultJasperReportsContext, byteArrayInputStream,this.getXmlRootName());
 				JasperReport jasperReport = (JasperReport) JRLoader.loadObject(defaultJasperReportsContext,templateIS);
 				JasperPrint jasperPrint = JasperFillManager.getInstance(defaultJasperReportsContext).fill(jasperReport, parameters, dataSource);
 

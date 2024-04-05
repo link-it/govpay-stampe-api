@@ -35,6 +35,7 @@ import it.govpay.stampe.exception.BadRequestException;
 import it.govpay.stampe.exception.CodificaInesistenteException;
 import it.govpay.stampe.exception.GenerazioneAvvisoException;
 import it.govpay.stampe.exception.InternalException;
+import it.govpay.stampe.exception.UnprocessableEntityException;
 
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
@@ -79,6 +80,11 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 		ret.setDetail(detail);
 		
 		return ret;
+	}
+	
+	@ExceptionHandler({UnprocessableEntityException.class})
+	public ResponseEntity<Object> handleUnprocessableEntity(UnprocessableEntityException ex, WebRequest request) {
+		return buildResponseProblem(HttpStatus.UNPROCESSABLE_ENTITY, ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
 	}
 	
 	@ExceptionHandler({BadRequestException.class, CodificaInesistenteException.class})

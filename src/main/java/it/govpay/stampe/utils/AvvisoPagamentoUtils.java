@@ -11,43 +11,22 @@ public class AvvisoPagamentoUtils {
 	
 	private AvvisoPagamentoUtils() {}
 
-	public static String splitString(String start) {
-		if(start == null || start.length() <= 4)
-			return start;
-
-		int length = start.length();
-		int bonusSpace = length / 4;
-		int charCount = 0;
-		int iteration = 1;
-		char [] tmp = new char[length + bonusSpace];
-
-		for (int i = length -1; i >= 0; i --) {
-			char c = start.charAt(i);
-			tmp[charCount ++] = c;
-
-			if(iteration % 4 == 0) {
-				tmp[charCount ++] = ' ';
-			}
-
-			iteration ++;
-		}
-		if(length % 4 == 0)
-			charCount --;
-
-		String toRet = new String(tmp, 0, charCount); 
-		toRet = StringUtils.reverse(toRet);
-
-		return toRet;
-	}
-
-
+	/***
+	 * Crea il codice DataMatrix da stampare sul bollettino postale
+	 * 
+	 * @param numeroAvviso
+	 * @param numeroCC
+	 * @param importo
+	 * @param codDominio
+	 * @param cfDebitore
+	 * @param denominazioneDebitore
+	 * @param causale
+	 * @return
+	 */
 	public static String creaDataMatrix(String numeroAvviso, String numeroCC, double importo, String codDominio, String cfDebitore, String denominazioneDebitore, String causale) {
-
 
 		String importoInCentesimi = getImportoInCentesimi(importo);
 		String codeLine = createCodeLine(numeroAvviso, numeroCC, importoInCentesimi);
-		//		log.debug("CodeLine ["+codeLine+"] Lunghezza["+codeLine.length()+"]");
-
 
 		String cfDebitoreFilled = getCfDebitoreFilled(cfDebitore);
 
@@ -60,7 +39,6 @@ public class AvvisoPagamentoUtils {
 		String causaleFilled = getCausaleFilled(causaleASCII);
 
 		String dataMatrix = MessageFormat.format(Costanti.PATTERN_DATAMATRIX, codeLine, codDominio, cfDebitoreFilled, denominazioneDebitoreFilled, causaleFilled, Costanti.FILLER_DATAMATRIX);
-		//		log.debug("DataMatrix ["+dataMatrix+"] Lunghezza["+dataMatrix.length()+"]"); 
 		return dataMatrix;
 	}
 

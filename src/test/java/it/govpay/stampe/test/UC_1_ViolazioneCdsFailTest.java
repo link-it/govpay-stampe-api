@@ -872,4 +872,77 @@ class UC_1_ViolazioneCdsFailTest {
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 
 	}
+	
+	@Test
+	void UC_1_35_ViolazioneCds_MissingPostal() throws Exception {
+	    CdsViolation cdsViolation = Utils.creaCdsViolation();
+	    cdsViolation.setPostal(null); // Assumendo che `setPostal` sia il metodo per impostare il campo postal
+	    
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Field error in object 'cdsViolation' on field 'postal': rejected value [null]; must not be null"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_1_36_ViolazioneCds_MissingTitle() throws Exception {
+	    CdsViolation cdsViolation = Utils.creaCdsViolation();
+	    cdsViolation.setTitle(null); // Assuming `setTitle` is the method to set the title field
+	    
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Field error in object 'cdsViolation' on field 'title': rejected value [null]; must not be null"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_1_37_ViolazioneCds_InvalidAmountIbanAndPostal() throws Exception {
+	    CdsViolation cdsViolation = Utils.creaCdsViolation();
+	    cdsViolation.setPostal(true);
+	    cdsViolation.getDiscountedAmount().setIbanCode(null); 
+
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isUnprocessableEntity()) // Updated to expect a 422 status code
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(422, problem.getInt("status")); // Updated to expect a 422 status code
+	    assertEquals("Unprocessable Entity", problem.getString("title")); // Updated to match the expected 422 status code title
+	    assertTrue(problem.getString("detail").contains("Iban obbligatorio in caso di avviso postale"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-422-unprocessable-content", problem.getString("type")); // Updated to match the expected 422 status code reference
+	}
 }

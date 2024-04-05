@@ -27,8 +27,6 @@
  
     </Appenders>
     <Loggers>
-
-        
         <Logger name="it.govpay" level="DEBUG" additivity="false">
             <AppenderRef ref="core" />
         </Logger>

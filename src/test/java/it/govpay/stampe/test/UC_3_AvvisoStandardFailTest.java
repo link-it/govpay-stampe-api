@@ -796,4 +796,126 @@ class UC_3_AvvisoStandardFailTest {
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 
 	}
+	
+	@Test
+	void UC_3_34_AvvisoStandard_MissingPostal() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
+		avvisoRataUnica.setPostal(null);
+		
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+
+		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+        JsonObject problem = reader.readObject();
+        assertNotNull(problem.getString("type"));
+        assertNotNull(problem.getString("title"));
+        assertNotNull(problem.getString("detail"));
+        assertEquals(400, problem.getInt("status"));
+        assertEquals("Bad Request", problem.getString("title"));
+        assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'postal': rejected value [null]; must not be null"));
+        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+	
+	@Test
+	void UC_3_35_AvvisoStandard_MissingTitle() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
+		avvisoRataUnica.setTitle(null);
+		
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+
+		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+        JsonObject problem = reader.readObject();
+        assertNotNull(problem.getString("type"));
+        assertNotNull(problem.getString("title"));
+        assertNotNull(problem.getString("detail"));
+        assertEquals(400, problem.getInt("status"));
+        assertEquals("Bad Request", problem.getString("title"));
+        assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'title': rejected value [null]; must not be null"));
+        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+	
+	@Test
+	void UC_3_36_AvvisoStandard_MissingPostalRequired() throws Exception {
+		PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
+		avvisoRataUnica.setPostal(null);
+		
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+
+		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+        JsonObject problem = reader.readObject();
+        assertNotNull(problem.getString("type"));
+        assertNotNull(problem.getString("title"));
+        assertNotNull(problem.getString("detail"));
+        assertEquals(400, problem.getInt("status"));
+        assertEquals("Bad Request", problem.getString("title"));
+        assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'postal': rejected value [null]; must not be null"));
+        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+	
+	@Test
+	void UC_3_37_AvvisoStandard_InvalidFullAmountIbanAndPostal() throws Exception {
+	    PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeFull();
+	    avvisoRataUnica.setPostal(true);
+	    avvisoRataUnica.getFull().setIbanCode(null);
+	
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+	
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isUnprocessableEntity())
+	            .andReturn();
+	
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(422, problem.getInt("status"));
+	    assertEquals("Unprocessable Entity", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Iban obbligatorio in caso di avviso postale"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-422-unprocessable-content", problem.getString("type"));
+	}
+	
+	@Test
+	void UC_3_38_AvvisoStandard_InvalidInstalmentIbanAndPostal() throws Exception {
+	    PaymentNotice avvisoRataUnica = Utils.creaPaymentNoticeConRate(1,false);
+	    avvisoRataUnica.setPostal(true);
+	    avvisoRataUnica.getInstalments().get(0).setIbanCode(null);
+	
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+	
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isUnprocessableEntity())
+	            .andReturn();
+	
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(422, problem.getInt("status"));
+	    assertEquals("Unprocessable Entity", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Iban obbligatorio in caso di avviso postale"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-422-unprocessable-content", problem.getString("type"));
+	}
 }

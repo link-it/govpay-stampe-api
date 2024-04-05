@@ -28,14 +28,16 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 
 		AvvisoPagamentoInput avvisoPagamentoInput = toViolazioneAvvisoPagamentoInputBase(cdsViolation);
 
+		Boolean postal = cdsViolation.getPostal();
+
 		// importo ridotto
 		Amount reducedAmount = cdsViolation.getReducedAmount();
-		RataAvviso rataRidotto = amountToRata(reducedAmount);
+		RataAvviso rataRidotto = amountToRata(reducedAmount, postal, avvisoPagamentoInput);
 		rataRidotto.setTipo(Costanti.TIPO_RATA_RIDOTTO);
 
 		// importo scontato
 		Amount discountedAmount = cdsViolation.getDiscountedAmount();
-		RataAvviso rataScontato = amountToRata(discountedAmount);
+		RataAvviso rataScontato = amountToRata(discountedAmount, postal, avvisoPagamentoInput);
 		rataScontato.setTipo(Costanti.TIPO_RATA_SCONTATO);
 		rataScontato.setImportoScontato(rataScontato.getImporto());
 		// properties per completare la doppia pagina
@@ -45,7 +47,7 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 
 		avvisoPagamentoInput.setPagine(new PagineAvviso());
 
-		Boolean postal = cdsViolation.getPostal();
+		
 		if(postal != null && postal.booleanValue()) { // avviso postale
 
 			PaginaAvvisoSingola pagina1 = new PaginaAvvisoSingola();

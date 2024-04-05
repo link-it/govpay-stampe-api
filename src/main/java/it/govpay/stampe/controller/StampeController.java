@@ -27,6 +27,7 @@ import it.govpay.stampe.service.AvvisoBilingueService;
 import it.govpay.stampe.service.AvvisoPostaleService;
 import it.govpay.stampe.service.AvvisoSempliceService;
 import it.govpay.stampe.service.ViolazioneCdsService;
+import it.govpay.stampe.validator.SemanticValidator;
 
 //@Controller
 @RestController
@@ -58,10 +59,16 @@ public class StampeController implements DefaultApi{
 	
 	@Autowired
 	AvvisoBilingueService avvisoBilingueService;
+	
+	@Autowired
+	SemanticValidator semanticValidator;
 
 	@Override
 	public ResponseEntity<Resource> cdsViolationPost(@Valid @RequestBody CdsViolation cdsViolation) {
 		logger.info("Creazione avviso di violazione codice della strada ...");
+		
+		// validazione semantica input
+		this.semanticValidator.validazioneSemanticaViolazioneCds(cdsViolation);
 		
 		// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 		String nomePdf = this.violazioneCdsMapper.nomePdf(cdsViolation);
@@ -97,6 +104,9 @@ public class StampeController implements DefaultApi{
 	@Override
 	public ResponseEntity<Resource> standardPost(@Valid PaymentNotice paymentNotice) {
 		logger.info("Creazione avviso standard ...");
+		
+		// validazione semantica input
+		this.semanticValidator.validazioneSemanticaPaymentNotice(paymentNotice);
 		
 		byte[] creaAvviso = null;
 		String nomePdf = null;

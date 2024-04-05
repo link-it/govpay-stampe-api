@@ -53,7 +53,8 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		// rata unica
 		RataAvviso rataUnica = null;
 		if(paymentNotice.getFull() != null) {
-			rataUnica = amountToRata(paymentNotice.getFull());
+			logger.debug("AAAAAA" + avvisoPagamentoInput.getOggettoDelPagamento());
+			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput);
 
 			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 			pagina.setRata(rataUnica);
@@ -98,7 +99,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		// rata unica
 		RataAvviso rataUnica = null;
 		if(paymentNotice.getFull() != null) {
-			rataUnica = amountToRata(paymentNotice.getFull());
+			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput);
 		}
 
 		// rate

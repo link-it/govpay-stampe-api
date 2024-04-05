@@ -72,7 +72,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 				}
 
 				//				if(StringUtils.isBlank(postale.getIntestatario()))
-				//					input.setIntestatarioContoCorrentePostale(input.getEnteCreditore());
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
 				//				else 
 				//					input.setIntestatarioContoCorrentePostale(postale.getIntestatario());
 			} else {

@@ -40,6 +40,7 @@ public class Utils {
 	public static CdsViolation creaCdsViolation() {
 		CdsViolation cdsViolation = new CdsViolation();
 		cdsViolation.setLanguage(Languages.IT);
+		cdsViolation.setTitle("Violazione del codice della strada"); 
 		Creditor creditor = new Creditor();
 		creditor.setCbillCode("ABC12");
 		creditor.setFiscalCode(Costanti.ID_DOMINIO_1);
@@ -52,18 +53,23 @@ public class Utils {
 		cdsViolation.setDebtor(debtor );
 		
 		cdsViolation.setPostal(false);
+		
+		String numeroAvviso = Utils.generaNumeroAvviso();
 		Amount ridotto = new Amount();
 		ridotto.setAmount(Double.valueOf(50.00));
 		ridotto.setDueDate(LocalDate.now());
-		ridotto.setNoticeNumber("001340000013900808");
-		ridotto.setQrcode("PAGOPA|002|001340000013900808|12345678901|5000");
+		ridotto.setNoticeNumber(numeroAvviso);
+		ridotto.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
+		ridotto.setIbanCode("IT60X0542811101000000123455");
 		cdsViolation.setReducedAmount(ridotto );
 		
+		numeroAvviso = Utils.generaNumeroAvviso();
 		Amount scontato = new Amount();
 		scontato.setAmount(Double.valueOf(150.00));
 		scontato.setDueDate(LocalDate.now());
-		scontato.setNoticeNumber("001340000013900909");
-		scontato.setQrcode("PAGOPA|002|001340000013900909|12345678901|15000");
+		scontato.setNoticeNumber(numeroAvviso);
+		scontato.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|15000");
+		scontato.setIbanCode("IT60X0542811101000000123455");
 		cdsViolation.setDiscountedAmount(scontato );
 		
 		cdsViolation.setFirstLogo(new ByteArrayResource(Costanti.STRING_256.getBytes()));
@@ -86,6 +92,15 @@ public class Utils {
 	public static PaymentNotice creaPaymentNoticeConRate(int numeroRate, boolean rataUnica) {
 		PaymentNotice paymentNotice = new PaymentNotice();
 		paymentNotice.setLanguage(Languages.IT);
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("Avviso di pagamento con "+numeroRate+" rate");
+		
+		if(rataUnica)
+			sb.append(" e rata unica");
+		
+		paymentNotice.setTitle(sb.toString());
+		
 		Creditor creditor = new Creditor();
 		creditor.setCbillCode("ABC12");
 		creditor.setFiscalCode(Costanti.ID_DOMINIO_1);
@@ -106,6 +121,7 @@ public class Utils {
 			full.setDueDate(LocalDate.now());
 			full.setNoticeNumber(numeroAvviso);
 			full.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
+			full.setIbanCode("IT60X0542811101000000123456");
 			paymentNotice.setFull(full );
 		}
 		
@@ -121,6 +137,7 @@ public class Utils {
 				rata1.setNoticeNumber(numeroAvviso);
 				rata1.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
 				rata1.setInstalmentNumber((i +1));
+				rata1.setIbanCode("IT60X0542811101000000123456");
 				rate.add(rata1 );	
 			}
 		}
@@ -132,7 +149,7 @@ public class Utils {
 		NoticeMetadataSecondLanguage secondLanguage = new NoticeMetadataSecondLanguage();
 		secondLanguage.setBilinguism(true);
 		secondLanguage.setLanguage(Languages.EN);
-		secondLanguage.setTitle("Titolo");
+		secondLanguage.setTitle(sb.toString() + "ma nella seconda lingua");
 		paymentNotice.setSecondLanguage(secondLanguage );
 		
 		return paymentNotice;

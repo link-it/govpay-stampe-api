@@ -207,6 +207,8 @@ components:
         - creditor
         - debtor
         - pages
+        - postal
+        - title  # Aggiungi qui il campo 'title' come obbligatorio
       properties:
         language:
           $ref: '#/components/schemas/Languages'
@@ -293,6 +295,10 @@ components:
           pattern: "[0-9]{18}"
         qrcode:
           type: string
+        iban_code:
+          type: string
+          pattern: "^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$"
+          description: "International Bank Account Number (IBAN)"
 
     Languages:
       enum:

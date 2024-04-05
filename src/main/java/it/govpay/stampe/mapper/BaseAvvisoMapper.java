@@ -18,6 +18,7 @@ import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.CodificaInesistenteException;
+import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.model.v1.RataAvviso;
 import it.govpay.stampe.utils.AvvisoPagamentoUtils;
 
@@ -27,7 +28,26 @@ public interface BaseAvvisoMapper {
 	@Mapping(target = "data", source="dueDate", qualifiedByName = "mapData")
 	@Mapping(target = "codiceAvviso", source="noticeNumber", qualifiedByName = "mapNumeroAvviso")
 	@Mapping(target = "qrCode", source="qrcode")
-	public RataAvviso amountToRata(Amount amount);
+	public RataAvviso amountToRataBase(Amount amount);
+
+
+	public default RataAvviso amountToRata(Amount amount, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput) {
+		RataAvviso rataAvviso = amountToRataBase(amount);
+
+		if(postale != null && postale.booleanValue()){
+			String noticeNumber = amount.getNoticeNumber();
+			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(amount.getIbanCode());
+			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, 
+						amount.getAmount().doubleValue(),
+						avvisoPagamentoInput.getCfEnte(),
+						avvisoPagamentoInput.getCfDestinatario(),
+						avvisoPagamentoInput.getNomeCognomeDestinatario(),
+						avvisoPagamentoInput.getOggettoDelPagamento()));
+			rataAvviso.setNumeroCcPostale(numeroCC);
+		}
+
+		return rataAvviso;
+	}
 
 	public default Map<String, String> getLabelLingua(Languages languages, LabelAvvisiProperties labelAvvisiProperties){
 		if(languages == null) return null;

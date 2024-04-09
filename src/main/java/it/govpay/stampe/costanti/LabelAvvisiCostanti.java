@@ -1,8 +1,8 @@
 package it.govpay.stampe.costanti;
 
 public class LabelAvvisiCostanti {
-
-	public static final String [] LINGUE_DISPONIBILI = { "it" , "de",  "en", "fr", "sl" };
+	
+	private LabelAvvisiCostanti() {	}
 
 	public static final String LABEL_AVVISO_PAGAMENTO = "avviso_pagamento";
 	public static final String LABEL_ENTE_CREDITORE = "ente_creditore";

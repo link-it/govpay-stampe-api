@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
+import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
@@ -876,7 +877,7 @@ class UC_3_AvvisoStandardFailTest {
 	void UC_3_37_AvvisoStandard_InvalidFullAmountIbanAndPostal() throws Exception {
 	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
 	    avvisoRataUnica.setPostal(true);
-	    avvisoRataUnica.getFull().setIbanCode(null);
+	    avvisoRataUnica.getFull().setIban(null);
 	
 	    String body = mapper.writeValueAsString(avvisoRataUnica);
 	
@@ -901,7 +902,7 @@ class UC_3_AvvisoStandardFailTest {
 	void UC_3_38_AvvisoStandard_InvalidInstalmentIbanAndPostal() throws Exception {
 	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeConRate(1,false);
 	    avvisoRataUnica.setPostal(true);
-	    avvisoRataUnica.getInstalments().get(0).setIbanCode(null);
+	    avvisoRataUnica.getInstalments().get(0).setIban(null);
 	
 	    String body = mapper.writeValueAsString(avvisoRataUnica);
 	
@@ -920,5 +921,82 @@ class UC_3_AvvisoStandardFailTest {
 	    assertEquals("Unprocessable Entity", problem.getString("title"));
 	    assertTrue(problem.getString("detail").contains("Iban obbligatorio in caso di avviso postale"));
 	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-422-unprocessable-content", problem.getString("type"));
+	}
+	
+	@Test
+	void UC_3_39_AvvisoStandard_InvalidIban() throws Exception {
+	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+	    // Creating an instance of Iban and setting an invalid value
+	    Iban iban = new Iban();
+	    iban.setIbanCode("INVALID_IBAN");
+	    avvisoRataUnica.getFull().setIban(iban); 
+
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest()) 
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status")); 
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'full.iban.ibanCode': rejected value"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_3_40_AvvisoStandard_InvalidOwnerBusinessName() throws Exception {
+	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+	    avvisoRataUnica.getFull().getIban().setOwnerBusinessName(Costanti.STRING_256);
+
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+        assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'full.iban.ownerBusinessName': rejected value"));
+        assertTrue(problem.getString("detail").contains("size must be between 0 and 50"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_3_41_AvvisoStandard_InvalidPostalAuthMessage() throws Exception {
+	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+	    avvisoRataUnica.getFull().getIban().setPostalAuthMessage(Costanti.STRING_256);
+
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'full.iban.postalAuthMessage': rejected value"));
+        assertTrue(problem.getString("detail").contains("size must be between 0 and 70"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 	}
 }

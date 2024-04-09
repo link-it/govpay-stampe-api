@@ -175,6 +175,10 @@ components:
         cbill_code:
           type: string
           pattern: "[A-Z0-9]{5}"
+        postal_auth_message:
+          type: string
+          maxLength: 70
+          example: "Autorizzazione n. 0000 del 00/00/0000"
     Debtor:
       type: object
       required:
@@ -208,7 +212,7 @@ components:
         - debtor
         - pages
         - postal
-        - title  # Aggiungi qui il campo 'title' come obbligatorio
+        - title
       properties:
         language:
           $ref: '#/components/schemas/Languages'
@@ -267,6 +271,23 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Instalment'
+    Iban:
+      type: object
+      required:
+        - iban_code
+      properties:
+        iban_code:
+          type: string
+          pattern: "^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$"
+          description: "International Bank Account Number (IBAN)"
+        owner_business_name:
+            type: string
+            maxLength: 50
+            example: "Comune di Test 2"
+        postal_auth_message:
+          type: string
+          maxLength: 70
+          example: "Autorizzazione n. 0000 del 00/00/0000"
                 
     Instalment:
       allOf:
@@ -295,10 +316,8 @@ components:
           pattern: "[0-9]{18}"
         qrcode:
           type: string
-        iban_code:
-          type: string
-          pattern: "^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$"
-          description: "International Bank Account Number (IBAN)"
+        iban:
+          $ref: '#/components/schemas/Iban'
 
     Languages:
       enum:

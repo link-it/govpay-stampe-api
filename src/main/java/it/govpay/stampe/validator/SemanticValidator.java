@@ -43,12 +43,12 @@ public class SemanticValidator {
 	
 	
 	private void validazioneSemanticaInstalment(Instalment instalment, @NotNull Boolean postal) {
-		if(postal.booleanValue() && instalment.getIbanCode() == null) 
+		if(postal.booleanValue() && (instalment.getIban() == null || instalment.getIban().getIbanCode() == null)) 
 			throw new UnprocessableEntityException("Iban obbligatorio in caso di avviso postale");		
 	}
 
 	private void validazioneSemanticaAmount(Amount amount, Boolean postal) {
-		if(postal.booleanValue() && amount.getIbanCode() == null) 
+		if(postal.booleanValue() && (amount.getIban() == null || amount.getIban().getIbanCode() == null)) 
 			throw new UnprocessableEntityException("Iban obbligatorio in caso di avviso postale");
 	}
 }

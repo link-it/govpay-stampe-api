@@ -13,6 +13,7 @@ import it.govpay.stampe.beans.Amount;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.Creditor;
 import it.govpay.stampe.beans.Debtor;
+import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.beans.NoticeMetadataSecondLanguage;
@@ -70,7 +71,7 @@ public class AvvisiPagamentoFactory {
 		ridotto.setDueDate(LocalDate.now());
 		ridotto.setNoticeNumber(numeroAvviso);
 		ridotto.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
-		ridotto.setIbanCode("IT60X0542811101000000123455");
+		ridotto.setIban(this.creaIban());
 		cdsViolation.setReducedAmount(ridotto );
 		
 		numeroAvviso = this.generaNumeroAvviso();
@@ -79,7 +80,7 @@ public class AvvisiPagamentoFactory {
 		scontato.setDueDate(LocalDate.now());
 		scontato.setNoticeNumber(numeroAvviso);
 		scontato.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|15000");
-		scontato.setIbanCode("IT60X0542811101000000123455");
+		scontato.setIban(this.creaIban());
 		cdsViolation.setDiscountedAmount(scontato );
 		
 		cdsViolation.setFirstLogo(new ByteArrayResource(this.logoEnte.getBytes()));
@@ -87,6 +88,14 @@ public class AvvisiPagamentoFactory {
 		return cdsViolation;
 	}
 	
+	public Iban creaIban() {
+		Iban iban = new Iban();
+		iban.setIbanCode("IT60X0542811101000000123456");
+		iban.setOwnerBusinessName("Ente Creditore Test");
+		iban.setPostalAuthMessage("Autorizzazione al pagamento con IBAN");
+		return iban;
+	}
+		
 	public PaymentNotice creaPaymentNoticeFull() {
 		return this.creaPaymentNoticeConRate(0, true);
 	}
@@ -135,7 +144,7 @@ public class AvvisiPagamentoFactory {
 			full.setDueDate(LocalDate.now());
 			full.setNoticeNumber(numeroAvviso);
 			full.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
-			full.setIbanCode("IT60X0542811101000000123456");
+			full.setIban(this.creaIban());
 			paymentNotice.setFull(full );
 		}
 		
@@ -151,7 +160,7 @@ public class AvvisiPagamentoFactory {
 				rata1.setNoticeNumber(numeroAvviso);
 				rata1.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
 				rata1.setInstalmentNumber((i +1));
-				rata1.setIbanCode("IT60X0542811101000000123456");
+				rata1.setIban(this.creaIban());
 				rate.add(rata1 );	
 			}
 		}

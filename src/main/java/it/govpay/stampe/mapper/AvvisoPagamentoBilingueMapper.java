@@ -5,11 +5,14 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.slf4j.Logger;
 
 import it.govpay.stampe.beans.Amount;
+import it.govpay.stampe.beans.Creditor;
+import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
@@ -20,6 +23,7 @@ import it.govpay.stampe.model.v2.PaginaAvvisoDoppia;
 import it.govpay.stampe.model.v2.PaginaAvvisoSingola;
 import it.govpay.stampe.model.v2.PagineAvviso;
 import it.govpay.stampe.model.v2.RataAvviso;
+import it.govpay.stampe.utils.AvvisoPagamentoUtils;
 
 @Mapper(componentModel = "spring")
 public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
@@ -114,7 +118,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		// rata unica
 		RataAvviso rataUnica = null;
 		if(paymentNotice.getFull() != null) {
-			rataUnica = amountToRataWithLabels(logger, paymentNotice.getFull(), paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria);
+			rataUnica = amountToRataWithLabels(logger, paymentNotice.getFull(), paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 
 			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 			pagina.setRata(rataUnica);
@@ -170,7 +174,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 					Instalment instalment = instalments.remove(0);
 					PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 
-					RataAvviso rata = instalmentToRataWithLabels(logger, instalment, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria);
+					RataAvviso rata = instalmentToRataWithLabels(logger, instalment, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 
 					rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 					if(labelLinguaSecondaria != null)
@@ -202,8 +206,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 				Instalment v1 = instalments.remove(0);
 				Instalment v2 = instalments.remove(0);
 				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-				RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria);
-				RataAvviso rataDx = instalmentToRataWithLabels(logger, v2, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria);
+				RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+				RataAvviso rataDx = instalmentToRataWithLabels(logger, v2, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 				
 				if(v1.getInstalmentNumber() != null && v2.getInstalmentNumber() != null) {
 					// Titolo della pagina con 2 Rate
@@ -227,7 +231,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			if(instalments.size() == 1) {
 				Instalment v1 = instalments.remove(0);
 				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-				RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria);
+				RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 				
 				if(v1.getInstalmentNumber() != null) {
 					// Titolo della pagina con 2 Rate
@@ -283,10 +287,12 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 	@Mapping(target = "numeroRata", source="instalmentNumber")
 	public RataAvviso instalmentToRata(Instalment instalment);
 
-	public default RataAvviso instalmentToRataWithLabels(Logger logger, Instalment instalment, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+	public default RataAvviso instalmentToRataWithLabels(Logger logger, Instalment instalment, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria,  AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = instalmentToRata(instalment);
 
 		impostaLabelsNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria);
+		
+		impostaLabelsPostaliNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria, instalment.getNoticeNumber(), instalment.getIban(), instalment.getAmount(), avvisoPagamentoInput, creditor);
 
 		return rataAvviso;
 	}
@@ -297,10 +303,12 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 	@Mapping(target = "qrCode", source="qrcode")
 	public RataAvviso amountToRataV2(Amount amount);
 
-	public default RataAvviso amountToRataWithLabels(Logger logger, Amount amount, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+	public default RataAvviso amountToRataWithLabels(Logger logger, Amount amount, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = amountToRataV2(amount);
 
 		impostaLabelsNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria);
+		
+		impostaLabelsPostaliNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria, amount.getNoticeNumber(), amount.getIban(), amount.getAmount(), avvisoPagamentoInput, creditor);
 
 		return rataAvviso;
 
@@ -325,22 +333,26 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			if(labelLinguaSecondaria != null)
 				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 		}
-
-
-		impostaLabelsPostaliNellaRataAvviso(logger, rata, postale, labelLinguaPrincipale, labelLinguaSecondaria);
 	}
 
-	public default void impostaLabelsPostaliNellaRataAvviso(Logger logger, RataAvviso rata, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+	public default void impostaLabelsPostaliNellaRataAvviso(Logger logger, RataAvviso rataAvviso, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria,
+			String noticeNumber, Iban iban, Double importo, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		if(postale != null && postale.booleanValue()) {
-			//			rata.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(versamento.getNumeroAvviso(), AvvisoPagamentoUtils.getNumeroCCDaIban(postale.getCodIban()), 
-			//					versamento.getImportoTotale().doubleValue(),
-			//					input.getCfEnte(),
-			//					input.getCfDestinatario(),
-			//					input.getNomeCognomeDestinatario(),
-			//					input.getEtichette().getItaliano().getOggettoDelPagamento()));
-			//			rata.setNumeroCcPostale(AvvisoPagamentoUtils.getNumeroCCDaIban(postale.getCodIban()));
-			rata.setCodiceAvvisoPostale(rata.getCodiceAvviso()); 
-			//			rata.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(versamento.getDominio(configWrapper).getAutStampaPoste(), postale.getAutStampaPoste()));
+			
+			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
+			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, importo,
+					avvisoPagamentoInput.getCfEnte(),
+					avvisoPagamentoInput.getCfDestinatario(),
+					avvisoPagamentoInput.getNomeCognomeDestinatario(),
+					avvisoPagamentoInput.getEtichette().getItaliano().getOggettoDelPagamento()));
+			rataAvviso.setNumeroCcPostale(numeroCC);
+			// codice avviso gia' diviso in gruppi di 4
+			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso()); 
+			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
+			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
+			else 
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
 		}
 	}
 

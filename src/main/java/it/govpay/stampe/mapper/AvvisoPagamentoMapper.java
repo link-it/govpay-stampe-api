@@ -3,10 +3,13 @@ package it.govpay.stampe.mapper;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.slf4j.Logger;
 
+import it.govpay.stampe.beans.Creditor;
+import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
@@ -17,6 +20,7 @@ import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
 import it.govpay.stampe.model.v1.PaginaAvvisoTripla;
 import it.govpay.stampe.model.v1.PagineAvviso;
 import it.govpay.stampe.model.v1.RataAvviso;
+import it.govpay.stampe.utils.AvvisoPagamentoUtils;
 
 @Mapper(componentModel = "spring")
 public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
@@ -53,8 +57,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		// rata unica
 		RataAvviso rataUnica = null;
 		if(paymentNotice.getFull() != null) {
-			logger.debug("AAAAAA" + avvisoPagamentoInput.getOggettoDelPagamento());
-			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput);
+			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
 
 			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 			pagina.setRata(rataUnica);
@@ -69,8 +72,8 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 				Instalment v1 = instalments.remove(0);
 				Instalment v2 = instalments.remove(0);
 				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-				pagina.getRata().add(instalmentToRata(v1));
-				pagina.getRata().add(instalmentToRata(v2));
+				pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+				pagina.getRata().add(instalmentToRata(v2, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 			}
 
@@ -80,16 +83,16 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 				Instalment v3 = instalments.remove(0);
 
 				PaginaAvvisoTripla pagina = new PaginaAvvisoTripla();
-				pagina.getRata().add(instalmentToRata(v1));
-				pagina.getRata().add(instalmentToRata(v2));
-				pagina.getRata().add(instalmentToRata(v3));
+				pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+				pagina.getRata().add(instalmentToRata(v2, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+				pagina.getRata().add(instalmentToRata(v3, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 			}
 
 			if(instalments.size() == 1) {
 				Instalment v1 = instalments.remove(0);
 				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-				pagina.setRata(instalmentToRata(v1));
+				pagina.setRata(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 			}
 		}
@@ -99,7 +102,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		// rata unica
 		RataAvviso rataUnica = null;
 		if(paymentNotice.getFull() != null) {
-			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput);
+			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
 		}
 
 		// rate
@@ -138,15 +141,15 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 						// layout a 3 colonne
 						pagina.setColonne(BigInteger.valueOf(3l));
 
-						pagina.getRata().add(instalmentToRata(v1));
-						pagina.getRata().add(instalmentToRata(v2));
-						pagina.getRata().add(instalmentToRata(v3));
-						pagina.getRata().add(instalmentToRata(v4));
-						pagina.getRata().add(instalmentToRata(v5));
-						pagina.getRata().add(instalmentToRata(v6));
-						pagina.getRata().add(instalmentToRata(v7));
-						pagina.getRata().add(instalmentToRata(v8));
-						pagina.getRata().add(instalmentToRata(v9));
+						pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v2, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v3, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v4, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v5, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v6, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v7, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v8, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+						pagina.getRata().add(instalmentToRata(v9, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
 						avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 					}
 
@@ -167,7 +170,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 						while(!instalments.isEmpty()) {
 							Instalment v1 = instalments.remove(0);
-							pagina.getRata().add(instalmentToRata(v1));
+							pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
 						}
 
 						avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
@@ -186,7 +189,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 			} else {
 				Instalment v1 = instalments.remove(0);
 				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-				pagina.setRata(instalmentToRata(v1));
+				pagina.setRata(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 				log.debug("Aggiunta rata unica");
 			}
@@ -204,9 +207,9 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		Instalment v3 = instalments.remove(0);
 
 		PaginaAvvisoTripla pagina = new PaginaAvvisoTripla();
-		pagina.getRata().add(instalmentToRata(v1));
-		pagina.getRata().add(instalmentToRata(v2));
-		pagina.getRata().add(instalmentToRata(v3));
+		pagina.getRata().add(instalmentToRata(v1, false, avvisoPagamentoInput, null));
+		pagina.getRata().add(instalmentToRata(v2, false, avvisoPagamentoInput, null));
+		pagina.getRata().add(instalmentToRata(v3, false, avvisoPagamentoInput, null));
 
 		if(rataUnica != null) {
 			pagina.setUnica(rataUnica);
@@ -220,8 +223,8 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		Instalment v2 = instalments.remove(0);
 
 		PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-		pagina.getRata().add(instalmentToRata(v1));
-		pagina.getRata().add(instalmentToRata(v2));
+		pagina.getRata().add(instalmentToRata(v1, false, avvisoPagamentoInput, null));
+		pagina.getRata().add(instalmentToRata(v2, false, avvisoPagamentoInput, null));
 
 		if(rataUnica != null) {
 			pagina.setUnica(rataUnica);
@@ -251,5 +254,31 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	@Mapping(target = "codiceAvviso", source="noticeNumber", qualifiedByName = "mapNumeroAvviso")
 	@Mapping(target = "qrCode", source="qrcode")
 	@Mapping(target = "numeroRata", source="instalmentNumber")
-	public RataAvviso instalmentToRata(Instalment instalment);
+	public RataAvviso instalmentToRataBase(Instalment instalment);
+	
+	public default RataAvviso instalmentToRata(Instalment instalment, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
+		RataAvviso rataAvviso = instalmentToRataBase(instalment);
+
+		if(postale.booleanValue()){
+			Iban iban = instalment.getIban();
+			String noticeNumber = instalment.getNoticeNumber();
+			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
+			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, 
+					instalment.getAmount().doubleValue(),
+						avvisoPagamentoInput.getCfEnte(),
+						avvisoPagamentoInput.getCfDestinatario(),
+						avvisoPagamentoInput.getNomeCognomeDestinatario(),
+						avvisoPagamentoInput.getOggettoDelPagamento()));
+			rataAvviso.setNumeroCcPostale(numeroCC);
+			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
+			
+			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
+			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
+			else 
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
+		}
+
+		return rataAvviso;
+	}
 }

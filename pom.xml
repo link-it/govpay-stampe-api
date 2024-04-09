@@ -483,6 +483,11 @@
 			<artifactId>serializer</artifactId>
 			<version>${xalan.version}</version>
 		</dependency>
+		
+	 	<dependency>
+	      <groupId>commons-codec</groupId>
+	      <artifactId>commons-codec</artifactId>
+	    </dependency>
 
 		<!-- Integration Test -->
 		<dependency>

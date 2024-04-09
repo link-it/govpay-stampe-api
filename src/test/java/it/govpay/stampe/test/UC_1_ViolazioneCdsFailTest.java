@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.CdsViolation;
+import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
@@ -928,7 +929,7 @@ class UC_1_ViolazioneCdsFailTest {
 	void UC_1_37_ViolazioneCds_InvalidAmountIbanAndPostal() throws Exception {
 	    CdsViolation cdsViolation = this.avvisiPagamentoFactory.creaCdsViolation();
 	    cdsViolation.setPostal(true);
-	    cdsViolation.getDiscountedAmount().setIbanCode(null); 
+	    cdsViolation.getDiscountedAmount().setIban(null); 
 
 	    String body = mapper.writeValueAsString(cdsViolation);
 
@@ -947,5 +948,82 @@ class UC_1_ViolazioneCdsFailTest {
 	    assertEquals("Unprocessable Entity", problem.getString("title")); // Updated to match the expected 422 status code title
 	    assertTrue(problem.getString("detail").contains("Iban obbligatorio in caso di avviso postale"));
 	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-422-unprocessable-content", problem.getString("type")); // Updated to match the expected 422 status code reference
+	}
+
+	@Test
+	void UC_1_38_ViolazioneCds_InvalidIban() throws Exception {
+	    CdsViolation cdsViolation = this.avvisiPagamentoFactory.creaCdsViolation();
+	    // Creazione di un'istanza di Iban e impostazione di un valore non valido
+	    Iban iban = new Iban();
+	    iban.setIbanCode("INVALID_IBAN");
+	    cdsViolation.getDiscountedAmount().setIban(iban); 
+
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest()) 
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status")); 
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Field error in object 'cdsViolation' on field 'discountedAmount.iban.ibanCode': rejected value"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_1_39_ViolazioneCds_InvalidOwnerBusinessName() throws Exception {
+	    CdsViolation cdsViolation = this.avvisiPagamentoFactory.creaCdsViolation();
+	    cdsViolation.getDiscountedAmount().getIban().setOwnerBusinessName(Costanti.STRING_256);
+
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+        assertTrue(problem.getString("detail").contains("Field error in object 'cdsViolation' on field 'discountedAmount.iban.ownerBusinessName': rejected value"));
+        assertTrue(problem.getString("detail").contains("size must be between 0 and 50"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_1_40_ViolazioneCds_InvalidPostalAuthMessage() throws Exception {
+	    CdsViolation cdsViolation = this.avvisiPagamentoFactory.creaCdsViolation();
+	    cdsViolation.getDiscountedAmount().getIban().setPostalAuthMessage(Costanti.STRING_256);
+
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Field error in object 'cdsViolation' on field 'discountedAmount.iban.postalAuthMessage': rejected value"));
+        assertTrue(problem.getString("detail").contains("size must be between 0 and 70"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 	}
 }

@@ -13,6 +13,7 @@ import org.mapstruct.Named;
 
 import it.govpay.stampe.beans.Amount;
 import it.govpay.stampe.beans.Creditor;
+import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
@@ -31,12 +32,13 @@ public interface BaseAvvisoMapper {
 	public RataAvviso amountToRataBase(Amount amount);
 
 
-	public default RataAvviso amountToRata(Amount amount, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput) {
+	public default RataAvviso amountToRata(Amount amount, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = amountToRataBase(amount);
 
 		if(postale != null && postale.booleanValue()){
+			Iban iban = amount.getIban();
 			String noticeNumber = amount.getNoticeNumber();
-			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(amount.getIbanCode());
+			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
 			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, 
 						amount.getAmount().doubleValue(),
 						avvisoPagamentoInput.getCfEnte(),
@@ -44,6 +46,13 @@ public interface BaseAvvisoMapper {
 						avvisoPagamentoInput.getNomeCognomeDestinatario(),
 						avvisoPagamentoInput.getOggettoDelPagamento()));
 			rataAvviso.setNumeroCcPostale(numeroCC);
+			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
+
+			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
+			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
+			else 
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
 		}
 
 		return rataAvviso;

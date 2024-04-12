@@ -266,5 +266,97 @@ class UC_4_AvvisoStandardTest {
 			assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
 		}
 	}
+	
+	@Test
+	void UC_4_11_AvvisoSempliceRataUnica_NoScadenzaOk() throws Exception {
+		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+		avvisoRataUnica.getFull().setDueDate(null); // senza data scadenza
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
+	}
+
+	@Test
+	void UC_4_12_AvvisoPostaleRataUnica_NoScadenzaOk() throws Exception {
+		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avvisoRataUnica.setPostal(true);
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+		avvisoRataUnica.getFull().setDueDate(null); // senza data scadenza
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
+	}
+	
+	@Test
+	void UC_4_13_AvvisoPostaleRataUnicaOk() throws Exception {
+		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avvisoRataUnica.setPostal(true);
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+		avvisoRataUnica.getFull().getIban().setOwnerBusinessName(null); // senza ridefinire l'owner
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
+	}
+	
+	@Test
+	void UC_4_14_AvvisoPostaleDoppiaRataOk() throws Exception {
+		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeDueRate();
+		avvisoRataUnica.setPostal(true);
+		avvisoRataUnica.setSecondLanguage(null); // avviso monolingua
+		avvisoRataUnica.getInstalments().get(0).getIban().setOwnerBusinessName(null); // senza ridefinire l'owner
+		avvisoRataUnica.getInstalments().get(1).getIban().setOwnerBusinessName(null); // senza ridefinire l'owner
+
+		String body = mapper.writeValueAsString(avvisoRataUnica);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		String headerContentType = result.getResponse().getHeader(HttpHeaders.CONTENT_TYPE);
+		assertNotNull(headerContentType);
+		assertEquals(MediaType.APPLICATION_PDF_VALUE, headerContentType);
+		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
+		assertNotNull(headerContentDisposition);
+		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
+	}
 }
 

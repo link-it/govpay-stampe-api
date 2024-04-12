@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.Iban;
+import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;

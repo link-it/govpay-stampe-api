@@ -39,9 +39,10 @@ public interface BaseAvvisoMapper {
 			Iban iban = amount.getIban();
 			String noticeNumber = amount.getNoticeNumber();
 			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
+			String cfEnte = avvisoPagamentoInput.getCfEnte();
 			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, 
 						amount.getAmount().doubleValue(),
-						avvisoPagamentoInput.getCfEnte(),
+						cfEnte,
 						avvisoPagamentoInput.getCfDestinatario(),
 						avvisoPagamentoInput.getNomeCognomeDestinatario(),
 						avvisoPagamentoInput.getOggettoDelPagamento()));

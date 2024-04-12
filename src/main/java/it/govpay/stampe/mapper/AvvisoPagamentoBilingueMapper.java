@@ -74,11 +74,6 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 					etichetteLinguaSecondaria.setPagaTerritorio2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_POSTE));
 					etichetteLinguaSecondaria.setPagaApp2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_APP_POSTE));
 				}
-
-				//				if(StringUtils.isBlank(postale.getIntestatario()))
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
-				//				else 
-				//					input.setIntestatarioContoCorrentePostale(postale.getIntestatario());
 			} else {
 				// ho gia' caricato tutte le label, spengo il pagamento poste
 				etichette.setPagaTerritorio2(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_STANDARD));
@@ -340,8 +335,9 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		if(postale != null && postale.booleanValue()) {
 			
 			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
+			String cfEnte = avvisoPagamentoInput.getCfEnte();
 			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, importo,
-					avvisoPagamentoInput.getCfEnte(),
+					cfEnte,
 					avvisoPagamentoInput.getCfDestinatario(),
 					avvisoPagamentoInput.getNomeCognomeDestinatario(),
 					avvisoPagamentoInput.getEtichette().getItaliano().getOggettoDelPagamento()));

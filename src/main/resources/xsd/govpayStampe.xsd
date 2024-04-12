@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+ 
+	<xsd:element name="AvvisoPagamentoInput" type="AvvisoPagamentoInput" />
+    <xsd:element name="RicevutaTelematicaInput" type="RicevutaTelematicaInput" />
+    <xsd:element name="ProspettoRiscossioniInput" type="ProspettoRiscossioniInput" />
+    
+    <xsd:complexType name="AvvisoPagamentoInput">
+		<xsd:sequence>
+			<xsd:element name="logo_ente" type="xsd:string"/>
+			<xsd:element name="logo_ente_secondario" type="xsd:string"/>
+			<xsd:element name="oggetto_del_pagamento" type="xsd:string"/>
+			<xsd:element name="cf_ente" type="xsd:string"/>
+			<xsd:element name="cf_destinatario" type="xsd:string"/>
+			<xsd:element name="nome_cognome_destinatario" type="xsd:string"/>
+			<xsd:element name="ente_creditore" type="xsd:string"/>
+			<xsd:element name="settore_ente" type="xsd:string"/>
+			<xsd:element name="indirizzo_destinatario_1" type="xsd:string"/>
+			<xsd:element name="indirizzo_destinatario_2" type="xsd:string"/>
+			<xsd:element name="info_ente" type="xsd:string"/>
+			<xsd:element name="del_tuo_ente" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="di_poste" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="cbill" type="xsd:string"/>
+			<xsd:element name="intestatario_conto_corrente_postale" type="xsd:string"/>
+			<xsd:element name="scadenza_scontato" type="xsd:string"/>
+			<xsd:element name="scadenza_ridotto" type="xsd:string"/>
+			<xsd:element name="pagine" type="PagineAvviso" />
+			<xsd:element name="informativa_importo_avviso" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="nascondi_informativa_importo_avviso" type="xsd:boolean" />
+		</xsd:sequence>
+	</xsd:complexType>
+			
+	<xsd:complexType name="PagineAvviso">
+		<xsd:choice minOccurs="1" maxOccurs="unbounded">
+			<xsd:element name="singola" type="PaginaAvvisoSingola" />
+			<xsd:element name="doppia" type="PaginaAvvisoDoppia"/>
+			<xsd:element name="tripla" type="PaginaAvvisoTripla"/>
+			<xsd:element name="multipla" type="PaginaAvvisoMultipla"/>
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:complexType name="PaginaAvvisoTripla">
+		<xsd:sequence>
+			<xsd:element name="unica" type="RataAvviso"/>
+			<xsd:sequence minOccurs="3" maxOccurs="3">
+				<xsd:element name="rata" type="RataAvviso"/>
+			</xsd:sequence>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="PaginaAvvisoDoppia">
+		<xsd:sequence>
+			<xsd:element name="unica" type="RataAvviso"/>
+			<xsd:sequence minOccurs="2" maxOccurs="2">
+				<xsd:element name="rata" type="RataAvviso"/>
+			</xsd:sequence>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="PaginaAvvisoSingola">
+		<xsd:sequence>
+			<xsd:element name="rata" type="RataAvviso"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="PaginaAvvisoMultipla">
+		<xsd:sequence minOccurs="2" maxOccurs="9">
+			<xsd:element name="rata" type="RataAvviso"/>
+		</xsd:sequence>
+		<xsd:attribute name="colonne" use="required" type="xsd:integer"/>
+	</xsd:complexType>
+	
+	<xsd:complexType name="RataAvviso">
+		<xsd:sequence>
+			<xsd:element name="tipo" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="giorni" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="numero_rata" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="importo" type="xsd:double"/>
+			<xsd:element name="data" type="xsd:string"/>
+			<xsd:element name="qr_code" type="xsd:string"/>
+			<xsd:element name="cbill" type="xsd:string"/>
+			<xsd:element name="codice_avviso" type="xsd:string"/>
+			<xsd:element name="codice_avviso_postale" type="xsd:string"/>
+			<xsd:element name="numero_cc_postale" type="xsd:string"/>
+			<xsd:element name="data_matrix" type="xsd:string"/>
+			<xsd:element name="autorizzazione" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="importo_ridotto" type="xsd:double" minOccurs="0"/>
+			<xsd:element name="importo_scontato" type="xsd:double" minOccurs="0"/>
+			<xsd:element name="qr_code_2" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="codice_avviso_2" type="xsd:string" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>    
+	    
+	<xsd:complexType name="RicevutaTelematicaInput">
+		<xsd:sequence>
+			<xsd:element name="logo_ente" type="xsd:string"/>
+			<xsd:element name="logo_pagopa" type="xsd:string"/>
+			<xsd:element name="oggetto_del_pagamento" type="xsd:string"/>
+			<xsd:element name="ente_denominazione" type="xsd:string"/>
+			<xsd:element name="indirizzo_ente" type="xsd:string"/>
+			<xsd:element name="luogo_ente" type="xsd:string"/>
+			<xsd:element name="cf_ente" type="xsd:string"/>
+			<xsd:element name="soggetto" type="xsd:string"/>
+			<xsd:element name="indirizzo_soggetto" type="xsd:string"/>
+			<xsd:element name="luogo_soggetto" type="xsd:string"/>
+			<xsd:element name="cf_soggetto" type="xsd:string"/>
+			<xsd:element name="istituto" type="xsd:string"/>
+			<xsd:element name="importo" type="xsd:double"/>
+			<xsd:element name="dataOperazione" type="xsd:string"/>
+			<xsd:element name="dataApplicativa" type="xsd:string"/>
+			<xsd:element name="stato" type="xsd:string"/>
+			<xsd:element name="IUV" type="xsd:string"/>
+			<xsd:element name="CCP" type="xsd:string"/>
+			<xsd:element name="versione_oggetto" type="xsd:string"/>
+			<xsd:element name="elenco_voci">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="voce" type="VoceRicevutaTelematicaInput" minOccurs="1" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element> 
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="VoceRicevutaTelematicaInput">
+		<xsd:sequence>
+			<xsd:element name="descrizione" type="xsd:string"/>
+			<xsd:element name="id_riscossione" type="xsd:string"/>
+			<xsd:element name="importo" type="xsd:double"/>
+			<xsd:element name="stato" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="ProspettoRiscossioniInput">
+		<xsd:sequence>
+			<xsd:element name="elenco_prospetti_dominio">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="prospetto_dominio" type="ProspettoRiscossioneDominioInput" minOccurs="1" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element> 
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="ProspettoRiscossioneDominioInput">
+		<xsd:sequence>
+			<xsd:element name="logo_ente" type="xsd:string"/>
+			<xsd:element name="logo_pagopa" type="xsd:string"/>
+			<xsd:element name="dataDa" type="xsd:string"/>
+			<xsd:element name="dataA" type="xsd:string"/>
+			<xsd:element name="ente_denominazione" type="xsd:string"/>
+			<xsd:element name="indirizzo_ente" type="xsd:string"/>
+			<xsd:element name="luogo_ente" type="xsd:string"/>
+			<xsd:element name="cf_ente" type="xsd:string"/>
+			<xsd:element name="elenco_flussi_riscossioni">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="voce_flusso_riscossioni" type="RiscossioneConFlussoInput" minOccurs="1" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element> 
+			<xsd:element name="elenco_riscossioni">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="voce_riscossione" type="VoceRiscossioneInput" minOccurs="1" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element> 
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="RiscossioneConFlussoInput">
+		<xsd:sequence>
+			<xsd:element name="id_flusso" type="xsd:string"/>
+			<xsd:element name="data" type="xsd:string"/>
+			<xsd:element name="importo" type="xsd:double"/>
+			<xsd:element name="iur" type="xsd:string"/>
+			<xsd:element name="elenco_riscossioni">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="voce_riscossione" type="VoceRiscossioneInput" minOccurs="1" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element> 
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="VoceRiscossioneInput">
+		<xsd:sequence>
+			<xsd:element name="iuv" type="xsd:string"/>
+			<xsd:element name="id_pendenza" type="xsd:string"/>
+			<xsd:element name="importo" type="xsd:double"/>
+			<xsd:element name="identificativo_debitore" type="xsd:string"/>
+			<xsd:element name="id_tipo_pendenza" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="id_entrata" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="anno" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="data_pagamento" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="data" type="xsd:string" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="QuietanzaPagamentoInput">
+		<xsd:sequence>
+			<xsd:element name="logo_ente" type="xsd:string"/>
+			<xsd:element name="logo_pagopa" type="xsd:string"/>
+			<xsd:element name="oggetto_del_pagamento" type="xsd:string"/>
+			<xsd:element name="ente_denominazione" type="xsd:string"/>
+			<xsd:element name="indirizzo_ente" type="xsd:string"/>
+			<xsd:element name="luogo_ente" type="xsd:string"/>
+			<xsd:element name="cf_ente" type="xsd:string"/>
+			<xsd:element name="soggetto" type="xsd:string"/>
+			<xsd:element name="indirizzo_soggetto" type="xsd:string"/>
+			<xsd:element name="luogo_soggetto" type="xsd:string"/>
+			<xsd:element name="cf_soggetto" type="xsd:string"/>
+			<xsd:element name="istituto" type="xsd:string"/>
+			<xsd:element name="importo" type="xsd:double"/>
+			<xsd:element name="dataOperazione" type="xsd:string"/>
+			<xsd:element name="stato" type="xsd:string"/>
+			<xsd:element name="IUV" type="xsd:string"/>
+			<xsd:element name="elenco_voci">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="voce" type="VoceRicevutaTelematicaInput" minOccurs="1" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element> 
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">%p &lt;%d{dd-MM-yyyy HH:mm:ss.SSS}&gt; %C.%M(%L): %m %n %n</Property>
+	<Property name="APP_LOG_ROOT">/var/log/govpay</Property>
+    </Properties>
+    <Appenders>
+        <RollingFile name="spring"
+            fileName="${APP_LOG_ROOT}/govpay-stampe-api_spring.log"
+            filePattern="${APP_LOG_ROOT}/govpay-stampe-api_spring.log.%i">
+            <PatternLayout pattern="${LOG_PATTERN}" />
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5000KB" />
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+        </RollingFile>
+ 
+        <RollingFile name="core"
+            fileName="${APP_LOG_ROOT}/govpay-stampe-api_core.log"
+            filePattern="${APP_LOG_ROOT}/govpay-stampe-api_core.log.%i">
+            <PatternLayout pattern="${LOG_PATTERN}" />
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5000KB" />
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+        </RollingFile>
+ 
+    </Appenders>
+    <Loggers>
+        <Logger name="it.govpay" level="DEBUG" additivity="false">
+            <AppenderRef ref="core" />
+        </Logger>
+
+        <Logger name="org.springframework" level="error" additivity="false">
+            <AppenderRef ref="spring" />
+        </Logger>
+
+        <Root level="DEBUG">
+            <AppenderRef ref="core" />
+        </Root>
+
+    </Loggers>
+</Configuration>

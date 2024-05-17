@@ -18,7 +18,10 @@ ENV PATH "${JAVA_HOME}/bin:${PATH}"
 COPY --from=eclipse-temurin:11 $JAVA_HOME $JAVA_HOME
 
 RUN yum install fontconfig -y \
-&& yum install freetype -y
+&& yum install freetype -y \
+&& yum update openssl -y \
+&& yum update python3 -y
+
 
 ARG release_tag
 ENV SW_RELEASE=${release_tag}
@@ -32,7 +35,7 @@ ENV logging.level.it.govpay="INFO"
 ENV management.endpoint.health.probes.enabled=true
 ENV management.health.livenessState.enabled=true
 ENV management.health.readinessState.enabled=true
-ENV server.servlet.context-path=/govpay-stampe-api
+ENV server.servlet.context-path=/govpay-stampe
 ENV server.port=8080
 
 

@@ -1,20 +1,11 @@
-# FROM eclipse-temurin:11 as jre-build
-# RUN $JAVA_HOME/bin/jlink \
-#     --add-modules java.base \
-#     --add-modules java.logging \
-#     --add-modules java.sql \
-#     --add-modules java.net.http \
-#     --strip-debug \
-#     --no-man-pages \
-#     --no-header-files \
-#     --compress=2 \
-#     --output /javaruntime
+FROM eclipse-temurin:11 as jre-build
 
-# Define your base image
-FROM rockylinux:9.1.20230215-minimal
+# scarico e installo jdk11 e maven
+RUN apt-get update -y \
+&& apt-get install -y openjdk-11-jdk
+
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
-#COPY --from=jre-build /javaruntime $JAVA_HOME
 COPY --from=eclipse-temurin:11 $JAVA_HOME $JAVA_HOME
 
 ARG release_tag

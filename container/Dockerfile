@@ -1,12 +1,24 @@
-FROM eclipse-temurin:11 as jre-build
+#FROM eclipse-temurin:11 as jre-build
+# RUN $JAVA_HOME/bin/jlink \
+#     --add-modules java.base \
+#     --add-modules java.logging \
+#     --add-modules java.sql \
+#     --add-modules java.net.http \
+#     --strip-debug \
+#     --no-man-pages \
+#     --no-header-files \
+#     --compress=2 \
+#     --output /javaruntime
 
-# scarico e installo jdk11 e maven
-RUN apt-get update -y \
-&& apt-get install -y openjdk-11-jdk
-
+# Define your base image
+FROM rockylinux:9.1.20230215
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
+#COPY --from=jre-build /javaruntime $JAVA_HOME
 COPY --from=eclipse-temurin:11 $JAVA_HOME $JAVA_HOME
+
+RUN yum install fontconfig -y \
+&& yum install freetype -y
 
 ARG release_tag
 ENV SW_RELEASE=${release_tag}

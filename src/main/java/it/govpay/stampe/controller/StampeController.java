@@ -29,7 +29,6 @@ import it.govpay.stampe.service.AvvisoSempliceService;
 import it.govpay.stampe.service.ViolazioneCdsService;
 import it.govpay.stampe.validator.SemanticValidator;
 
-//@Controller
 @RestController
 public class StampeController implements DefaultApi{
 	

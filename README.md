@@ -3,7 +3,7 @@ Servizio per la stampa degli Avvisi pagoPA
 
 ## Istruzioni di compilazione
 
-Il progetto utilizza librerie spring-boot versione 2.7.17 e JDK 11.
+Il progetto utilizza librerie spring-boot versione 3.2.5 e JDK 21.
 
 Per la compilazione eseguire il seguente comando, verranno eseguiti anche i test.
 
@@ -48,7 +48,7 @@ stampe.time-zone=[TimeZone dell'applicazione]
 
 ```
 
-All'interno del file `log4j2.xml` si definisce la configurazione di log dell'applicazione.
+L'applicazione e' configurata per loggare su standardOutput e' possibile sovrascrivere la configurazione di default utilizzando il meccanismo di override delle properties di spring.
 
 
 # Avvisi di Pagamento supportati
@@ -301,7 +301,7 @@ L'avviso per la Violazione del Codice della strada deve contenere due importi ri
     "amount": 50.25,
     "due_date": "2022-12-31",
     "notice_number": "123456789012345678",
-    "qrcode": "base64encodedimage",
+    "qrcode": "PAGOPA|002|123456789012345678|01234567890|5025",
     "iban": {
       "iban_code": "IT60X0542811101000000123456",
       "owner_business_name": "Comune di Test 2",
@@ -312,7 +312,7 @@ L'avviso per la Violazione del Codice della strada deve contenere due importi ri
     "amount": 25.00,
     "due_date": "2022-12-31",
     "notice_number": "987654321098765432",
-    "qrcode": "base64encodedimage",
+    "qrcode": "PAGOPA|002|987654321098765432|01234567890|2500",
     "iban": {
       "iban_code": "IT60X0542811101000000123456",
       "owner_business_name": "Comune di Test 2",

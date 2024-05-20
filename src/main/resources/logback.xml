@@ -6,11 +6,11 @@
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-			<Pattern>%white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable</Pattern>
+			<Pattern>%white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable</Pattern>
 		</encoder>
 	</appender>
 		
-	<logger name="it.govpay" level="ERROR" additivity="false">
+	<logger name="it.govpay" level="INFO" additivity="false">
 		<appender-ref ref="STDOUT" />
 	</logger>
 	

@@ -1,4 +1,4 @@
-#FROM eclipse-temurin:11 as jre-build
+#FROM eclipse-temurin:21 as jre-build
 # RUN $JAVA_HOME/bin/jlink \
 #     --add-modules java.base \
 #     --add-modules java.logging \
@@ -15,7 +15,7 @@ FROM rockylinux:9.1.20230215
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 #COPY --from=jre-build /javaruntime $JAVA_HOME
-COPY --from=eclipse-temurin:11 $JAVA_HOME $JAVA_HOME
+COPY --from=eclipse-temurin:21 $JAVA_HOME $JAVA_HOME
 
 RUN yum install fontconfig -y \
 && yum install freetype -y \

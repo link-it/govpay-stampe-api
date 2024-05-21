@@ -1,4 +1,4 @@
-#FROM eclipse-temurin:11 as jre-build
+#FROM eclipse-temurin:21 as jre-build
 # RUN $JAVA_HOME/bin/jlink \
 #     --add-modules java.base \
 #     --add-modules java.logging \
@@ -11,17 +11,21 @@
 #     --output /javaruntime
 
 # Define your base image
-FROM rockylinux:9.1.20230215
+FROM rockylinux:9.3.20231119
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 #COPY --from=jre-build /javaruntime $JAVA_HOME
-COPY --from=eclipse-temurin:11 $JAVA_HOME $JAVA_HOME
+COPY --from=eclipse-temurin:21 $JAVA_HOME $JAVA_HOME
 
 RUN yum install fontconfig -y \
 && yum install freetype -y \
 && yum update openssl -y \
-&& yum update python3 -y
-
+&& yum update python3 -y \
+&& yum update gnutls -y \
+&& yum update less -y \
+&& yum update libxml2 -y \
+&& yum update file-libs -y \
+&& yum update systemd-libs -y
 
 ARG release_tag
 ENV SW_RELEASE=${release_tag}

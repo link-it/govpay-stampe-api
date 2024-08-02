@@ -50,6 +50,18 @@ stampe.time-zone=[TimeZone dell'applicazione]
 
 L'applicazione e' configurata per loggare su standardOutput e' possibile sovrascrivere la configurazione di default utilizzando il meccanismo di override delle properties di spring.
 
+# Formato Logo 
+
+L'avviso di pagamento deve contenere il logo dell'ente creditore. 
+
+Il formato accettato dal servizio e' il seguente:
+
+```
+...
+"first_logo": "Base64('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAACfFBMVEVHcExqTjt......')"
+...
+```
+
 
 # Avvisi di Pagamento supportati
 

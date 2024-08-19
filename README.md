@@ -52,16 +52,7 @@ L'applicazione e' configurata per loggare su standardOutput e' possibile sovrasc
 
 # Formato Logo 
 
-L'avviso di pagamento deve contenere il logo dell'ente creditore. 
-
-Il formato accettato dal servizio e' il seguente:
-
-```
-...
-"first_logo": "Base64('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAACfFBMVEVHcExqTjt......')"
-...
-```
-
+Il logo dell'ente creditore deve essere fornito come stringa nel formato `data:image/png;base64,iVBORw0KGg......` codificato in base 64.
 
 # Avvisi di Pagamento supportati
 

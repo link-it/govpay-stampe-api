@@ -50,6 +50,9 @@ stampe.time-zone=[TimeZone dell'applicazione]
 
 L'applicazione e' configurata per loggare su standardOutput e' possibile sovrascrivere la configurazione di default utilizzando il meccanismo di override delle properties di spring.
 
+# Formato Logo 
+
+Il logo dell'ente creditore deve essere fornito come stringa nel formato `data:image/png;base64,iVBORw0KGg......` codificato in base 64.
 
 # Avvisi di Pagamento supportati
 

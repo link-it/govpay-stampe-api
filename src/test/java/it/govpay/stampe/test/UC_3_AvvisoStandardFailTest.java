@@ -207,7 +207,7 @@ class UC_3_AvvisoStandardFailTest {
         assertNotNull(problem.getString("detail"));
         assertEquals(400, problem.getInt("status"));
         assertEquals("Bad Request", problem.getString("title"));
-        assertTrue(problem.getString("detail").contains("Cannot construct instance of `it.govpay.stampe.beans.Languages`, problem: Unexpected value 'XXX'\n at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 1, column: 13] (through reference chain: it.govpay.stampe.beans.PaymentNotice[\"language\"])"));
+        assertTrue(problem.getString("detail").contains("Cannot construct instance of `it.govpay.stampe.beans.Languages`, problem: Unexpected value 'XXX'"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 	}
 	

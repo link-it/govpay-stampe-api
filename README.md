@@ -1,12 +1,23 @@
-# govpay-stampe-api
-Servizio per la stampa degli Avvisi pagoPA
+<p align="center">
+<img src="https://www.link.it/wp-content/uploads/2025/01/logo-govpay.svg" alt="GovPay Logo" width="200"/>
+</p>
+
+# GovPay - Porta di accesso al sistema pagoPA - Stampe Api
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=link-it_govpay-gde-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=link-it_govpay-gde-api)
+[![Docker Hub](https://img.shields.io/docker/v/linkitaly/govpay-gde-api?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/linkitaly/govpay-gde-api)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://raw.githubusercontent.com/link-it/govpay-gde-api/main/LICENSE)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-brightgreen.svg)](https://spring.io/projects/spring-boot)
+
+## Sommario
+
+Servizio per la stampa degli Avvisi pagoPA e delle ricevute di pagamento
 
 ## Istruzioni di compilazione
 
-Il progetto utilizza librerie spring-boot versione 3.2.5 e JDK 21.
+Il progetto utilizza librerie Spring Boot versione 3.5.9 e JDK 21.
 
 Per la compilazione eseguire il seguente comando, verranno eseguiti anche i test.
-
 
 ``` bash
 mvn clean install -P [jar|war]
@@ -20,17 +31,15 @@ Per l'avvio dell'applicativo come standalone eseguire:
 mvn spring-boot:run
 ```
 
-Per sovrascrivere le proprieta' definite nel file `application.properties` utilizzare il seguente sistema:
+Per sovrascrivere le proprietà definite nel file `application.properties` utilizzare il seguente sistema:
 
 ``` bash
 mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dserver.port=[NUOVO_VALORE] ..."
-
 ```
 
 # Configurazione
 
-All'interno del file `application.properties` sono definite le seguenti proprieta':
-
+All'interno del file `application.properties` sono definite le seguenti proprietà:
 
 ``` bash
 # ----------- SPRING SERVLET ------------
@@ -323,4 +332,21 @@ L'avviso per la Violazione del Codice della strada deve contenere due importi ri
     }
   }
 }
+```
+
+## Configurazione logging
+
+La configurazione del logging è gestita tramite le proprietà definite in `application.properties`:
+
+``` bash
+logging.file.name=[Path completo del file di log]
+logging.level.it.govpay=[Livello di log: DEBUG, INFO, WARN, ERROR]
+```
+
+## Docker
+
+L'immagine Docker è disponibile su Docker Hub: [linkitaly/govpay-stampe-api](https://hub.docker.com/r/linkitaly/govpay-stampe-api)
+
+``` bash
+docker pull linkitaly/govpay-stampe-api:latest
 ```

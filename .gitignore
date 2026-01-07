@@ -27,7 +27,6 @@ gradle/
 gradlew
 gradlew.bat
 settings.gradle
-.github/
 api/
 docs/
 
@@ -46,7 +45,7 @@ pom.xml.versionsBackup
 /target
 /bin
 _build
-
+buildcontext
 # swagger
 .swagger-codegen
 
@@ -85,3 +84,5 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+/.apt_generated/
+/.apt_generated_tests/

@@ -60,29 +60,34 @@
 		<!-- xalan -->
 		<xalan.version>2.7.3</xalan.version>
 		<!-- Jaxen -->
-		<jaxen.version>1.2.0</jaxen.version>
+        <jaxen.version>2.0.0</jaxen.version>
 		<!-- barbecue -->
 		<barbecue.version>1.5-beta1</barbecue.version>
 		<!-- Groovy -->
 		<groovy-all.version>2.4.21</groovy-all.version>
 		<!-- xmlgraphics-commons -->
-		<xmlgraphics.commons.version>2.8</xmlgraphics.commons.version>
+		<xmlgraphics.commons.version>2.11</xmlgraphics.commons.version>
 		<!-- xmlgraphics-batik-bridge -->
-		<batik-bridge.version>1.17</batik-bridge.version>
+		<batik-bridge.version>1.19</batik-bridge.version>
 		<!-- com.google.zxing.javase -->
-		<com.google.zxing.javase.version>2.3.0</com.google.zxing.javase.version>
+		<com.google.zxing.javase.version>3.5.3</com.google.zxing.javase.version>
 		<!-- dynamicreports-core -->
 		<dynamicreports-core.version>6.20.1</dynamicreports-core.version>
 		<!-- jasperreports -->
-		<jasperreports.version>6.21.3</jasperreports.version>
+		<jasperreports.version>6.21.5</jasperreports.version>
 		
 		<javax.annotation-api.version>1.3.2</javax.annotation-api.version>
 
-		<!-- Versioni aggiornate per risolvere vulnerabilita' -->
+		<!-- ant version -->
 		<ant.version>1.10.15</ant.version>
+		<!-- commons bean utils-->
 		<commons-beanutils.version>1.11.0</commons-beanutils.version>
+		
 		<jfreechart.version>1.5.6</jfreechart.version>
+		
 		<commons-lang3.version>3.20.0</commons-lang3.version>
+		 <!-- barcode4j -->
+		<barcode4j.version>2.1</barcode4j.version>
 
 		<owasp.falsePositives.dir>src/main/resources/owasp/falsePositives</owasp.falsePositives.dir>
 		<!-- owasp config -->
@@ -330,10 +335,9 @@
 					<groupId>xml-apis</groupId>
 					<artifactId>xml-apis</artifactId>
 				</exclusion>
-				<!-- Esclusione ant vulnerabile da barcode4j -->
 				<exclusion>
-					<groupId>org.apache.ant</groupId>
-					<artifactId>ant</artifactId>
+					<groupId>net.sf.barcode4j</groupId>
+   					<artifactId>barcode4j</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -359,14 +363,17 @@
 					<groupId>com.fasterxml.jackson.dataformat</groupId>
 					<artifactId>jackson-dataformat-xml</artifactId>
 				</exclusion>
-				<!-- Esclusione versioni vulnerabili -->
-				<exclusion>
-					<groupId>commons-beanutils</groupId>
-					<artifactId>commons-beanutils</artifactId>
-				</exclusion>
 				<exclusion>
 					<groupId>org.jfree</groupId>
-					<artifactId>jfreechart</artifactId>
+  					<artifactId>jfreechart</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.sf.barcode4j</groupId>
+   					<artifactId>barcode4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-beanutils</groupId>
+		    		<artifactId>commons-beanutils</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -374,13 +381,13 @@
 		<dependency>
 			<groupId>com.google.zxing</groupId>
 			<artifactId>javase</artifactId>
-			<version>2.3.0</version>
+			<version>${com.google.zxing.javase.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
 			<artifactId>xmlgraphics-commons</artifactId>
-			<version>2.8</version>
+			<version>${xmlgraphics.commons.version}</version>
 		</dependency>
 
 		<dependency>
@@ -417,11 +424,29 @@
 			<artifactId>groovy-all</artifactId>
 			<version>${groovy-all.version}</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>net.sourceforge.barbecue</groupId>
 			<artifactId>barbecue</artifactId>
-			<version>1.5-beta1</version>
+			<version>${barbecue.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sf.barcode4j</groupId>
+   			<artifactId>barcode4j</artifactId>
+   			<version>${barcode4j.version}</version>
+   			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.apache.ant</groupId>
+		    <artifactId>ant</artifactId>
+		    <version>${ant.version}</version>
 		</dependency>
 
 		<dependency>
@@ -449,20 +474,15 @@
 
 		<!-- Dipendenze con versioni aggiornate per risolvere vulnerabilita' -->
 		<dependency>
-			<groupId>org.apache.ant</groupId>
-			<artifactId>ant</artifactId>
-			<version>${ant.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>${commons-beanutils.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.jfree</groupId>
-			<artifactId>jfreechart</artifactId>
-			<version>${jfreechart.version}</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.jfree</groupId>-->
+<!--			<artifactId>jfreechart</artifactId>-->
+<!--			<version>${jfreechart.version}</version>-->
+<!--		</dependency>-->
 
 		<!-- Integration Test -->
 		<dependency>

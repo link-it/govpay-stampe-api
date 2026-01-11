@@ -478,11 +478,6 @@
 			<artifactId>commons-beanutils</artifactId>
 			<version>${commons-beanutils.version}</version>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>org.jfree</groupId>-->
-<!--			<artifactId>jfreechart</artifactId>-->
-<!--			<version>${jfreechart.version}</version>-->
-<!--		</dependency>-->
 
 		<!-- Integration Test -->
 		<dependency>

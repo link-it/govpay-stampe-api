@@ -377,159 +377,195 @@ components:
           $ref: '#/components/schemas/Iban'
 
     # ==================== Receipt Schemas ====================
-    # Schema conforme a RicevutaTelematicaInput in govpayStampe.xsd
+
+    ReceiptOrganization:
+      type: object
+      description: Creditor organization data
+      required:
+        - fiscal_code
+        - business_name
+        - address
+        - location
+      properties:
+        fiscal_code:
+          type: string
+          maxLength: 16
+          description: Creditor fiscal code / VAT number
+          example: "01234567890"
+        business_name:
+          type: string
+          maxLength: 70
+          description: Creditor business name
+          example: "Comune di Test"
+        address:
+          type: string
+          maxLength: 70
+          description: Creditor address
+          example: "Via Roma, 1"
+        location:
+          type: string
+          maxLength: 70
+          description: Creditor location (postal code, city, province)
+          example: "00100 Roma (RM)"
+
+    Payer:
+      type: object
+      description: Payer data
+      required:
+        - fiscal_code
+        - full_name
+        - address
+        - location
+      properties:
+        fiscal_code:
+          type: string
+          maxLength: 16
+          description: Payer fiscal code
+          example: "RSSMRA80A01H501U"
+        full_name:
+          type: string
+          maxLength: 70
+          description: Payer full name or business name
+          example: "Mario Rossi"
+        address:
+          type: string
+          maxLength: 70
+          description: Payer address
+          example: "Viale dei Giardini, 00"
+        location:
+          type: string
+          maxLength: 70
+          description: Payer location (postal code, city, province)
+          example: "00000 Roma (RM)"
 
     Receipt:
       type: object
-      description: Input per la generazione della ricevuta telematica (mapping XSD RicevutaTelematicaInput)
+      description: Input for payment receipt generation
       required:
-        - logo_ente
-        - logo_pagopa
-        - oggetto_del_pagamento
-        - ente_denominazione
-        - indirizzo_ente
-        - luogo_ente
-        - cf_ente
-        - soggetto
-        - indirizzo_soggetto
-        - luogo_soggetto
-        - cf_soggetto
-        - istituto
-        - importo
-        - dataOperazione
-        - dataApplicativa
-        - stato
-        - IUV
-        - CCP
-        - versione_oggetto
-        - elenco_voci
+        - creditor_logo
+        - pagopa_logo
+        - payment_subject
+        - organization
+        - payer
+        - psp
+        - amount
+        - operation_date
+        - application_date
+        - status
+        - creditor_reference_id
+        - receipt_id
+        - object_version
+        - items
       properties:
-        logo_ente:
+        creditor_logo:
           type: string
-          description: Logo ente creditore in formato base64
+          description: Creditor logo in base64 format
           example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        logo_pagopa:
+        pagopa_logo:
           type: string
-          description: Logo pagoPA in formato base64
+          description: pagoPA logo in base64 format
           example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        oggetto_del_pagamento:
+        payment_subject:
           type: string
           maxLength: 140
-          description: Causale/oggetto del pagamento
+          description: Payment subject/description
           example: "Pagamento TARI 2024"
-        ente_denominazione:
+        organization:
+          $ref: '#/components/schemas/ReceiptOrganization'
+        payer:
+          $ref: '#/components/schemas/Payer'
+        psp:
           type: string
           maxLength: 70
-          description: Denominazione ente creditore
-          example: "Comune di Test"
-        indirizzo_ente:
-          type: string
-          maxLength: 70
-          description: Indirizzo ente creditore
-          example: "Via Roma, 1"
-        luogo_ente:
-          type: string
-          maxLength: 70
-          description: Luogo ente creditore (CAP, Citta, Provincia)
-          example: "00100 Roma (RM)"
-        cf_ente:
-          type: string
-          maxLength: 16
-          description: Codice fiscale/Partita IVA ente creditore
-          example: "01234567890"
-        soggetto:
-          type: string
-          maxLength: 70
-          description: Nome e cognome o ragione sociale del soggetto pagatore
-          example: "Mario Rossi"
-        indirizzo_soggetto:
-          type: string
-          maxLength: 70
-          description: Indirizzo soggetto pagatore
-          example: "Viale dei Giardini, 00"
-        luogo_soggetto:
-          type: string
-          maxLength: 70
-          description: Luogo soggetto pagatore (CAP, Citta, Provincia)
-          example: "00000 Roma (RM)"
-        cf_soggetto:
-          type: string
-          maxLength: 16
-          description: Codice fiscale soggetto pagatore
-          example: "RSSMRA80A01H501U"
-        istituto:
-          type: string
-          maxLength: 70
-          description: Nome del Prestatore Servizi di Pagamento (PSP)
+          description: Payment Service Provider name
           example: "Banca di Test S.p.A."
-        importo:
+        amount:
           type: number
           format: double
           minimum: 0.01
-          description: Importo totale pagato
+          description: Total payment amount
           example: 150.00
-        dataOperazione:
+        operation_date:
           type: string
-          description: Data e ora del pagamento
+          description: Payment date and time
           example: "15/01/2024 10:30:00"
-        dataApplicativa:
+        application_date:
           type: string
-          description: Data applicativa del pagamento
+          description: Application date
           example: "15/01/2024"
-        stato:
-          type: string
-          description: Esito del pagamento
-          example: "Eseguito"
-        IUV:
+        status:
+          $ref: '#/components/schemas/ReceiptStatus'
+        creditor_reference_id:
           type: string
           maxLength: 35
-          description: Identificativo Univoco Versamento
+          description: Creditor Reference Identifier (Identificativo Univoco Versamento)
           example: "01234567890123456"
-        CCP:
+        receipt_id:
           type: string
           maxLength: 35
-          description: Codice Contesto Pagamento
+          description: Receipt Identifier (Codice Contesto Pagamento)
           example: "0123456789012345678901234567890"
-        versione_oggetto:
-          type: string
-          description: Versione oggetto RT
-          example: "6.2.0"
-        elenco_voci:
+        object_version:
+          $ref: '#/components/schemas/ReceiptVersion'
+        items:
           type: array
-          description: Elenco delle singole voci di pagamento
+          description: List of payment items
           minItems: 1
           items:
-            $ref: '#/components/schemas/VoceRicevutaTelematicaInput'
+            $ref: '#/components/schemas/ReceiptItem'
 
-    VoceRicevutaTelematicaInput:
+    ReceiptItem:
       type: object
-      description: Singola voce della ricevuta telematica (mapping XSD VoceRicevutaTelematicaInput)
+      description: Single payment receipt item
       required:
-        - descrizione
-        - id_riscossione
-        - importo
-        - stato
+        - description
+        - iur
+        - amount
+        - status
       properties:
-        descrizione:
+        description:
           type: string
           maxLength: 140
-          description: Descrizione della voce di pagamento
+          description: Payment item description
           example: "TARI 2024 - Quota fissa"
-        id_riscossione:
+        iur:
           type: string
           maxLength: 35
-          description: Identificativo della riscossione
+          description: Unique Collection Identifier (Identificativo Univoco Riscossione)
           example: "1"
-        importo:
+        amount:
           type: number
           format: double
           minimum: 0.01
-          description: Importo della voce
+          description: Item amount
           example: 100.00
-        stato:
-          type: string
-          description: Stato della singola voce
-          example: "Eseguito"
+        status:
+          $ref: '#/components/schemas/ReceiptItemStatus'
+
+    ReceiptStatus:
+      type: string
+      description: Receipt payment outcome status
+      enum:
+        - EXECUTED
+        - NOT_EXECUTED
+        - PARTIALLY_EXECUTED
+        - EXPIRED
+        - PARTIALLY_EXPIRED
+
+    ReceiptItemStatus:
+      type: string
+      description: Receipt item status
+      enum:
+        - EXECUTED
+        - NOT_EXECUTED
+
+    ReceiptVersion:
+      type: string
+      description: RT object version (SANP version)
+      enum:
+        - SANP_240_V2
+        - SANP_240
+        - SANP_230
 
     # ==================== Common Schemas ====================
 

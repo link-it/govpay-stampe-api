@@ -88,6 +88,8 @@
 		<commons-lang3.version>3.20.0</commons-lang3.version>
 		 <!-- barcode4j -->
 		<barcode4j.version>2.1</barcode4j.version>
+		<!-- log4j fix CVE-2025-68161 -->
+		<log4j2.version>2.25.3</log4j2.version>
 
 		<owasp.falsePositives.dir>src/main/resources/owasp/falsePositives</owasp.falsePositives.dir>
 		<!-- owasp config -->

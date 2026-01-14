@@ -1,55 +1,38 @@
 openapi: 3.0.3
 
 info:
-  title: Stampa Avvisi pagoPA
-  version: 0.1.0
+  title: GovPay Stampe API
+  description: API per la generazione di avvisi di pagamento e ricevute pagoPA in formato PDF
+  version: 1.1.0
   contact:
     name: Link.it
     email: info@link.it
+
 servers:
-  - url: https://govhub.backoffice.it/api/v3
+  - url: https://govhub.backoffice.it/api/v1
     description: Sample Deployment URL (Not Actual)
+
+tags:
+  - name: PaymentNotice
+    description: Generazione avvisi di pagamento pagoPA
+  - name: Receipt
+    description: Generazione ricevute di pagamento pagoPA
+
 paths:
 
   '/standard':
     post:
+      tags:
+        - PaymentNotice
+      operationId: createPaymentNotice
       summary: Avviso di pagamento con e senza rate
+      description: Genera un avviso di pagamento pagoPA in formato PDF. Supporta rata unica, rate multiple, bollettino postale e formato bilingue.
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PaymentNotice'
-        required: true      
-      responses:
-        '201':
-          description: Avviso stampato
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        '400':
-          $ref: "#/components/responses/400BadRequest"
-        '401':
-          $ref: "#/components/responses/401Unauthorized"
-        '403':
-          $ref: "#/components/responses/403Forbidden"
-        '404':
-          $ref: "#/components/responses/404NotFound"
-        '503':
-          $ref: "#/components/responses/503ServiceUnavailable"
-        default:
-          $ref: "#/components/responses/ResponseDefault"        
-
-  '/cds_violation':
-    post:
-      summary: Violazione del Codice della Strada
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CdsViolation'
-        required: true      
+        required: true
       responses:
         '201':
           description: Avviso stampato
@@ -70,7 +53,75 @@ paths:
           $ref: "#/components/responses/503ServiceUnavailable"
         default:
           $ref: "#/components/responses/ResponseDefault"
-          
+
+  '/cds_violation':
+    post:
+      tags:
+        - PaymentNotice
+      operationId: createCdsViolationNotice
+      summary: Avviso per Violazione del Codice della Strada
+      description: Genera un avviso di pagamento per violazioni CDS con importo ridotto e scontato.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CdsViolation'
+        required: true
+      responses:
+        '201':
+          description: Avviso stampato
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: "#/components/responses/400BadRequest"
+        '401':
+          $ref: "#/components/responses/401Unauthorized"
+        '403':
+          $ref: "#/components/responses/403Forbidden"
+        '404':
+          $ref: "#/components/responses/404NotFound"
+        '503':
+          $ref: "#/components/responses/503ServiceUnavailable"
+        default:
+          $ref: "#/components/responses/ResponseDefault"
+
+  '/receipt':
+    post:
+      tags:
+        - Receipt
+      operationId: createReceipt
+      summary: Ricevuta di pagamento
+      description: Genera una ricevuta telematica di pagamento pagoPA in formato PDF.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Receipt'
+        required: true
+      responses:
+        '201':
+          description: Ricevuta stampata
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: "#/components/responses/400BadRequest"
+        '401':
+          $ref: "#/components/responses/401Unauthorized"
+        '403':
+          $ref: "#/components/responses/403Forbidden"
+        '404':
+          $ref: "#/components/responses/404NotFound"
+        '503':
+          $ref: "#/components/responses/503ServiceUnavailable"
+        default:
+          $ref: "#/components/responses/ResponseDefault"
+
 components:
   responses:
     '400BadRequest':
@@ -135,7 +186,7 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
           example:
-            detail: Request Can't be fulfilled at the moment.  
+            detail: Request Can't be fulfilled at the moment.
             status: 503
             title: Service Unavailable
             type: "https://www.rfc-editor.org/rfc/rfc9110.html#name-503-service-unavailable"
@@ -145,7 +196,10 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+
   schemas:
+    # ==================== Payment Notice Schemas ====================
+
     Creditor:
       type: object
       required:
@@ -179,6 +233,7 @@ components:
           type: string
           maxLength: 70
           example: "Autorizzazione n. 0000 del 00/00/0000"
+
     Debtor:
       type: object
       required:
@@ -201,7 +256,7 @@ components:
           type: string
           maxLength: 70
           example: "00000 Roma (RM)"
-          
+
     NoticeMetadata:
       type: object
       additionalProperties: false
@@ -235,7 +290,7 @@ components:
               $ref: '#/components/schemas/Languages'
             title:
               type: string
-              maxLength: 70            
+              maxLength: 70
           required:
             ["bilinguism", "language", "title"]
           example:
@@ -261,7 +316,7 @@ components:
               $ref: '#/components/schemas/Amount'
 
     PaymentNotice:
-      allOf:    
+      allOf:
         - $ref: '#/components/schemas/NoticeMetadata'
         - type: object
           properties:
@@ -271,6 +326,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Instalment'
+
     Iban:
       type: object
       required:
@@ -288,7 +344,7 @@ components:
           type: string
           maxLength: 70
           example: "Autorizzazione n. 0000 del 00/00/0000"
-                
+
     Instalment:
       allOf:
         - $ref: '#/components/schemas/Amount'
@@ -297,6 +353,7 @@ components:
           properties:
             instalment_number:
               type: integer
+
     Amount:
       type: object
       required:
@@ -319,6 +376,163 @@ components:
         iban:
           $ref: '#/components/schemas/Iban'
 
+    # ==================== Receipt Schemas ====================
+    # Schema conforme a RicevutaTelematicaInput in govpayStampe.xsd
+
+    Receipt:
+      type: object
+      description: Input per la generazione della ricevuta telematica (mapping XSD RicevutaTelematicaInput)
+      required:
+        - logo_ente
+        - logo_pagopa
+        - oggetto_del_pagamento
+        - ente_denominazione
+        - indirizzo_ente
+        - luogo_ente
+        - cf_ente
+        - soggetto
+        - indirizzo_soggetto
+        - luogo_soggetto
+        - cf_soggetto
+        - istituto
+        - importo
+        - dataOperazione
+        - dataApplicativa
+        - stato
+        - IUV
+        - CCP
+        - versione_oggetto
+        - elenco_voci
+      properties:
+        logo_ente:
+          type: string
+          description: Logo ente creditore in formato base64
+          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        logo_pagopa:
+          type: string
+          description: Logo pagoPA in formato base64
+          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        oggetto_del_pagamento:
+          type: string
+          maxLength: 140
+          description: Causale/oggetto del pagamento
+          example: "Pagamento TARI 2024"
+        ente_denominazione:
+          type: string
+          maxLength: 70
+          description: Denominazione ente creditore
+          example: "Comune di Test"
+        indirizzo_ente:
+          type: string
+          maxLength: 70
+          description: Indirizzo ente creditore
+          example: "Via Roma, 1"
+        luogo_ente:
+          type: string
+          maxLength: 70
+          description: Luogo ente creditore (CAP, Citta, Provincia)
+          example: "00100 Roma (RM)"
+        cf_ente:
+          type: string
+          maxLength: 16
+          description: Codice fiscale/Partita IVA ente creditore
+          example: "01234567890"
+        soggetto:
+          type: string
+          maxLength: 70
+          description: Nome e cognome o ragione sociale del soggetto pagatore
+          example: "Mario Rossi"
+        indirizzo_soggetto:
+          type: string
+          maxLength: 70
+          description: Indirizzo soggetto pagatore
+          example: "Viale dei Giardini, 00"
+        luogo_soggetto:
+          type: string
+          maxLength: 70
+          description: Luogo soggetto pagatore (CAP, Citta, Provincia)
+          example: "00000 Roma (RM)"
+        cf_soggetto:
+          type: string
+          maxLength: 16
+          description: Codice fiscale soggetto pagatore
+          example: "RSSMRA80A01H501U"
+        istituto:
+          type: string
+          maxLength: 70
+          description: Nome del Prestatore Servizi di Pagamento (PSP)
+          example: "Banca di Test S.p.A."
+        importo:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Importo totale pagato
+          example: 150.00
+        dataOperazione:
+          type: string
+          description: Data e ora del pagamento
+          example: "15/01/2024 10:30:00"
+        dataApplicativa:
+          type: string
+          description: Data applicativa del pagamento
+          example: "15/01/2024"
+        stato:
+          type: string
+          description: Esito del pagamento
+          example: "Eseguito"
+        IUV:
+          type: string
+          maxLength: 35
+          description: Identificativo Univoco Versamento
+          example: "01234567890123456"
+        CCP:
+          type: string
+          maxLength: 35
+          description: Codice Contesto Pagamento
+          example: "0123456789012345678901234567890"
+        versione_oggetto:
+          type: string
+          description: Versione oggetto RT
+          example: "6.2.0"
+        elenco_voci:
+          type: array
+          description: Elenco delle singole voci di pagamento
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/VoceRicevutaTelematicaInput'
+
+    VoceRicevutaTelematicaInput:
+      type: object
+      description: Singola voce della ricevuta telematica (mapping XSD VoceRicevutaTelematicaInput)
+      required:
+        - descrizione
+        - id_riscossione
+        - importo
+        - stato
+      properties:
+        descrizione:
+          type: string
+          maxLength: 140
+          description: Descrizione della voce di pagamento
+          example: "TARI 2024 - Quota fissa"
+        id_riscossione:
+          type: string
+          maxLength: 35
+          description: Identificativo della riscossione
+          example: "1"
+        importo:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Importo della voce
+          example: 100.00
+        stato:
+          type: string
+          description: Stato della singola voce
+          example: "Eseguito"
+
+    # ==================== Common Schemas ====================
+
     Languages:
       enum:
         - it
@@ -326,6 +540,7 @@ components:
         - de
         - fr
         - sl
+
     Problem:
       type: object
       additionalProperties: false
@@ -354,7 +569,7 @@ components:
           description: Short description of the occurred problem.
           maxLength: 255
           pattern: ^[ -~]+$
-          example: Service Unavailable        
+          example: Service Unavailable
         type:
           type: string
           description: Absolute URI for the problem description.

@@ -68,4 +68,16 @@ public class Costanti {
 
 	public static final String TIPO_RATA_SCONTATO = "scontato";
 	public static final String TIPO_RATA_RIDOTTO = "ridotto";
+	
+	// Ricevuta 
+	// root element elemento di input
+	public static final String RICEVUTA_TELEMATICA_ROOT_ELEMENT_NAME= "root";
+
+	public static final String RICEVUTA_TELEMATICA_TEMPLATE_JASPER = "RicevutaMae.jasper";
+	
+	public static final String PAGAMENTO_ESEGUITO = "Eseguito";
+	public static final String PAGAMENTO_NON_ESEGUITO = "Non eseguito";
+	public static final String PAGAMENTO_PARZIALMENTE_ESEGUITO = "Parzialmente eseguito";
+	public static final String DECORRENZA_TERMINI = "Decorrenza termini";
+	public static final String DECORRENZA_TERMINI_PARZIALE = "Decorrenza termini parziale";
 }

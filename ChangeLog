@@ -1,0 +1,55 @@
+2026-01-14  Giuliano Pintori <pintori@link.it>
+
+	Rilascio versione 1.1.0
+
+2026-01-14  Giuliano Pintori <pintori@link.it>
+
+	* Issue #14
+	Aggiunta funzionalità
+	Implementato servizio di generazione ricevute di pagamento pagoPA (endpoint POST /receipt).
+	Aggiunto RicevutaMapper per conversione da model OpenAPI a model JAXB.
+	Aggiunto RicevutaService per generazione PDF tramite JasperReports.
+	Aggiunti template Jasper RicevutaMae.jasper e RicevutaMae_elenco_voci.jasper.
+
+	* Issue #14
+	Aggiornamento OpenAPI
+	Allineata nomenclatura API ricevute a convenzioni inglesi coerenti con gli avvisi.
+	Introdotti oggetti annidati ReceiptOrganization e Payer per dati ente creditore e pagatore.
+	Aggiunte enum ReceiptStatus, ReceiptItemStatus e ReceiptVersion per validazione valori.
+	Rinominati campi: iuv->creditor_reference_id, ccp->receipt_id, id_riscossione->iur.
+
+	* Issue #14
+	Aggiunta funzionalità
+	Aggiunti test di validazione per ricevute di pagamento (UC_7_RicevutaFailTest).
+	43 test case per verifica campi obbligatori, vincoli di dimensione e valori enum.
+	Aggiunto test funzionale UC_6_RicevutaTest per verifica generazione PDF.
+
+	* Issue #14
+	Risoluzione vulnerabilità CVE-2025-68161
+	Aggiornata dipendenza log4j alla versione 2.25.3 per risolvere vulnerabilità DoS.
+	Aggiunta property log4j2.version nel pom.xml.
+
+	* Issue #14
+	Aggiornamento dipendenze
+	Aggiornato a Java 21 e Spring Boot 3.4.2.
+	Migrazione da javax.* a jakarta.* per compatibilità Jakarta EE.
+	Aggiornate dipendenze JasperReports, MapStruct e altre librerie.
+
+2025-07-15  Giuliano Pintori <pintori@link.it>
+
+	* Issue #10
+	Preparazione rilascio versione 1.1.0
+
+2025-06-20  Giuliano Pintori <pintori@link.it>
+
+	* Issue #3
+	Aggiunta funzionalità
+	Realizzato Dockerfile per containerizzazione del servizio stampe.
+	Configurazione multi-stage build per ottimizzazione immagine.
+
+2025-05-10  Giuliano Pintori <pintori@link.it>
+
+	* Rilascio iniziale versione 1.0.0
+	Servizio REST per generazione avvisi di pagamento pagoPA.
+	Supporto avvisi standard, bilingue e violazioni CDS.
+	Supporto bollettino postale PA.

@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import it.govpay.stampe.api.DefaultApi;
+import it.govpay.stampe.api.PaymentNoticeApi;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
@@ -30,52 +30,52 @@ import it.govpay.stampe.service.ViolazioneCdsService;
 import it.govpay.stampe.validator.SemanticValidator;
 
 @RestController
-public class StampeController implements DefaultApi{
-	
-	private static Logger logger = LoggerFactory.getLogger(StampeController.class);
-	
+public class PaymentNoticeController implements PaymentNoticeApi {
+
+	private static Logger logger = LoggerFactory.getLogger(PaymentNoticeController.class);
+
 	@Qualifier("labelAvvisiProperties")
 	@Autowired
 	LabelAvvisiProperties labelAvvisiProperties;
-	
+
 	@Autowired
 	ViolazioneCdsMapperImpl violazioneCdsMapper;
-	
+
 	@Autowired
 	AvvisoPagamentoMapperImpl avvisoPagamentoMapper;
-	
+
 	@Autowired
 	AvvisoPagamentoBilingueMapperImpl avvisoPagamentoBilingueMapper;
-	
+
 	@Autowired
 	ViolazioneCdsService violazioneCdsService;
-	
+
 	@Autowired
 	AvvisoSempliceService avvisoSempliceService;
-	
+
 	@Autowired
 	AvvisoPostaleService avvisoPostaleService;
-	
+
 	@Autowired
 	AvvisoBilingueService avvisoBilingueService;
-	
+
 	@Autowired
 	SemanticValidator semanticValidator;
 
 	@Override
-	public ResponseEntity<Resource> cdsViolationPost(@Valid @RequestBody CdsViolation cdsViolation) {
+	public ResponseEntity<Resource> createCdsViolationNotice(@Valid @RequestBody CdsViolation cdsViolation) {
 		logger.info("Creazione avviso di violazione codice della strada ...");
-		
+
 		// validazione semantica input
 		this.semanticValidator.validazioneSemanticaViolazioneCds(cdsViolation);
-		
+
 		// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 		String nomePdf = this.violazioneCdsMapper.nomePdf(cdsViolation);
-		
+
 		AvvisoPagamentoInput avvisoPagamentoInput = this.violazioneCdsMapper.toViolazioneAvvisoPagamentoInput(cdsViolation, labelAvvisiProperties);
-		
+
 		logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf...");
-		
+
 		byte[] creaAvviso = null;
 		if(avvisoPagamentoInput.getDiPoste() != null) {
 			logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf con bollettino postale...");
@@ -84,9 +84,9 @@ public class StampeController implements DefaultApi{
 			logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf senza bollettino postale...");
 			creaAvviso = this.violazioneCdsService.creaAvviso(avvisoPagamentoInput);
 		}
-        
+
 		logger.debug("Generazione del pdf [{}] completata.", nomePdf);
-		
+
         ByteArrayResource resource = new ByteArrayResource(creaAvviso);
 
         HttpHeaders headers = new HttpHeaders();
@@ -94,28 +94,28 @@ public class StampeController implements DefaultApi{
 		ContentDisposition contentDisposition = ContentDisposition.attachment().filename(nomePdf).build();
 		headers.setContentDisposition(contentDisposition );
         headers.setContentLength(creaAvviso.length);
-        
+
 		logger.info("Creazione avviso di violazione codice della strada completata.");
 
         return ResponseEntity.created(null).headers(headers).body(resource);
 	}
 
 	@Override
-	public ResponseEntity<Resource> standardPost(@Valid PaymentNotice paymentNotice) {
+	public ResponseEntity<Resource> createPaymentNotice(@Valid PaymentNotice paymentNotice) {
 		logger.info("Creazione avviso standard ...");
-		
+
 		// validazione semantica input
 		this.semanticValidator.validazioneSemanticaPaymentNotice(paymentNotice);
-		
+
 		byte[] creaAvviso = null;
 		String nomePdf = null;
 		// attualmente c'e' una divisione dei template senza bilinguismo
 		if(paymentNotice.getSecondLanguage() == null) {
 			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 			nomePdf = this.avvisoPagamentoMapper.nomePdf(paymentNotice);
-			
+
 			AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, labelAvvisiProperties);
-			
+
 			if(avvisoPagamentoInput.getDiPoste() != null) {
 				logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf con bollettino postale...");
 				creaAvviso = this.avvisoPostaleService.creaAvviso(avvisoPagamentoInput);
@@ -126,16 +126,16 @@ public class StampeController implements DefaultApi{
 		} else {
 			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 			nomePdf = this.avvisoPagamentoBilingueMapper.nomePdf(paymentNotice);
-			
+
 			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, labelAvvisiProperties);
-			
+
 			logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf bilingue...");
-			
+
 			creaAvviso = this.avvisoBilingueService.creaAvviso(avvisoPagamentoInput);
 		}
-		
+
 		logger.debug("Generazione del pdf [{}] completata.", nomePdf);
-		
+
         ByteArrayResource resource = new ByteArrayResource(creaAvviso);
 
         HttpHeaders headers = new HttpHeaders();
@@ -143,9 +143,9 @@ public class StampeController implements DefaultApi{
 		ContentDisposition contentDisposition = ContentDisposition.attachment().filename(nomePdf).build();
 		headers.setContentDisposition(contentDisposition );
         headers.setContentLength(creaAvviso.length);
-		
+
 		logger.info("Creazione avviso standard completata.");
-		
+
 		 return ResponseEntity.created(null).headers(headers).body(resource);
 	}
 }

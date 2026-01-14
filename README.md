@@ -334,6 +334,115 @@ L'avviso per la Violazione del Codice della strada deve contenere due importi ri
 }
 ```
 
+## Ricevute di Pagamento
+
+L'applicazione consente di generare i PDF delle ricevute di pagamento pagoPA.
+
+Il servizio e' disponibile alla url:
+
+``` html
+POST /receipt
+
+{
+	json ricevuta
+}
+```
+
+### Ricevuta standard
+
+Di seguito un esempio di richiesta per la generazione di una ricevuta di pagamento:
+
+``` json
+{
+  "creditor_logo": "base64encodedimage",
+  "pagopa_logo": "base64encodedimage",
+  "organization": {
+    "fiscal_code": "01234567890",
+    "business_name": "Comune di Test",
+    "address": "Via Roma, 1",
+    "location": "00100 Roma (RM)"
+  },
+  "payer": {
+    "fiscal_code": "RSSMRA80A01H501U",
+    "full_name": "Mario Rossi",
+    "address": "Viale dei Giardini, 00",
+    "location": "00000 Roma (RM)"
+  },
+  "payment_subject": "Pagamento TARI 2024",
+  "psp": "Banca di Test S.p.A.",
+  "amount": 150.00,
+  "operation_date": "15/01/2024 10:30:00",
+  "application_date": "15/01/2024",
+  "status": "EXECUTED",
+  "creditor_reference_id": "01234567890123456",
+  "receipt_id": "0123456789012345678901234567890",
+  "object_version": "SANP_230",
+  "items": [
+    {
+      "description": "TARI 2024 - Quota fissa",
+      "iur": "RF01234567890123456789012345",
+      "amount": 100.00,
+      "status": "EXECUTED"
+    },
+    {
+      "description": "TARI 2024 - Quota variabile",
+      "iur": "RF01234567890123456789012346",
+      "amount": 50.00,
+      "status": "EXECUTED"
+    }
+  ]
+}
+```
+
+### Campi della ricevuta
+
+| Campo | Descrizione | Obbligatorio |
+|-------|-------------|--------------|
+| `creditor_logo` | Logo dell'ente creditore in formato base64 | Si |
+| `pagopa_logo` | Logo pagoPA in formato base64 | Si |
+| `organization` | Dati dell'ente creditore | Si |
+| `organization.fiscal_code` | Codice fiscale dell'ente (11 caratteri) | Si |
+| `organization.business_name` | Denominazione dell'ente | Si |
+| `organization.address` | Indirizzo dell'ente | No |
+| `organization.location` | Localita' dell'ente | No |
+| `payer` | Dati del soggetto pagatore | Si |
+| `payer.fiscal_code` | Codice fiscale del pagatore | Si |
+| `payer.full_name` | Nome completo del pagatore | Si |
+| `payer.address` | Indirizzo del pagatore | No |
+| `payer.location` | Localita' del pagatore | No |
+| `payment_subject` | Causale del pagamento | Si |
+| `psp` | Nome del PSP che ha elaborato il pagamento | Si |
+| `amount` | Importo totale pagato | Si |
+| `operation_date` | Data e ora dell'operazione | Si |
+| `application_date` | Data di applicazione | Si |
+| `status` | Stato della ricevuta | Si |
+| `creditor_reference_id` | Identificativo Univoco Versamento (IUV) | Si |
+| `receipt_id` | Codice Contesto Pagamento (CCP) | Si |
+| `object_version` | Versione del tracciato pagoPA | Si |
+| `items` | Lista delle voci di pagamento | Si |
+| `items[].description` | Descrizione della voce | Si |
+| `items[].iur` | Identificativo Univoco Riscossione | Si |
+| `items[].amount` | Importo della voce | Si |
+| `items[].status` | Stato della voce | Si |
+
+### Valori enum
+
+**status** (stato ricevuta):
+- `EXECUTED`: Eseguito
+- `NOT_EXECUTED`: Non eseguito
+- `PARTIALLY_EXECUTED`: Parzialmente eseguito
+- `EXPIRED`: Decorrenza termini
+- `PARTIALLY_EXPIRED`: Decorrenza termini parziale
+
+**items[].status** (stato voce):
+- `EXECUTED`: Eseguito
+- `NOT_EXECUTED`: Non eseguito
+
+**object_version** (versione tracciato):
+- `SANP_240_V2`: Versione 2.4.0 v2
+- `SANP_240`: Versione 2.4.0
+- `SANP_230`: Versione 2.3.0
+
 ## Configurazione logging
 
 La configurazione del logging è gestita tramite le proprietà definite in `application.properties`:

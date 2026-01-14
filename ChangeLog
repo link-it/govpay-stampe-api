@@ -1,5 +1,9 @@
 2026-01-14  Giuliano Pintori <pintori@link.it>
 
+	Rilascio versione 1.1.0
+
+2026-01-14  Giuliano Pintori <pintori@link.it>
+
 	* Issue #14
 	Aggiunta funzionalità
 	Implementato servizio di generazione ricevute di pagamento pagoPA (endpoint POST /receipt).

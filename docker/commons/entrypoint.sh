@@ -36,7 +36,7 @@ fi
 ##############################################################################
 
 if [ -n "${STAMPE_TIME_ZONE}" ]; then
-    export stampe.time-zone="${STAMPE_TIME_ZONE}"
+    export STAMPE_TIME_ZONE="${STAMPE_TIME_ZONE}"
 fi
 
 ##############################################################################

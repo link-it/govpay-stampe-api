@@ -19,13 +19,14 @@ GovPay STAMPE API e un componente del progetto [GovPay](https://github.com/link-
 - Generazione avvisi con bollettino postale
 - Generazione avvisi bilingue (italiano + seconda lingua)
 - Generazione avvisi per violazioni CDS (importo ridotto e scontato)
+- Stampa delle ricevute di pagamento pagoPA
 - Health check e monitoraggio tramite Spring Boot Actuator
 - Documentazione OpenAPI/Swagger integrata
 
 ## Versioni disponibili
 
 - `latest` - ultima versione stabile
-- `1.0.0`
+- `1.1.0`
 
 Storico completo delle modifiche consultabile nel [ChangeLog](https://github.com/link-it/govpay-stampe-api/blob/main/ChangeLog) del progetto.
 

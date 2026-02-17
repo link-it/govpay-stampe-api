@@ -1,3 +1,16 @@
+2026-02-12  Giuliano Pintori <pintori@link.it>
+
+	Rilascio versione 1.2.0
+
+2026-02-12  Giuliano Pintori <pintori@link.it>
+
+	Migrazione parent POM a govpay-bom
+	Sostituito parent spring-boot-starter-parent con org.gov4j.govpay:govpay-bom:1.1.1.
+	Rimosse versioni dipendenze ora gestite dal BOM (mapstruct, commons-io,
+	jackson-databind-nullable, springdoc-openapi).
+	Rimosse property ridondanti ereditate dal BOM (jacoco, commons-lang3, log4j2).
+	Aggiunto repository central-snapshots per risolvere dipendenze SNAPSHOT.
+
 2026-01-14  Giuliano Pintori <pintori@link.it>
 
 	Rilascio versione 1.1.0

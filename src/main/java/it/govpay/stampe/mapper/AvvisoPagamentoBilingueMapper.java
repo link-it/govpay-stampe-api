@@ -2,6 +2,7 @@ package it.govpay.stampe.mapper;
 
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ import it.govpay.stampe.beans.Creditor;
 import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.ThresholdPayment;
+import it.govpay.stampe.beans.ThresholdType;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.costanti.LabelAvvisiCostanti;
 import it.govpay.stampe.model.v2.AvvisoPagamentoInput;
@@ -33,8 +36,10 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 		if(paymentNotice.getFull() != null) {
 			noticeNumber = paymentNotice.getFull().getNoticeNumber();
-		} else {
+		} else if(paymentNotice.getInstalments() != null && !paymentNotice.getInstalments().isEmpty()) {
 			noticeNumber = paymentNotice.getInstalments().get(0).getNoticeNumber();
+		} else if(paymentNotice.getReducedPayments() != null && !paymentNotice.getReducedPayments().isEmpty()) {
+			noticeNumber = paymentNotice.getReducedPayments().get(0).getNoticeNumber();
 		}
 
 		return paymentNotice.getCreditor().getFiscalCode() + "_" + noticeNumber + ".pdf";
@@ -91,7 +96,14 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 			avvisoPagamentoInput.setPagine(new PagineAvviso());
 
-			creaRatePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria); 
+			List<ThresholdPayment> reducedPayments = paymentNotice.getReducedPayments();
+			boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
+
+			if(hasReducedPayments) {
+				creaRateRidottePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+			} else {
+				creaRatePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+			}
 
 
 		}
@@ -256,6 +268,100 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		} else {
 			avvisoPagamentoInput.getEtichette().getItaliano().setNota2(labelNotaImporto);
 
+			if(labelLinguaSecondaria != null) {
+				avvisoPagamentoInput.getEtichette().getTraduzione().setNota2(labelNotaImportoTra);
+			}
+		}
+	}
+
+	@Mapping(target = "importo", source="amount")
+	@Mapping(target = "data", source="dueDate", qualifiedByName = "mapData")
+	@Mapping(target = "codiceAvviso", source="noticeNumber", qualifiedByName = "mapNumeroAvviso")
+	@Mapping(target = "qrCode", source="qrcode")
+	public RataAvviso thresholdPaymentToRataV2(ThresholdPayment thresholdPayment);
+
+	public default RataAvviso thresholdPaymentToRataWithLabels(Logger logger, ThresholdPayment thresholdPayment, Boolean postale,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria,
+			AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
+		RataAvviso rataAvviso = thresholdPaymentToRataV2(thresholdPayment);
+
+		int giorni = thresholdPayment.getThresholdDays();
+
+		if(thresholdPayment.getThresholdType() == ThresholdType.ENTRO) {
+			rataAvviso.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ENTRO, giorni));
+			rataAvviso.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_ENTRO_GIORNI, giorni));
+			if(labelLinguaSecondaria != null) {
+				rataAvviso.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ENTRO, giorni));
+				rataAvviso.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_ENTRO_GIORNI, giorni));
+			}
+		} else { // OLTRE
+			rataAvviso.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_OLTRE, giorni));
+			rataAvviso.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_OLTRE_GIORNI, giorni));
+			if(labelLinguaSecondaria != null) {
+				rataAvviso.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_OLTRE, giorni));
+				rataAvviso.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_OLTRE_GIORNI, giorni));
+			}
+		}
+
+		// NON impostare il campo data: la label contiene gia' l'informazione temporale
+
+		impostaLabelsPostaliNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria,
+				thresholdPayment.getNoticeNumber(), thresholdPayment.getIban(), thresholdPayment.getAmount(), avvisoPagamentoInput, creditor);
+
+		return rataAvviso;
+	}
+
+	public default void creaRateRidottePerAvvisoBilingue(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+
+		// rata unica
+		if(paymentNotice.getFull() != null) {
+			RataAvviso rataUnica = amountToRataWithLabels(logger, paymentNotice.getFull(), paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+
+			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+			pagina.setRata(rataUnica);
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+		}
+
+		// soglie ridotte: 2 per pagina (PaginaAvvisoDoppia)
+		List<ThresholdPayment> reducedPayments = new ArrayList<>(paymentNotice.getReducedPayments());
+
+		logger.debug("Inserisco le soglie ridotte due per pagina");
+		while(reducedPayments.size() > 1) {
+			ThresholdPayment v1 = reducedPayments.remove(0);
+			ThresholdPayment v2 = reducedPayments.remove(0);
+			PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
+			RataAvviso rataSx = thresholdPaymentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+			RataAvviso rataDx = thresholdPaymentToRataWithLabels(logger, v2, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+
+			pagina.getRata().add(rataSx);
+			pagina.getRata().add(rataDx);
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+		}
+
+		// soglia rimasta
+		if(reducedPayments.size() == 1) {
+			ThresholdPayment v1 = reducedPayments.remove(0);
+			PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
+			RataAvviso rataSx = thresholdPaymentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+			pagina.getRata().add(rataSx);
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+		}
+
+		// nota importo
+		String labelNotaImporto = labelLinguaPrincipale.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
+		String labelNotaImportoTra = null;
+		if(labelLinguaSecondaria != null) {
+			labelNotaImportoTra = labelLinguaSecondaria.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
+		}
+
+		if(paymentNotice.getFull() != null) {
+			avvisoPagamentoInput.getEtichette().getItaliano().setNota1(labelNotaImporto);
+			if(labelLinguaSecondaria != null) {
+				avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(labelNotaImportoTra);
+			}
+		} else {
+			avvisoPagamentoInput.getEtichette().getItaliano().setNota2(labelNotaImporto);
 			if(labelLinguaSecondaria != null) {
 				avvisoPagamentoInput.getEtichette().getTraduzione().setNota2(labelNotaImportoTra);
 			}

@@ -68,6 +68,8 @@ public class Costanti {
 
 	public static final String TIPO_RATA_SCONTATO = "scontato";
 	public static final String TIPO_RATA_RIDOTTO = "ridotto";
+	public static final String TIPO_RATA_ENTRO = "entro";
+	public static final String TIPO_RATA_OLTRE = "oltre";
 	
 	// Ricevuta 
 	// root element elemento di input

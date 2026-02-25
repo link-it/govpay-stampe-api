@@ -326,6 +326,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Instalment'
+            reduced_payments:
+              type: array
+              items:
+                $ref: '#/components/schemas/ThresholdPayment'
 
     Iban:
       type: object
@@ -353,6 +357,22 @@ components:
           properties:
             instalment_number:
               type: integer
+
+    ThresholdType:
+      type: string
+      enum: [ENTRO, OLTRE]
+
+    ThresholdPayment:
+      allOf:
+        - $ref: '#/components/schemas/Amount'
+        - type: object
+          required: [threshold_type, threshold_days]
+          properties:
+            threshold_type:
+              $ref: '#/components/schemas/ThresholdType'
+            threshold_days:
+              type: integer
+              minimum: 1
 
     Amount:
       type: object

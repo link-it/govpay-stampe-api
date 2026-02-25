@@ -18,6 +18,8 @@ import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.beans.NoticeMetadataSecondLanguage;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.ThresholdPayment;
+import it.govpay.stampe.beans.ThresholdType;
 import it.govpay.stampe.test.costanti.Costanti;
 
 @Component
@@ -178,6 +180,78 @@ public class AvvisiPagamentoFactory {
 		return paymentNotice;
 	}
 	
+	public PaymentNotice creaPaymentNoticeConSoglie(int numThresholds, boolean rataUnica, boolean postale, boolean bilingue) {
+		PaymentNotice paymentNotice = new PaymentNotice();
+		paymentNotice.setLanguage(Languages.IT);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("Avviso di pagamento con "+numThresholds+" soglie");
+		if(rataUnica)
+			sb.append(" e rata unica");
+
+		paymentNotice.setTitle(sb.toString());
+
+		Creditor creditor = new Creditor();
+		creditor.setCbillCode("ABC12");
+		creditor.setFiscalCode(Costanti.ID_DOMINIO_1);
+		creditor.setBusinessName("Ente Creditore Test");
+		creditor.setInfoLine1("Tel: 00 1234 5678 - Fax: 00 1234 5678");
+		creditor.setInfoLine2("pec: protocollo.generale@pec.entecreditore.it");
+		paymentNotice.setCreditor(creditor);
+
+		Debtor debtor = new Debtor();
+		debtor.setFiscalCode("RSSMRA50A01A110X");
+		debtor.setFullName("Mario Rossi");
+		debtor.setAddressLine1("Viale Monterosa 11Bis");
+		debtor.setAddressLine2("340 Roma (RM)");
+		paymentNotice.setDebtor(debtor);
+
+		paymentNotice.setPostal(postale);
+
+		if(rataUnica) {
+			String numeroAvviso = this.generaNumeroAvviso();
+			Amount full = new Amount();
+			full.setAmount(Double.valueOf(200.00));
+			full.setDueDate(LocalDate.now());
+			full.setNoticeNumber(numeroAvviso);
+			full.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|20000");
+			full.setIban(this.creaIban());
+			paymentNotice.setFull(full);
+		}
+
+		List<ThresholdPayment> soglie = new ArrayList<>();
+		ThresholdType[] tipi = {ThresholdType.ENTRO, ThresholdType.OLTRE, ThresholdType.ENTRO};
+		int[] giorniDefault = {30, 60, 90};
+		double[] importiDefault = {100.00, 150.00, 180.00};
+
+		for (int i = 0; i < numThresholds; i++) {
+			String numeroAvviso = this.generaNumeroAvviso();
+			ThresholdPayment tp = new ThresholdPayment();
+			tp.setAmount(Double.valueOf(importiDefault[i % importiDefault.length]));
+			tp.setDueDate(LocalDate.now());
+			tp.setNoticeNumber(numeroAvviso);
+			tp.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|" + (int)(importiDefault[i % importiDefault.length] * 100));
+			tp.setIban(this.creaIban());
+			tp.setThresholdType(tipi[i % tipi.length]);
+			tp.setThresholdDays(giorniDefault[i % giorniDefault.length]);
+			soglie.add(tp);
+		}
+
+		paymentNotice.setReducedPayments(soglie);
+
+		paymentNotice.setFirstLogo(new ByteArrayResource(this.logoEnte.getBytes()));
+
+		if(bilingue) {
+			NoticeMetadataSecondLanguage secondLanguage = new NoticeMetadataSecondLanguage();
+			secondLanguage.setBilinguism(true);
+			secondLanguage.setLanguage(Languages.SL);
+			secondLanguage.setTitle(sb.toString() + " nella seconda lingua");
+			paymentNotice.setSecondLanguage(secondLanguage);
+		}
+
+		return paymentNotice;
+	}
+
 	public String generaNumeroAvviso() {
         Random random = new Random();
         StringBuilder stringBuilder = new StringBuilder();

@@ -1,6 +1,7 @@
 package it.govpay.stampe.mapper;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +13,10 @@ import it.govpay.stampe.beans.Creditor;
 import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.ThresholdPayment;
+import it.govpay.stampe.beans.ThresholdType;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
+import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.model.v1.PaginaAvvisoDoppia;
 import it.govpay.stampe.model.v1.PaginaAvvisoMultipla;
@@ -30,8 +34,10 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		if(paymentNotice.getFull() != null) {
 			noticeNumber = paymentNotice.getFull().getNoticeNumber();
-		} else {
+		} else if(paymentNotice.getInstalments() != null && !paymentNotice.getInstalments().isEmpty()) {
 			noticeNumber = paymentNotice.getInstalments().get(0).getNoticeNumber();
+		} else if(paymentNotice.getReducedPayments() != null && !paymentNotice.getReducedPayments().isEmpty()) {
+			noticeNumber = paymentNotice.getReducedPayments().get(0).getNoticeNumber();
 		}
 
 		return paymentNotice.getCreditor().getFiscalCode() + "_" + noticeNumber + ".pdf";
@@ -45,7 +51,16 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		avvisoPagamentoInput.setPagine(new PagineAvviso());
 
-		if(postal != null && postal.booleanValue()) { // avviso postale
+		List<ThresholdPayment> reducedPayments = paymentNotice.getReducedPayments();
+		boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
+
+		if(hasReducedPayments) {
+			if(postal != null && postal.booleanValue()) {
+				creaRateRidottePerAvvisoPostale(logger, paymentNotice, avvisoPagamentoInput);
+			} else {
+				creaRateRidottePerAvvisoSemplice(logger, paymentNotice, avvisoPagamentoInput);
+			}
+		} else if(postal != null && postal.booleanValue()) { // avviso postale
 			creaRatePerAvvisoPostale(logger, paymentNotice, avvisoPagamentoInput);
 		} else { // avviso semplice
 			creaRatePerAvvisoSemplice(logger, paymentNotice, avvisoPagamentoInput);
@@ -231,6 +246,117 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		}
 
 		avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+	}
+
+	@Mapping(target = "importo", source="amount")
+	@Mapping(target = "data", source="dueDate", qualifiedByName = "mapData")
+	@Mapping(target = "codiceAvviso", source="noticeNumber", qualifiedByName = "mapNumeroAvviso")
+	@Mapping(target = "qrCode", source="qrcode")
+	public RataAvviso thresholdPaymentToRataBase(ThresholdPayment thresholdPayment);
+
+	public default RataAvviso thresholdPaymentToRata(ThresholdPayment thresholdPayment, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
+		RataAvviso rataAvviso = thresholdPaymentToRataBase(thresholdPayment);
+
+		// imposta tipo e giorni per la soglia
+		rataAvviso.setTipo(thresholdPayment.getThresholdType() == ThresholdType.ENTRO ? Costanti.TIPO_RATA_ENTRO : Costanti.TIPO_RATA_OLTRE);
+		rataAvviso.setGiorni(java.math.BigInteger.valueOf(thresholdPayment.getThresholdDays()));
+
+		if(postale != null && postale.booleanValue()){
+			Iban iban = thresholdPayment.getIban();
+			String noticeNumber = thresholdPayment.getNoticeNumber();
+			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
+			String cfEnte = avvisoPagamentoInput.getCfEnte();
+			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC,
+					thresholdPayment.getAmount().doubleValue(),
+						cfEnte,
+						avvisoPagamentoInput.getCfDestinatario(),
+						avvisoPagamentoInput.getNomeCognomeDestinatario(),
+						avvisoPagamentoInput.getOggettoDelPagamento()));
+			rataAvviso.setNumeroCcPostale(numeroCC);
+			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
+
+			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
+			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
+			else
+				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
+		}
+
+		return rataAvviso;
+	}
+
+	public default void creaRateRidottePerAvvisoSemplice(Logger log, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput) {
+		// rata unica
+		RataAvviso rataUnica = null;
+		if(paymentNotice.getFull() != null) {
+			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
+		}
+
+		List<ThresholdPayment> reducedPayments = new ArrayList<>(paymentNotice.getReducedPayments());
+		log.debug("Numero soglie ridotte: [{}]", reducedPayments.size());
+
+		if(reducedPayments.size() == 2) {
+			log.debug("Layout pagina doppia per soglie ridotte");
+			ThresholdPayment v1 = reducedPayments.remove(0);
+			ThresholdPayment v2 = reducedPayments.remove(0);
+
+			PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
+			pagina.getRata().add(thresholdPaymentToRata(v1, false, avvisoPagamentoInput, null));
+			pagina.getRata().add(thresholdPaymentToRata(v2, false, avvisoPagamentoInput, null));
+
+			if(rataUnica != null) {
+				pagina.setUnica(rataUnica);
+			}
+
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+		} else if(reducedPayments.size() == 3) {
+			log.debug("Layout pagina tripla per soglie ridotte");
+			ThresholdPayment v1 = reducedPayments.remove(0);
+			ThresholdPayment v2 = reducedPayments.remove(0);
+			ThresholdPayment v3 = reducedPayments.remove(0);
+
+			PaginaAvvisoTripla pagina = new PaginaAvvisoTripla();
+			pagina.getRata().add(thresholdPaymentToRata(v1, false, avvisoPagamentoInput, null));
+			pagina.getRata().add(thresholdPaymentToRata(v2, false, avvisoPagamentoInput, null));
+			pagina.getRata().add(thresholdPaymentToRata(v3, false, avvisoPagamentoInput, null));
+
+			if(rataUnica != null) {
+				pagina.setUnica(rataUnica);
+			}
+
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+		} else if(reducedPayments.size() == 1) {
+			// singola soglia: se c'e' anche rata unica, li mettiamo in una doppia
+			if(rataUnica != null) {
+				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
+				pagina.getRata().add(rataUnica);
+				pagina.getRata().add(thresholdPaymentToRata(reducedPayments.remove(0), false, avvisoPagamentoInput, null));
+				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+			} else {
+				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+				pagina.setRata(thresholdPaymentToRata(reducedPayments.remove(0), false, avvisoPagamentoInput, null));
+				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+			}
+		}
+	}
+
+	public default void creaRateRidottePerAvvisoPostale(Logger log, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput) {
+		// rata unica
+		if(paymentNotice.getFull() != null) {
+			RataAvviso rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
+
+			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+			pagina.setRata(rataUnica);
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+		}
+
+		// soglie ridotte: ogni soglia in una pagina singola postale
+		List<ThresholdPayment> reducedPayments = new ArrayList<>(paymentNotice.getReducedPayments());
+		for(ThresholdPayment tp : reducedPayments) {
+			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+			pagina.setRata(thresholdPaymentToRata(tp, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+		}
 	}
 
 	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")

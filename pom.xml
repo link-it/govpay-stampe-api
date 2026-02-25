@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.gov4j.govpay</groupId>
 		<artifactId>govpay-bom</artifactId>
-		<version>1.1.1</version>
+		<version>1.1.2</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>it.govpay.stampe</groupId>
@@ -621,6 +621,11 @@
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
 				<version>${owasp.plugin.version}</version>
+				<configuration>
+					<suppressionFiles>
+						<suppressionFile>${owasp.falsePositives.dir}/CVE-2025-10492.xml</suppressionFile>
+					</suppressionFiles>
+				</configuration>
 				<executions>
 					<execution>
 						<id>check owasp</id>
@@ -629,9 +634,6 @@
 							<autoUpdate>${owasp.plugin.autoUpdate}</autoUpdate>
 							<failBuildOnCVSS>${owasp.plugin.failBuildOnCVSS}</failBuildOnCVSS>
 							<format>ALL</format>
-							<suppressionFiles>
-                            	<suppressionFile>${owasp.falsePositives.dir}/CVE-2025-10492.xml</suppressionFile>
-                            </suppressionFiles>
                             <nvdApiDelay>120000</nvdApiDelay><!-- 2 minuti -->
 							<nvdMaxRetryCount>3</nvdMaxRetryCount> <!-- 3 max tentativi visto il timeout alto -->
 						</configuration>

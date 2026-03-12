@@ -1,3 +1,14 @@
+2026-03-12  Giuliano Pintori <pintori@link.it>
+
+	Rilascio versione 1.2.1
+
+2026-03-12  Giuliano Pintori <pintori@link.it>
+
+	Correzione packaging
+	Aggiunta esecuzione esplicita del goal repackage di spring-boot-maven-plugin
+	per generare un JAR eseguibile. Necessario perché il parent POM govpay-bom
+	non eredita la configurazione automatica di spring-boot-starter-parent.
+
 2026-02-25  Giuliano Pintori <pintori@link.it>
 
 	* Issue #7

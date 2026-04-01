@@ -1,3 +1,14 @@
+2026-03-30  Giuliano Pintori <pintori@link.it>
+
+	Rilascio versione 1.2.2
+
+2026-03-30  Giuliano Pintori <pintori@link.it>
+
+	Rimossa configurazione logback.xml per consentire la gestione del logging
+	tramite variabili d'ambiente Spring Boot (LOGGING_FILE_NAME, rolling policy, ecc.).
+	Rimossi test di validazione lunghezza campo title non più applicabili
+	(UC_1_10, UC_3_10, UC_3_33).
+
 2026-03-12  Giuliano Pintori <pintori@link.it>
 
 	Rilascio versione 1.2.1

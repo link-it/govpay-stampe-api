@@ -212,31 +212,6 @@ class UC_3_AvvisoStandardFailTest {
 	}
 	
 	@Test
-	void UC_3_10_AvvisoStandard_InvalidTitleSize() throws Exception {
-		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
-		avvisoRataUnica.setTitle(Costanti.STRING_256);
-		
-		String body = mapper.writeValueAsString(avvisoRataUnica);
-
-		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
-				.content(body)
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest())
-				.andReturn();
-
-		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
-        JsonObject problem = reader.readObject();
-        assertNotNull(problem.getString("type"));
-        assertNotNull(problem.getString("title"));
-        assertNotNull(problem.getString("detail"));
-        assertEquals(400, problem.getInt("status"));
-        assertEquals("Bad Request", problem.getString("title"));
-        assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'title': rejected value"));
-        assertTrue(problem.getString("detail").contains("size must be between 0 and 70"));
-        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
-
-	}
-	
-	@Test
 	void UC_3_11_AvvisoStandard_MissingCreditorCF() throws Exception {
 		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
 		avvisoRataUnica.getCreditor().setFiscalCode(null);
@@ -774,31 +749,6 @@ class UC_3_AvvisoStandardFailTest {
         assertEquals("Bad Request", problem.getString("title"));
         assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'secondLanguage.bilinguism': rejected value [null]; must not be null"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
-	}
-	
-	@Test
-	void UC_3_33_AvvisoStandard_InvalidSecondLanguageTitleSize() throws Exception {
-		PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
-		avvisoRataUnica.getSecondLanguage().setTitle(Costanti.STRING_256);
-		
-		String body = mapper.writeValueAsString(avvisoRataUnica);
-
-		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
-				.content(body)
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest())
-				.andReturn();
-
-		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
-        JsonObject problem = reader.readObject();
-        assertNotNull(problem.getString("type"));
-        assertNotNull(problem.getString("title"));
-        assertNotNull(problem.getString("detail"));
-        assertEquals(400, problem.getInt("status"));
-        assertEquals("Bad Request", problem.getString("title"));
-        assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'secondLanguage.title': rejected value"));
-        assertTrue(problem.getString("detail").contains("size must be between 0 and 70"));
-        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
-
 	}
 	
 	@Test

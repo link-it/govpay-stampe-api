@@ -279,7 +279,6 @@ components:
           format: binary
         title:
           type: string
-          maxLength: 70
           example: "Avviso di pagamento"
         second_language:
           type: object
@@ -290,7 +289,6 @@ components:
               $ref: '#/components/schemas/Languages'
             title:
               type: string
-              maxLength: 70
           required:
             ["bilinguism", "language", "title"]
           example:

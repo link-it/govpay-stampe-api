@@ -1,3 +1,12 @@
+2026-04-20  Giuliano Pintori <pintori@link.it>
+
+	Pipeline CI
+	Aggiunto job osv-scan in .github/workflows/maven.yml basato sul reusable
+	workflow google/osv-scanner-action@v2.3.5 per la scansione delle vulnerabilità
+	sulle dipendenze dichiarate in pom.xml.
+	Il job viene eseguito su push al branch main e sui tag (o forzando
+	FORCE_OSV_JOB) e blocca il job release, che ora dipende da [ build, osv-scan ].
+
 2026-03-30  Giuliano Pintori <pintori@link.it>
 
 	Rilascio versione 1.2.2

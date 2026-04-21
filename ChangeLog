@@ -1,5 +1,10 @@
 2026-04-21  Giuliano Pintori <pintori@link.it>
 
+	Aggiornamento dipendenze
+	Aggiornato parent POM govpay-bom dalla versione 1.1.2 alla 1.1.3-SNAPSHOT.
+
+2026-04-21  Giuliano Pintori <pintori@link.it>
+
 	Pipeline CI
 	Rivista la gestione della cache del DB OWASP Dependency-Check in
 	.github/workflows/maven.yml: chiave cache basata sulla data corrente

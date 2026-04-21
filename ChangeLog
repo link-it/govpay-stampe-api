@@ -1,3 +1,18 @@
+2026-04-21  Giuliano Pintori <pintori@link.it>
+
+	Pipeline CI
+	Rivista la gestione della cache del DB OWASP Dependency-Check in
+	.github/workflows/maven.yml: chiave cache basata sulla data corrente
+	(invece che su github.sha), aggiornato actions/cache a v5 e aggiunto
+	flag -DautoUpdate=false in caso di cache-hit sulla chiave giornaliera
+	per evitare il download completo del DB NVD a ogni esecuzione.
+	Aggiunto nuovo workflow .github/workflows/refresh-owasp-db.yml che
+	aggiorna il DB NVD ogni notte alle 03:00 UTC (o on-demand) così la
+	pipeline principale trova sempre una cache calda.
+	Allineate le versioni delle GitHub Actions a govpay-bom:
+	actions/checkout@v6, actions/setup-java@v5, actions/upload-artifact@v7
+	e actions/download-artifact@v7.
+
 2026-04-20  Giuliano Pintori <pintori@link.it>
 
 	Pipeline CI

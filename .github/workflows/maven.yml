@@ -12,7 +12,7 @@ on:
   push:
     branches: [ "main" ]
     tags:
-      - '*'  # Trigger per tutti i tag 
+      - '*'  # Trigger per tutti i tag
   pull_request:
     branches: [ "main" ]
 
@@ -29,7 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
       with:
-        fetch-depth: 0  # Clona tutta la history Git 
+        fetch-depth: 0  # Clona tutta la history Git
     - name: Set timezone to Europe/Rome
       run: sudo timedatectl set-timezone Europe/Rome
     - name: Set up JDK 21
@@ -98,8 +98,8 @@ jobs:
         cd target/site
         zip -r ../jacoco-html-report.zip jacoco
         cd ../../
-        ls -lh target/  
-    
+        ls -lh target/
+
     - name: Copy dependencies
       run: |
         mkdir -p target/dependency
@@ -162,6 +162,9 @@ jobs:
         .
         --lockfile
         ./pom.xml
+        --allow-no-lockfiles
+        --config
+        ./src/main/resources/osv/osv-scanner.toml
 
   release:
     runs-on: ubuntu-latest

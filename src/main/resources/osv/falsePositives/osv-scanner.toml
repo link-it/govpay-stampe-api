@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "GHSA-7c3f-cg9x-f3gr"
+reason = "False positive: jasperreports used only for PDF rendering in offline context, not exposed to untrusted input"

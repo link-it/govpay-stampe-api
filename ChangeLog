@@ -1,3 +1,15 @@
+2026-04-23  Giuliano Pintori <pintori@link.it>
+
+	Pipeline CI
+	Ristrutturato il job release in .github/workflows/maven.yml per raccogliere
+	tutti i report (OWASP Dependency-Check, JaCoCo, OSV Scanner SARIF,
+	third-party-licenses) in un unico archivio release-reports-<tag>.zip,
+	assieme a un file <tag>_actions_run.txt con il link alla pipeline run.
+	Aggiunto download dell'artifact "OSV Scanner SARIF file" e impostato
+	results-file-name: osv-report.sarif nel job osv-scan.
+	Rimosso il prefisso 'be-' da matrix-property nel job osv-scan.
+	La GitHub release ora allega solo WAR, JAR e release-reports-<tag>.zip.
+
 2026-04-21  Giuliano Pintori <pintori@link.it>
 
 	Aggiornamento dipendenze

@@ -1,3 +1,14 @@
+2026-04-24  Giuliano Pintori <pintori@link.it>
+
+	Risoluzione vulnerabilità GHSA-2rwm-xv5j-777p
+	Sostituita la dipendenza di test org.glassfish:javax.json:1.1.4 (non più
+	mantenuta, segnalata da OSV Scanner tramite alias CPE come
+	org.eclipse.parsson:parsson:1.0.0) con org.eclipse.parsson:parsson:1.1.7.
+	Aggiornati gli import nei test UC_1_ViolazioneCdsFailTest,
+	UC_3_AvvisoStandardFailTest, UC_7_RicevutaFailTest e
+	UC_11_AvvisoRidottoFailTest da javax.json.* a jakarta.json.* per
+	allineamento a Jakarta EE.
+
 2026-04-23  Giuliano Pintori <pintori@link.it>
 
 	Pipeline CI

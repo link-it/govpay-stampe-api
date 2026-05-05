@@ -29,13 +29,10 @@ LICENSE_COMPATIBILITY = {
     'MIT License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'MIT'},
     'The MIT License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'MIT'},
     'MIT': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'MIT'},
-    'MIT-0': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'MIT-0'},
 
     # BSD variants
     'BSD License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD'},
-    'BSD License 2.0': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD-2-Clause'},
     'BSD 3-Clause License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD-3-Clause'},
-    'BSD 3-clause License w/nuclear disclaimer': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD-3-Clause'},
     'BSD-3-Clause': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD-3-Clause'},
     'The BSD License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD'},
     'New BSD License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'BSD-3-Clause'},
@@ -69,7 +66,6 @@ LICENSE_COMPATIBILITY = {
 
     # LGPL - compatibile con GPLv3 e Enterprise
     'GNU Lesser General Public License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'LGPL'},
-    'GNU Lesser General Public Licence': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'LGPL'},  # UK spelling
     'Lesser General Public License, version 3 or greater': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'LGPL-3.0+'},
     'LGPL 2.1': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'LGPL-2.1'},
     'GNU Lesser General Public License, Version 2.1': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'LGPL-2.1'},
@@ -112,8 +108,6 @@ LICENSE_COMPATIBILITY = {
     # CDDL with GPL dual licenses (can choose either license, so enterprise safe)
     'CDDL+GPL License': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CDDL+GPL'},
     'CDDL/GPLv2+CE': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CDDL/GPL-2.0-with-CE'},
-    'CDDL + GPLv2 with classpath exception': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CDDL/GPL-2.0-with-CE'},
-    'Dual license consisting of the CDDL v1.1 and GPL v2': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CDDL+GPL'},
 
     # Multi-license (Apache + CDDL + EPL) - used by Tomcat Servlet API
     'Apache License, Version 2.0 and Common Development And Distribution License (CDDL) Version 1.0 and Eclipse Public License - v 2.0': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'Apache-2.0+CDDL+EPL-2.0'},
@@ -135,6 +129,12 @@ LICENSE_COMPATIBILITY = {
     'Public Domain, per Creative Commons CC0': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CC0-1.0'},
     'CC0': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CC0-1.0'},
 
+    # MIT-0 (MIT No Attribution)
+    'MIT-0': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'MIT-0'},
+
+    # CDDL + GPLv2 with classpath exception
+    'CDDL + GPLv2 with classpath exception': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'CDDL/GPL-2.0-with-CE'},
+
     # Oracle Free Use Terms and Conditions (FUTC) - used by Oracle JDBC drivers
     'Oracle Free Use Terms and Conditions (FUTC)': {'gplv3_compatible': True, 'enterprise_safe': True, 'category': 'Oracle-FUTC'},
 }
@@ -153,19 +153,18 @@ def infer_license_from_project_knowledge(group_id, artifact_id):
     This is a fallback for artifacts from major projects with established licensing.
     Returns a license dict or None.
     """
-    # Well-known artifacts with missing POM license info
-    known_artifacts = {
+    # Apache projects - these are well-known Apache artifacts with missing POM license info
+    apache_artifacts = {
         'xalan:xalan': {'name': 'Apache License, Version 2.0', 'url': 'https://www.apache.org/licenses/LICENSE-2.0', 'note': 'Apache Xalan project'},
         'xalan:serializer': {'name': 'Apache License, Version 2.0', 'url': 'https://www.apache.org/licenses/LICENSE-2.0', 'note': 'Apache Xalan project'},
         'xerces:xercesImpl': {'name': 'Apache License, Version 2.0', 'url': 'https://www.apache.org/licenses/LICENSE-2.0', 'note': 'Apache Xerces project'},
         'xml-apis:xml-apis': {'name': 'Apache License, Version 2.0', 'url': 'https://www.apache.org/licenses/LICENSE-2.0', 'note': 'Apache XML Commons project'},
-        'net.sourceforge.barbecue:barbecue': {'name': 'BSD License', 'url': 'https://opensource.org/licenses/BSD-3-Clause', 'note': 'Barbecue barcode library'},
     }
 
     # Check exact match
     key = f"{group_id}:{artifact_id}"
-    if key in known_artifacts:
-        lic_info = known_artifacts[key]
+    if key in apache_artifacts:
+        lic_info = apache_artifacts[key]
         print(f"  ✓ License inferred from project knowledge: {lic_info['name']} ({lic_info['note']})")
         return [{
             'name': lic_info['name'],

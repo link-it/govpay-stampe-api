@@ -1,3 +1,33 @@
+2026-05-05  Giuliano Pintori <pintori@link.it>
+
+	Rilascio versione 1.2.3
+
+2026-05-05  Giuliano Pintori <pintori@link.it>
+
+	Aggiornamento dipendenze
+	Aggiornato parent POM govpay-bom dalla versione 1.1.3-SNAPSHOT alla 1.1.3.
+
+2026-05-05  Giuliano Pintori <pintori@link.it>
+
+	Pipeline CI
+	Allineata la pipeline .github/workflows/maven.yml alle ultime modifiche di
+	govpay-fdr-batch: cleanup di header e commenti inline, aggiunta di banner
+	di sezione e formattazione uniforme con righe vuote tra gli step,
+	semplificato il log della verifica NVD_API_KEY.
+	Rimossi dal job osv-scan i flag --allow-no-lockfiles e --config che
+	puntavano a un path inesistente (./src/main/resources/osv/osv-scanner.toml).
+	Aggiunto nuovo job sbom che genera la SBOM CycloneDX (json + xml) tramite
+	cyclonedx-maven-plugin (schema 1.6) e pubblica l'artifact sbom-report;
+	il job è gated su push a main / tag con override via FORCE_SBOM_JOB e
+	disabilitabile con DISABLE_SBOM_JOB.
+	Il job release ora dipende da [ build, osv-scan, sbom ], scarica l'artifact
+	sbom-report e lo include nel ZIP release-reports-<tag>.zip insieme agli
+	altri report.
+	Aggiornato .github/workflows/scripts/analyze_licenses.py: rinominata la
+	mappa known_artifacts in apache_artifacts (rimosso barbecue, ora coperto
+	dalle eccezioni POM), riorganizzate alcune voci della tabella delle
+	licenze note.
+
 2026-04-24  Giuliano Pintori <pintori@link.it>
 
 	Risoluzione vulnerabilità GHSA-2rwm-xv5j-777p

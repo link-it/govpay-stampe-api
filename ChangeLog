@@ -4,6 +4,18 @@
 
 2026-05-05  Giuliano Pintori <pintori@link.it>
 
+	Pipeline CI
+	Ripristinate in .github/workflows/scripts/analyze_licenses.py le voci di
+	licenza rimosse durante l'allineamento a govpay-fdr-batch ma necessarie
+	alle dipendenze di stampe-api: 'BSD License 2.0' (jaxen),
+	'BSD 3-clause License w/nuclear disclaimer' (jai-imageio-core),
+	'GNU Lesser General Public Licence' UK spelling (jfree jcommon).
+	Reintegrato 'net.sourceforge.barbecue:barbecue' nel dict di artifact noti
+	con licenza inferita (BSD), rinominato da apache_artifacts a
+	known_artifacts per accomodare anche artifact non-Apache.
+
+2026-05-05  Giuliano Pintori <pintori@link.it>
+
 	Aggiornamento dipendenze
 	Aggiornato parent POM govpay-bom dalla versione 1.1.3-SNAPSHOT alla 1.1.3.
 

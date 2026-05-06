@@ -1,3 +1,15 @@
+2026-05-06  Giuliano Pintori <pintori@link.it>
+
+	Pipeline CI
+	Reintrodotto nel job osv-scan di .github/workflows/maven.yml il flag
+	--config ./src/main/resources/osv/falsePositives/osv-scanner.toml per
+	caricare le eccezioni OSV. Il flag era stato rimosso durante l'allineamento
+	a govpay-fdr-batch (path originale errato: osv/osv-scanner.toml invece di
+	osv/falsePositives/osv-scanner.toml); ora abilita correttamente l'eccezione
+	GHSA-7c3f-cg9x-f3gr (jasperreports 6.21.5, deserializzazione Java) classificata
+	come falso positivo: i template .jasper sono bundlati nel JAR e l'input
+	proviene da REST API validata, non da fonti esterne non fidate.
+
 2026-05-05  Giuliano Pintori <pintori@link.it>
 
 	Rilascio versione 1.2.3

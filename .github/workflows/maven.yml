@@ -161,6 +161,8 @@ jobs:
         .
         --lockfile
         ./pom.xml
+        --config
+        ./src/main/resources/osv/falsePositives/osv-scanner.toml
 
   # ── SBOM CycloneDX ───────────────────────────────────────────────────
   sbom:

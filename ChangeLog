@@ -1,3 +1,17 @@
+2026-05-12  Giuliano Pintori <pintori@link.it>
+
+	Rilascio versione 1.2.4
+
+2026-05-12  Giuliano Pintori <pintori@link.it>
+
+	Risoluzione segnalazione SonarCloud java:S4507
+	In src/main/java/it/govpay/stampe/mapper/BaseAvvisoMapper.java sostituita
+	la chiamata e.printStackTrace() nel catch del metodo mapLogo con
+	logger.error(...) via SLF4J, coerente con il pattern già adottato negli
+	altri service del progetto (es. AvvisoPagamentoService). Aggiunti i
+	relativi import e dichiarato il Logger nell'interfaccia. Rimossi commenti
+	di debug residui.
+
 2026-05-06  Giuliano Pintori <pintori@link.it>
 
 	Pipeline CI

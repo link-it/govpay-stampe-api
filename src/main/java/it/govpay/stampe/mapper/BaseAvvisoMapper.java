@@ -10,6 +10,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.govpay.stampe.beans.Amount;
 import it.govpay.stampe.beans.Creditor;
@@ -24,7 +26,9 @@ import it.govpay.stampe.model.v1.RataAvviso;
 import it.govpay.stampe.utils.AvvisoPagamentoUtils;
 
 public interface BaseAvvisoMapper {
-	
+
+	Logger logger = LoggerFactory.getLogger(BaseAvvisoMapper.class);
+
 	@Mapping(target = "importo", source="amount")
 	@Mapping(target = "data", source="dueDate", qualifiedByName = "mapData")
 	@Mapping(target = "codiceAvviso", source="noticeNumber", qualifiedByName = "mapNumeroAvviso")
@@ -82,14 +86,11 @@ public interface BaseAvvisoMapper {
 		if(logo == null) return null;
 		
 		try {
-	        // Leggi i byte dal file di risorsa del logo
 	        byte[] logoBytes = IOUtils.toByteArray(logo.getInputStream());
-
-	        // Converti i byte in una stringa
 	        return new String(logoBytes);
 	    } catch (IOException e) {
-	        e.printStackTrace(); // o logga l'errore
-	        return null; // o gestisci diversamente l'errore, restituendo una stringa vuota o lanciando un'eccezione
+	        logger.error("Errore durante la lettura del logo", e);
+	        return null;
 	    }
 	}
 

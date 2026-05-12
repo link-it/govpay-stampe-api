@@ -96,7 +96,6 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	@ExceptionHandler({Throwable.class, RuntimeException.class, InternalException.class, GenerazioneAvvisoException.class})
 	public final ResponseEntity<Object> handleAllInternalExceptions(Throwable ex, WebRequest request) {
 		restLogger.error("Handling Internal Server Error: " + ex.getMessage(), ex);
-		ex.printStackTrace();
 		return buildResponseProblem(HttpStatus.SERVICE_UNAVAILABLE, "Request can't be satisfaied at the moment", request.getHeader(HttpHeaders.ACCEPT)) ;
 	}
 	

@@ -4,13 +4,17 @@
 
 2026-05-12  Giuliano Pintori <pintori@link.it>
 
-	Risoluzione segnalazione SonarCloud java:S4507
+	Risoluzione segnalazioni SonarCloud java:S4507
 	In src/main/java/it/govpay/stampe/mapper/BaseAvvisoMapper.java sostituita
 	la chiamata e.printStackTrace() nel catch del metodo mapLogo con
 	logger.error(...) via SLF4J, coerente con il pattern già adottato negli
 	altri service del progetto (es. AvvisoPagamentoService). Aggiunti i
 	relativi import e dichiarato il Logger nell'interfaccia. Rimossi commenti
 	di debug residui.
+	In src/main/java/it/govpay/stampe/exception/handlers/RestResponseEntityExceptionHandler.java
+	rimossa la chiamata ex.printStackTrace() nel metodo handleAllInternalExceptions:
+	era ridondante poiché la riga precedente già esegue
+	restLogger.error("...", ex) che logga lo stack trace via SLF4J.
 
 2026-05-06  Giuliano Pintori <pintori@link.it>
 

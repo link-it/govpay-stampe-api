@@ -5,8 +5,7 @@ import java.net.URISyntaxException;
 import java.util.AbstractMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -29,7 +28,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.util.WebUtils;
 
-import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
+import tools.jackson.databind.exc.ValueInstantiationException;
 
 import it.govpay.stampe.beans.Problem;
 import it.govpay.stampe.exception.BadRequestException;

@@ -1,3 +1,50 @@
+2026-06-18  Giuliano Pintori <pintori@link.it>
+
+	* [Build]
+	Avanzamento versione 2.0.0-SNAPSHOT.
+	Aggiornato parent govpay-bom alla versione 2.0.0-SNAPSHOT (Spring Boot 4.1.0,
+	Spring Framework 7.0.8, Jackson 3).
+
+	* [Migrazione]
+	Migrazione a Spring Boot 4.x / Spring Framework 7.x / Jackson 3.
+	Jackson 2 -> Jackson 3 (package tools.jackson): l'ObjectMapper e' ora immutabile
+	e configurato tramite builder. La personalizzazione del mapper primario (timezone
+	e deserializer custom per i campi Resource via SimpleModule) e' migrata da
+	Jackson2ObjectMapperBuilderCustomizer al nuovo JsonMapperBuilderCustomizer in
+	Application. Ripristinata l'inclusione dei campi null nelle risposte (ALWAYS), che
+	Jackson 3 omette per default. Il supporto a java.time e' ora integrato in
+	jackson-databind (rimossi il modulo JavaTimeModule e la dipendenza
+	jackson-datatype-jsr310). Le API di lettura/scrittura sollevano l'unchecked
+	JacksonException; il deserializer/serializer custom non possono piu' ricevere un
+	tipo gestito null (passata la classe esplicita).
+	Spring Framework 7: javax.annotation.Nullable -> JSpecify
+	org.jspecify.annotations.Nullable; javax.annotation.PostConstruct ->
+	jakarta.annotation.PostConstruct nei service.
+	Rimosso spring-boot-starter-hateoas (non utilizzato); rimossa la dipendenza
+	javax.annotation-api; swagger-annotations v1 (io.swagger) -> io.swagger.core.v3
+	(versioni gestite dal BOM).
+
+	* [Test]
+	Lo slice MockMvc/@AutoConfigureMockMvc in Spring Boot 4 e' in un modulo dedicato
+	(spring-boot-webmvc-test): aggiunta la dipendenza di test e aggiornato l'import.
+	Helper di test (ObjectMapperUtils, ResourceSerializer) allineati a Jackson 3.
+
+	* [Sicurezza]
+	Allineata la gestione della cache OWASP delle pipeline a govpay-common: chiave di
+	cache version-aware (include owasp.plugin.version dal pom, cosi' il bump del plugin
+	invalida la cache evitando incompatibilita' di schema del DB NVD). In
+	refresh-owasp-db.yml la versione della CLI dependency-check e' derivata dal pom e
+	l'URL di download aggiornato a github.com/dependency-check.
+	Aggiunte due suppression OWASP (falsi positivi/non applicabili):
+	- CVE-2026-6009 (JasperReports, deserializzazione -> RCE): non applicabile, l'app usa
+	  solo template .jasper predefiniti nel JAR e l'API accetta solo JSON, senza
+	  caricamento di template esterni (stesso vettore gia' analizzato per CVE-2025-10492;
+	  fix presente solo nella serie 7.x, incompatibile con dynamicreports-core 6.20.1).
+	- CVE-2026-54515 (jackson-databind): falso positivo, l'advisory ufficiale
+	  (GHSA-5jmj-h7xm-6q6v) circoscrive la vulnerabilita' a Jackson 3 >= 3.1.0 e < 3.1.4
+	  (corretta in 3.1.4, versione gia' in uso via BOM); OSS Index la associa erroneamente
+	  all'artefatto Jackson 2 transitivo (jackson-databind 2.21.4), non interessato.
+
 2026-05-12  Giuliano Pintori <pintori@link.it>
 
 	Rilascio versione 1.2.4

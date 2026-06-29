@@ -1,19 +1,18 @@
 package it.govpay.stampe.test.serializer;
 
-import java.io.IOException;
-
 import org.springframework.core.io.ByteArrayResource;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 public class ResourceSerializer extends StdSerializer<ByteArrayResource> {
 
 	private static final long serialVersionUID = 1L;
 
 	public ResourceSerializer() {
-		this(null);
+		this(ByteArrayResource.class);
 	}
 
 	public ResourceSerializer(Class<ByteArrayResource> t) {
@@ -21,7 +20,7 @@ public class ResourceSerializer extends StdSerializer<ByteArrayResource> {
 	}
 
 	@Override
-	public void serialize(ByteArrayResource value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-		gen.writeBinary(value.getInputStream(), (int) value.contentLength());
+	public void serialize(ByteArrayResource value, JsonGenerator gen, SerializationContext provider) throws JacksonException {
+		gen.writeBinary(value.getByteArray());
 	}
 }

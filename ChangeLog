@@ -1,8 +1,8 @@
 2026-06-18  Giuliano Pintori <pintori@link.it>
 
 	* [Build]
-	Avanzamento versione 2.0.0-SNAPSHOT.
-	Aggiornato parent govpay-bom alla versione 2.0.0-SNAPSHOT (Spring Boot 4.1.0,
+	Avanzamento versione 2.0.0.
+	Aggiornato parent govpay-bom alla versione 2.0.0 (Spring Boot 4.1.0,
 	Spring Framework 7.0.8, Jackson 3).
 
 	* [Migrazione]

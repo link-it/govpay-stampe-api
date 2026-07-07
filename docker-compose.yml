@@ -1,0 +1,10 @@
+version: '1'
+services:
+  govpay-stampe-api:
+    container_name: govpay-stampe-api
+    image: govpay-stampe-api:local
+    ports:
+        - 8380:8080
+    environment:
+        - management.endpoints.web.exposure.include=*
+        - LOGGING_LEVEL_IT_GOVPAY=DEBUG

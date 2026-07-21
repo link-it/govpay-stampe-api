@@ -31,7 +31,7 @@ Rilascio del 2026-07-15.
 
 - Runtime Docker: JDK 25 (LTS) — target di compilazione: JDK 21
 - Spring Boot 4.1.0 / Spring Framework 7.0.8 / Jackson 3
-- Parent BOM: `org.gov4j.govpay:govpay-bom:2.0.0`
+- Parent BOM: `org.gov4j.govpay:govpay-bom:2.0.2`
 
 ---
 

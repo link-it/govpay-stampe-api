@@ -2,6 +2,7 @@
 
 	* [Build]
 	Avanzamento versione 2.0.1.
+	Aggiornato parent govpay-bom alla versione 2.0.2.
 
 	* [Docker]
 	Immagini Docker portate al runtime JDK 25 (solo runtime, nessun cambio del

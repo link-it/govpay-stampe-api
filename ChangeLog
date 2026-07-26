@@ -1,3 +1,14 @@
+2026-07-26  Giuliano Pintori <pintori@link.it>
+
+	* [Sicurezza]
+	Aggiunta eccezione OSV Scanner per GHSA-9wxq-mwqw-8hhg (jasperreports 6.21.5,
+	deserializzazione Java -> RCE, CVSS 8.7) in
+	src/main/resources/osv/falsePositives/osv-scanner.toml. Non applicabile: stessa
+	classe di GHSA-7c3f-cg9x-f3gr / CVE-2026-6009, l'app usa solo template .jasper
+	predefiniti e un'API REST JSON-only, senza caricamento di template esterni ne'
+	deserializzazione di oggetti JasperReports non fidati. Fix disponibile solo nella
+	serie 7.x, incompatibile con dynamicreports-core 6.20.1 e i template attuali.
+
 2026-07-25  Giuliano Pintori <pintori@link.it>
 
 	* [Build]

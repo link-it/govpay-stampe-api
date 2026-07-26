@@ -1,3 +1,7 @@
 [[IgnoredVulns]]
 id = "GHSA-7c3f-cg9x-f3gr"
 reason = "False positive: jasperreports used only for PDF rendering in offline context, not exposed to untrusted input"
+
+[[IgnoredVulns]]
+id = "GHSA-9wxq-mwqw-8hhg"
+reason = "Not applicable: jasperreports Java deserialization RCE (same class as GHSA-7c3f-cg9x-f3gr / CVE-2026-6009). The app uses only bundled .jasper templates and a JSON-only REST API, with no loading of external templates or deserialization of untrusted JasperReports objects. Fixed only in the 7.x line, incompatible with dynamicreports-core 6.20.1 and the current templates."

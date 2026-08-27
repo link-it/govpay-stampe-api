@@ -50,215 +50,330 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 		AvvisoPagamentoInput avvisoPagamentoInput = toPaymentNoticeAvvisoPagamentoInput(paymentNotice);
 
-		if(avvisoPagamentoInput != null) {
-			Etichette etichette = getEtichette(labelLinguaPrincipale);
+		if(avvisoPagamentoInput == null) {
+			return null;
+		}
 
-			// titolo avviso si imposta nelle etichette
-			etichette.setOggettoDelPagamento(paymentNotice.getTitle());
+		Etichette etichette = getEtichette(labelLinguaPrincipale);
 
-			Etichette etichetteLinguaSecondaria = null;
-			Map<String, String> labelLinguaSecondaria = null;
+		// titolo avviso si imposta nelle etichette
+		etichette.setOggettoDelPagamento(paymentNotice.getTitle());
 
-			if(paymentNotice.getSecondLanguage() != null) {
-				labelLinguaSecondaria = getLabelLingua(paymentNotice.getSecondLanguage().getLanguage(), labelAvvisiProperties);
-				etichetteLinguaSecondaria = getEtichette(labelLinguaSecondaria);
-			}
-			
-			if(etichetteLinguaSecondaria != null) {
-				// titolo avviso si imposta nelle etichette
-				etichetteLinguaSecondaria.setOggettoDelPagamento(paymentNotice.getSecondLanguage().getTitle());				
-			}
+		// le label della lingua secondaria sono valorizzate solo per gli avvisi bilingue
+		Map<String, String> labelLinguaSecondaria = null;
+		if(paymentNotice.getSecondLanguage() != null) {
+			labelLinguaSecondaria = getLabelLingua(paymentNotice.getSecondLanguage().getLanguage(), labelAvvisiProperties);
+		}
 
-			// informazioni postali
-			Boolean postale = paymentNotice.getPostal();
-			if(postale != null && postale.booleanValue()) {
-				// ho gia' caricato tutte le label, spengo il pagamento standard
-				etichette.setPagaTerritorio2(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_POSTE));
-				etichette.setPagaApp2(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PAGA_APP_POSTE));
-				if(etichetteLinguaSecondaria != null) {
-					etichetteLinguaSecondaria.setPagaTerritorio2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_POSTE));
-					etichetteLinguaSecondaria.setPagaApp2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_APP_POSTE));
-				}
-			} else {
-				// ho gia' caricato tutte le label, spengo il pagamento poste
-				etichette.setPagaTerritorio2(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_STANDARD));
-				etichette.setPagaApp2(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PAGA_APP_STANDARD));
-				if(etichetteLinguaSecondaria != null) {
-					etichetteLinguaSecondaria.setPagaTerritorio2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_STANDARD));
-					etichetteLinguaSecondaria.setPagaApp2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_APP_STANDARD));
-				}
-			}
+		Etichette etichetteLinguaSecondaria = creaEtichetteLinguaSecondaria(paymentNotice, labelLinguaSecondaria);
 
-			it.govpay.stampe.model.v2.AvvisoPagamentoInput.Etichette etichetteAvviso = new it.govpay.stampe.model.v2.AvvisoPagamentoInput.Etichette();
-			etichetteAvviso.setItaliano(etichette);
-			etichetteAvviso.setTraduzione(etichetteLinguaSecondaria);
-			avvisoPagamentoInput.setEtichette(etichetteAvviso );
+		// informazioni postali
+		impostaLabelsCanaliDiPagamento(paymentNotice.getPostal(), etichette, labelLinguaPrincipale, etichetteLinguaSecondaria, labelLinguaSecondaria);
 
-			avvisoPagamentoInput.setPagine(new PagineAvviso());
+		it.govpay.stampe.model.v2.AvvisoPagamentoInput.Etichette etichetteAvviso = new it.govpay.stampe.model.v2.AvvisoPagamentoInput.Etichette();
+		etichetteAvviso.setItaliano(etichette);
+		etichetteAvviso.setTraduzione(etichetteLinguaSecondaria);
+		avvisoPagamentoInput.setEtichette(etichetteAvviso );
 
-			List<ThresholdPayment> reducedPayments = paymentNotice.getReducedPayments();
-			boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
+		avvisoPagamentoInput.setPagine(new PagineAvviso());
 
-			if(hasReducedPayments) {
-				creaRateRidottePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
-			} else {
-				creaRatePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
-			}
+		List<ThresholdPayment> reducedPayments = paymentNotice.getReducedPayments();
+		boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
 
-
+		if(hasReducedPayments) {
+			creaRateRidottePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+		} else {
+			creaRatePerAvvisoBilingue(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
 		}
 
 		return avvisoPagamentoInput;
 	}
 
+	/***
+	 * Crea le etichette della lingua secondaria, se l'avviso e' bilingue, altrimenti null.
+	 *
+	 */
+	public default Etichette creaEtichetteLinguaSecondaria(PaymentNotice paymentNotice, Map<String, String> labelLinguaSecondaria) {
+		if(paymentNotice.getSecondLanguage() == null) {
+			return null;
+		}
+
+		Etichette etichetteLinguaSecondaria = getEtichette(labelLinguaSecondaria);
+
+		// titolo avviso si imposta nelle etichette
+		etichetteLinguaSecondaria.setOggettoDelPagamento(paymentNotice.getSecondLanguage().getTitle());
+
+		return etichetteLinguaSecondaria;
+	}
+
+	/***
+	 * Imposta le label dei canali di pagamento: per l'avviso postale si spengono le label del
+	 * pagamento standard, negli altri casi si spengono quelle del pagamento presso le poste.
+	 *
+	 */
+	public default void impostaLabelsCanaliDiPagamento(Boolean postale, Etichette etichette, Map<String, String> labelLinguaPrincipale,
+			Etichette etichetteLinguaSecondaria, Map<String, String> labelLinguaSecondaria) {
+		String labelPagaTerritorio = LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_STANDARD;
+		String labelPagaApp = LabelAvvisiCostanti.LABEL_PAGA_APP_STANDARD;
+
+		if(Boolean.TRUE.equals(postale)) {
+			labelPagaTerritorio = LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_POSTE;
+			labelPagaApp = LabelAvvisiCostanti.LABEL_PAGA_APP_POSTE;
+		}
+
+		etichette.setPagaTerritorio2(getLabel(labelLinguaPrincipale, labelPagaTerritorio));
+		etichette.setPagaApp2(getLabel(labelLinguaPrincipale, labelPagaApp));
+
+		if(etichetteLinguaSecondaria != null) {
+			etichetteLinguaSecondaria.setPagaTerritorio2(getLabel(labelLinguaSecondaria, labelPagaTerritorio));
+			etichetteLinguaSecondaria.setPagaApp2(getLabel(labelLinguaSecondaria, labelPagaApp));
+		}
+	}
+
 	public default void creaRatePerAvvisoBilingue(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
 		// nota importo viene letta dalle properties e poi viene inserita in un punto diverso a seconda della presenza o meno della rata unica
 		String labelNotaImportoTra = null;
-		String labelNotaImporto = labelLinguaPrincipale.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
-
-		if(labelLinguaSecondaria != null) {
-			labelNotaImporto = labelLinguaSecondaria.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
-		}
-
-		boolean addNota1 = true;
+		String labelNotaImporto = getLabelNotaImporto(labelLinguaPrincipale, labelLinguaSecondaria);
 
 		// rata unica
-		RataAvviso rataUnica = null;
-		if(paymentNotice.getFull() != null) {
-			rataUnica = amountToRataWithLabels(logger, paymentNotice.getFull(), paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		RataAvviso rataUnica = creaPaginaRataUnica(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
 
-			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-			pagina.setRata(rataUnica);
-
-			avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
-		} else {
-			addNota1 = false;
-		}
+		// Per la rata unica si utilizza la nota 1, per le rate la nota 2
+		boolean addNota1 = rataUnica != null;
 
 		// rate
 		List<Instalment> instalments = paymentNotice.getInstalments();
 
 		if(instalments != null) {
 			// calcolo il numero delle rate
-			int numeroRate = 0;
-			for (Instalment instalment : instalments) {
-				if(instalment.getInstalmentNumber() != null) {
-					numeroRate ++;
-				}
-			}
+			int numeroRate = contaRate(instalments);
+
 			// controllo se sono tutte rate
 			boolean soloRate = rataUnica == null && numeroRate == instalments.size();
 
 			if(!instalments.isEmpty() && soloRate) {
-				// numero di versamenti pari devo creara la pagina principale con i dati della prima rata
-				if(instalments.size() % 2 == 0) {
-					logger.debug("Numero di versamenti con rate e' pari, riporto i dati della prima rata anche nella pagina principale.");	
-					PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-					Instalment versamento = instalments.get(0); // leggo alcuni dati dalla prima rata
-
-					avvisoPagamentoInput.getEtichette().getItaliano().setNota1(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
-
-					if(labelLinguaSecondaria != null ) {
-						avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
-					}
-
-					addNota1 = false;
-
-					RataAvviso rata = instalmentToRata(versamento);
-
-					// calcolo dell'importo totale
-					BigDecimal importoTotale = BigDecimal.ZERO;
-					for (Instalment instalment : instalments) {
-						importoTotale = importoTotale.add(BigDecimal.valueOf(instalment.getAmount()));
-					}
-					rata.setImporto(importoTotale.doubleValue());
-
-					pagina.setRata(rata);
-
-					avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
-				} else { // versamenti dispari la prima pagina e la prima rata coincidono
-					logger.debug("Numero di versamenti con rate e' dispari, la prima pagina coincide con la prima rata.");	
-					Instalment instalment = instalments.remove(0);
-					PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-
-					RataAvviso rata = instalmentToRataWithLabels(logger, instalment, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
-
-					rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
-					if(labelLinguaSecondaria != null)
-						rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
-
-					avvisoPagamentoInput.getEtichette().getItaliano().setEntro(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ENTRO_IL));
-
-					if(labelLinguaSecondaria != null ) {
-						avvisoPagamentoInput.getEtichette().getTraduzione().setEntro(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ENTRO_IL));
-					}
-
-					pagina.setRata(rata);
-					avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
-				}
+				creaPaginaPrincipaleConSoleRate(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
 			}
-			
+
 			if(numeroRate > 0) {
-				avvisoPagamentoInput.getEtichette().getItaliano().setNota1(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA, numeroRate));
-				
-				if(labelLinguaSecondaria != null ) {
-					avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA, numeroRate));
-				}
+				impostaNotaPrimaRata(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, numeroRate);
 				addNota1 = false;
 			}
-			
-			logger.debug("Inserisco i versamenti due per pagina");	
-			// 2 rate per pagina
-			while(instalments.size() > 1) {
-				Instalment v1 = instalments.remove(0);
-				Instalment v2 = instalments.remove(0);
-				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-				RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
-				RataAvviso rataDx = instalmentToRataWithLabels(logger, v2, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
-				
-				if(v1.getInstalmentNumber() != null && v2.getInstalmentNumber() != null) {
-					// Titolo della pagina con 2 Rate
-					String titoloRateIta = getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ELENCO_RATE_2, v1.getInstalmentNumber(), v2.getInstalmentNumber());
-					rataSx.setElencoRate(titoloRateIta);
-					rataDx.setElencoRate(titoloRateIta);
-					if(labelLinguaSecondaria != null) {
-						String titoloRateSL = getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ELENCO_RATE_2, v1.getInstalmentNumber(), v2.getInstalmentNumber());
-						rataSx.setElencoRateTra(titoloRateSL);
-						rataDx.setElencoRateTra(titoloRateSL);
-					}
-				}
-				
-				pagina.getRata().add(rataSx);
-				pagina.getRata().add(rataDx);
-				avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
-			}
 
-			logger.debug("Inserisco i versamenti residui uno per pagina");	
-			// rata rimasta
-			if(instalments.size() == 1) {
-				Instalment v1 = instalments.remove(0);
-				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-				RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
-				
-				if(v1.getInstalmentNumber() != null) {
-					// Titolo della pagina con 2 Rate
-					String titoloRateIta = getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ELENCO_RATE_1, v1.getInstalmentNumber());
-					rataSx.setElencoRate(titoloRateIta);
-					if(labelLinguaSecondaria != null) {
-						String titoloRateSL = getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ELENCO_RATE_1, v1.getInstalmentNumber());
-						rataSx.setElencoRateTra(titoloRateSL);
-					}
-				}
-				
-				pagina.getRata().add(rataSx);
-				
-				avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+			creaPagineRate(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+		}
+
+		impostaNotaImporto(avvisoPagamentoInput, labelLinguaSecondaria, labelNotaImporto, labelNotaImportoTra, addNota1);
+	}
+
+	/***
+	 * Restituisce la nota sull'importo: quando e' presente la lingua secondaria viene utilizzata
+	 * la label della lingua secondaria.
+	 *
+	 */
+	public default String getLabelNotaImporto(Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		if(labelLinguaSecondaria != null) {
+			return labelLinguaSecondaria.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
+		}
+
+		return labelLinguaPrincipale.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
+	}
+
+	/***
+	 * Crea la pagina principale con la rata unica, se presente, e restituisce la rata creata.
+	 *
+	 */
+	public default RataAvviso creaPaginaRataUnica(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		if(paymentNotice.getFull() == null) {
+			return null;
+		}
+
+		RataAvviso rataUnica = amountToRataWithLabels(logger, paymentNotice.getFull(), paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+
+		PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+		pagina.setRata(rataUnica);
+
+		avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+
+		return rataUnica;
+	}
+
+	/***
+	 * Restituisce il numero di versamenti che sono rate di un piano rateale.
+	 *
+	 */
+	public default int contaRate(List<Instalment> instalments) {
+		int numeroRate = 0;
+
+		for (Instalment instalment : instalments) {
+			if(instalment.getInstalmentNumber() != null) {
+				numeroRate ++;
 			}
 		}
 
+		return numeroRate;
+	}
 
+	/***
+	 * Crea la pagina principale quando l'avviso contiene solo rate: con un numero di rate pari
+	 * la pagina principale riporta i dati della prima rata e l'importo totale, con un numero
+	 * dispari la pagina principale coincide con la prima rata.
+	 *
+	 */
+	public default void creaPaginaPrincipaleConSoleRate(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		List<Instalment> instalments = paymentNotice.getInstalments();
 
-		// Per la rata unica si utilizza la nota 1, per le rate la nota 2 
+		if(instalments.size() % 2 == 0) {
+			// numero di versamenti pari devo creare la pagina principale con i dati della prima rata
+			logger.debug("Numero di versamenti con rate e' pari, riporto i dati della prima rata anche nella pagina principale.");
+			creaPaginaPrincipaleConImportoTotale(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
+		} else {
+			// versamenti dispari la prima pagina e la prima rata coincidono
+			logger.debug("Numero di versamenti con rate e' dispari, la prima pagina coincide con la prima rata.");
+			creaPaginaPrincipaleConPrimaRata(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+		}
+	}
+
+	public default void creaPaginaPrincipaleConImportoTotale(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale,
+			Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
+		PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+		Instalment versamento = instalments.get(0); // leggo alcuni dati dalla prima rata
+
+		avvisoPagamentoInput.getEtichette().getItaliano().setNota1(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+
+		if(labelLinguaSecondaria != null ) {
+			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		}
+
+		RataAvviso rata = instalmentToRata(versamento);
+		rata.setImporto(calcolaImportoTotale(instalments));
+
+		pagina.setRata(rata);
+
+		avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+	}
+
+	/***
+	 * Calcola l'importo totale del piano rateale.
+	 *
+	 */
+	public default double calcolaImportoTotale(List<Instalment> instalments) {
+		BigDecimal importoTotale = BigDecimal.ZERO;
+
+		for (Instalment instalment : instalments) {
+			importoTotale = importoTotale.add(BigDecimal.valueOf(instalment.getAmount()));
+		}
+
+		return importoTotale.doubleValue();
+	}
+
+	public default void creaPaginaPrincipaleConPrimaRata(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		Instalment instalment = paymentNotice.getInstalments().remove(0);
+		PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+
+		RataAvviso rata = instalmentToRataWithLabels(logger, instalment, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+
+		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		if(labelLinguaSecondaria != null)
+			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+
+		avvisoPagamentoInput.getEtichette().getItaliano().setEntro(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ENTRO_IL));
+
+		if(labelLinguaSecondaria != null ) {
+			avvisoPagamentoInput.getEtichette().getTraduzione().setEntro(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ENTRO_IL));
+		}
+
+		pagina.setRata(rata);
+		avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+	}
+
+	public default void impostaNotaPrimaRata(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale,
+			Map<String, String> labelLinguaSecondaria, int numeroRate) {
+		avvisoPagamentoInput.getEtichette().getItaliano().setNota1(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA, numeroRate));
+
+		if(labelLinguaSecondaria != null ) {
+			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA, numeroRate));
+		}
+	}
+
+	/***
+	 * Crea le pagine delle rate: due rate per pagina e l'eventuale rata residua in una pagina.
+	 *
+	 */
+	public default void creaPagineRate(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		List<Instalment> instalments = paymentNotice.getInstalments();
+
+		logger.debug("Inserisco i versamenti due per pagina");
+		// 2 rate per pagina
+		while(instalments.size() > 1) {
+			creaPaginaConDueRate(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+		}
+
+		logger.debug("Inserisco i versamenti residui uno per pagina");
+		// rata rimasta
+		if(instalments.size() == 1) {
+			creaPaginaConUnaRata(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
+		}
+	}
+
+	public default void creaPaginaConDueRate(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		List<Instalment> instalments = paymentNotice.getInstalments();
+
+		Instalment v1 = instalments.remove(0);
+		Instalment v2 = instalments.remove(0);
+		PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
+		RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		RataAvviso rataDx = instalmentToRataWithLabels(logger, v2, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+
+		if(v1.getInstalmentNumber() != null && v2.getInstalmentNumber() != null) {
+			// Titolo della pagina con 2 Rate
+			String titoloRateIta = getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ELENCO_RATE_2, v1.getInstalmentNumber(), v2.getInstalmentNumber());
+			rataSx.setElencoRate(titoloRateIta);
+			rataDx.setElencoRate(titoloRateIta);
+			if(labelLinguaSecondaria != null) {
+				String titoloRateSL = getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ELENCO_RATE_2, v1.getInstalmentNumber(), v2.getInstalmentNumber());
+				rataSx.setElencoRateTra(titoloRateSL);
+				rataDx.setElencoRateTra(titoloRateSL);
+			}
+		}
+
+		pagina.getRata().add(rataSx);
+		pagina.getRata().add(rataDx);
+		avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+	}
+
+	public default void creaPaginaConUnaRata(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		Instalment v1 = paymentNotice.getInstalments().remove(0);
+		PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
+		RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+
+		if(v1.getInstalmentNumber() != null) {
+			// Titolo della pagina con 1 Rata
+			String titoloRateIta = getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ELENCO_RATE_1, v1.getInstalmentNumber());
+			rataSx.setElencoRate(titoloRateIta);
+			if(labelLinguaSecondaria != null) {
+				String titoloRateSL = getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ELENCO_RATE_1, v1.getInstalmentNumber());
+				rataSx.setElencoRateTra(titoloRateSL);
+			}
+		}
+
+		pagina.getRata().add(rataSx);
+
+		avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
+	}
+
+	/***
+	 * Imposta la nota sull'importo: per la rata unica si utilizza la nota 1, per le rate la nota 2.
+	 *
+	 */
+	public default void impostaNotaImporto(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaSecondaria,
+			String labelNotaImporto, String labelNotaImportoTra, boolean addNota1) {
 		if(addNota1) {
 			avvisoPagamentoInput.getEtichette().getItaliano().setNota1(labelNotaImporto);
 
@@ -285,43 +400,46 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = thresholdPaymentToRataV2(thresholdPayment);
 
-		int giorni = thresholdPayment.getThresholdDays();
-
-		if(thresholdPayment.getThresholdType() == ThresholdType.ENTRO) {
-			rataAvviso.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ENTRO, giorni));
-			rataAvviso.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_ENTRO_GIORNI, giorni));
-			if(labelLinguaSecondaria != null) {
-				rataAvviso.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_ENTRO, giorni));
-				rataAvviso.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_ENTRO_GIORNI, giorni));
-			}
-		} else { // OLTRE
-			rataAvviso.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_OLTRE, giorni));
-			rataAvviso.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_OLTRE_GIORNI, giorni));
-			if(labelLinguaSecondaria != null) {
-				rataAvviso.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_OLTRE, giorni));
-				rataAvviso.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_OLTRE_GIORNI, giorni));
-			}
-		}
+		impostaLabelsSogliaNellaRataAvviso(rataAvviso, thresholdPayment, labelLinguaPrincipale, labelLinguaSecondaria);
 
 		// NON impostare il campo data: la label contiene gia' l'informazione temporale
 
-		impostaLabelsPostaliNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria,
-				thresholdPayment.getNoticeNumber(), thresholdPayment.getIban(), thresholdPayment.getAmount(), avvisoPagamentoInput, creditor);
+		impostaLabelsPostaliNellaRataAvviso(rataAvviso, postale, thresholdPayment.getNoticeNumber(), thresholdPayment.getIban(),
+				thresholdPayment.getAmount(), avvisoPagamentoInput, creditor);
 
 		return rataAvviso;
+	}
+
+	/***
+	 * Imposta nella rata le label della soglia: entro/oltre il numero di giorni indicato.
+	 *
+	 */
+	public default void impostaLabelsSogliaNellaRataAvviso(RataAvviso rataAvviso, ThresholdPayment thresholdPayment,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+		int giorni = thresholdPayment.getThresholdDays();
+
+		String labelScadenza = LabelAvvisiCostanti.LABEL_OLTRE;
+		String labelScadenzaUnica = LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_OLTRE_GIORNI;
+
+		if(thresholdPayment.getThresholdType() == ThresholdType.ENTRO) {
+			labelScadenza = LabelAvvisiCostanti.LABEL_ENTRO;
+			labelScadenzaUnica = LabelAvvisiCostanti.LABEL_SOLUZIONE_UNICA_ENTRO_GIORNI;
+		}
+
+		rataAvviso.setScadenza(getLabel(labelLinguaPrincipale, labelScadenza, giorni));
+		rataAvviso.setScadenzaUnica(getLabel(labelLinguaPrincipale, labelScadenzaUnica, giorni));
+
+		if(labelLinguaSecondaria != null) {
+			rataAvviso.setScadenzaTra(getLabel(labelLinguaSecondaria, labelScadenza, giorni));
+			rataAvviso.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, labelScadenzaUnica, giorni));
+		}
 	}
 
 	public default void creaRateRidottePerAvvisoBilingue(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
 			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
 
 		// rata unica
-		if(paymentNotice.getFull() != null) {
-			RataAvviso rataUnica = amountToRataWithLabels(logger, paymentNotice.getFull(), paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
-
-			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-			pagina.setRata(rataUnica);
-			avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
-		}
+		RataAvviso rataUnica = creaPaginaRataUnica(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
 
 		// soglie ridotte: 2 per pagina (PaginaAvvisoDoppia)
 		List<ThresholdPayment> reducedPayments = new ArrayList<>(paymentNotice.getReducedPayments());
@@ -355,17 +473,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			labelNotaImportoTra = labelLinguaSecondaria.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
 		}
 
-		if(paymentNotice.getFull() != null) {
-			avvisoPagamentoInput.getEtichette().getItaliano().setNota1(labelNotaImporto);
-			if(labelLinguaSecondaria != null) {
-				avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(labelNotaImportoTra);
-			}
-		} else {
-			avvisoPagamentoInput.getEtichette().getItaliano().setNota2(labelNotaImporto);
-			if(labelLinguaSecondaria != null) {
-				avvisoPagamentoInput.getEtichette().getTraduzione().setNota2(labelNotaImportoTra);
-			}
-		}
+		impostaNotaImporto(avvisoPagamentoInput, labelLinguaSecondaria, labelNotaImporto, labelNotaImportoTra, rataUnica != null);
 	}
 
 	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
@@ -391,9 +499,9 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 	public default RataAvviso instalmentToRataWithLabels(Logger logger, Instalment instalment, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria,  AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = instalmentToRata(instalment);
 
-		impostaLabelsNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria);
-		
-		impostaLabelsPostaliNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria, instalment.getNoticeNumber(), instalment.getIban(), instalment.getAmount(), avvisoPagamentoInput, creditor);
+		impostaLabelsNellaRataAvviso(rataAvviso, labelLinguaPrincipale, labelLinguaSecondaria);
+
+		impostaLabelsPostaliNellaRataAvviso(rataAvviso, postale, instalment.getNoticeNumber(), instalment.getIban(), instalment.getAmount(), avvisoPagamentoInput, creditor);
 
 		return rataAvviso;
 	}
@@ -407,15 +515,15 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 	public default RataAvviso amountToRataWithLabels(Logger logger, Amount amount, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = amountToRataV2(amount);
 
-		impostaLabelsNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria);
-		
-		impostaLabelsPostaliNellaRataAvviso(logger, rataAvviso, postale, labelLinguaPrincipale, labelLinguaSecondaria, amount.getNoticeNumber(), amount.getIban(), amount.getAmount(), avvisoPagamentoInput, creditor);
+		impostaLabelsNellaRataAvviso(rataAvviso, labelLinguaPrincipale, labelLinguaSecondaria);
+
+		impostaLabelsPostaliNellaRataAvviso(rataAvviso, postale, amount.getNoticeNumber(), amount.getIban(), amount.getAmount(), avvisoPagamentoInput, creditor);
 
 		return rataAvviso;
 
 	}
 
-	public default void impostaLabelsNellaRataAvviso(Logger logger, RataAvviso rata, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
+	public default void impostaLabelsNellaRataAvviso(RataAvviso rata, Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
 		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 		if(labelLinguaSecondaria != null)
 			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
@@ -436,21 +544,20 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		}
 	}
 
-	public default void impostaLabelsPostaliNellaRataAvviso(Logger logger, RataAvviso rataAvviso, Boolean postale,  Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria,
+	public default void impostaLabelsPostaliNellaRataAvviso(RataAvviso rataAvviso, Boolean postale,
 			String noticeNumber, Iban iban, Double importo, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
-		if(postale != null && postale.booleanValue()) {
-			
+		if(Boolean.TRUE.equals(postale)) {
+
 			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
-			String cfEnte = avvisoPagamentoInput.getCfEnte();
 			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, importo,
-					cfEnte,
+					avvisoPagamentoInput.getCfEnte(),
 					avvisoPagamentoInput.getCfDestinatario(),
 					avvisoPagamentoInput.getNomeCognomeDestinatario(),
 					avvisoPagamentoInput.getEtichette().getItaliano().getOggettoDelPagamento()));
 			rataAvviso.setNumeroCcPostale(numeroCC);
 			// codice avviso gia' diviso in gruppi di 4
-			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso()); 
-			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
+			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
+			rataAvviso.setAutorizzazione(getAutorizzazionePostale(creditor, iban));
 			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
 				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
 			else 
@@ -480,9 +587,6 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		etichette.setImporto(labelsLingua.get(LabelAvvisiCostanti.LABEL_IMPORTO));
 		etichette.setIntestatario(labelsLingua.get(LabelAvvisiCostanti.LABEL_INTESTATARIO));
 		etichette.setNota(labelsLingua.get(LabelAvvisiCostanti.LABEL_NOTA));
-		//		etichette.setNota2(labelsLingua.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO))
-		//etichette.setNotaPrimaRata(labelsLingua.get(LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA))
-		//		etichette.setNotaRataUnica(labelsLingua.get(LabelAvvisiCostanti.LABEL_NOTA_RATA_UNICA))
 		etichette.setOggetto(labelsLingua.get(LabelAvvisiCostanti.LABEL_OGGETTO));
 		etichette.setPagaApp(labelsLingua.get(LabelAvvisiCostanti.LABEL_PAGA_APP));
 		etichette.setPagaTerritorio(labelsLingua.get(LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO));

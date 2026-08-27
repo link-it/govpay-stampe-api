@@ -57,11 +57,11 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.TOO_MANY_REQUESTS, "https://www.rfc-editor.org/rfc/rfc6585#section-4")
 		);
 	
-	public static ResponseEntity<Object> buildResponseProblem(HttpStatus status, String detail, String accept) {
-		return buildResponseProblem(status, status.getReasonPhrase(), detail, accept);
+	public static ResponseEntity<Object> buildResponseProblem(HttpStatus status, String detail) {
+		return buildResponseProblem(status, status.getReasonPhrase(), detail);
 	}
 	
-	public static ResponseEntity<Object> buildResponseProblem(HttpStatus status, String title, String detail, String accept) {
+	public static ResponseEntity<Object> buildResponseProblem(HttpStatus status, String title, String detail) {
 					return ResponseEntity.
 							status(status).
 			                contentType(MediaType.APPLICATION_PROBLEM_JSON).
@@ -84,25 +84,25 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	
 	@ExceptionHandler({UnprocessableEntityException.class})
 	public ResponseEntity<Object> handleUnprocessableEntity(UnprocessableEntityException ex, WebRequest request) {
-		return buildResponseProblem(HttpStatus.UNPROCESSABLE_ENTITY, ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
+		return buildResponseProblem(HttpStatus.UNPROCESSABLE_ENTITY, ex.getLocalizedMessage());
 	}
 	
 	@ExceptionHandler({BadRequestException.class, CodificaInesistenteException.class})
 	public ResponseEntity<Object> handleBadRequest(Throwable ex, WebRequest request) {
-		return buildResponseProblem(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
+		return buildResponseProblem(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
 	}
 
 	@ExceptionHandler({Throwable.class, RuntimeException.class, InternalException.class, GenerazioneAvvisoException.class})
 	public final ResponseEntity<Object> handleAllInternalExceptions(Throwable ex, WebRequest request) {
 		restLogger.error("Handling Internal Server Error: " + ex.getMessage(), ex);
-		return buildResponseProblem(HttpStatus.SERVICE_UNAVAILABLE, "Request can't be satisfaied at the moment", request.getHeader(HttpHeaders.ACCEPT)) ;
+		return buildResponseProblem(HttpStatus.SERVICE_UNAVAILABLE, "Request can't be satisfaied at the moment") ;
 	}
 	
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
 			MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		var error = ex.getBindingResult().getAllErrors().get(0);
-		return 	buildResponseProblem(HttpStatus.BAD_REQUEST, RestResponseEntityExceptionHandler.extractValidationError(error),request.getHeader(HttpHeaders.ACCEPT));
+		return 	buildResponseProblem(HttpStatus.BAD_REQUEST, RestResponseEntityExceptionHandler.extractValidationError(error));
 	}
 	
 	
@@ -116,20 +116,20 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 		} else {
 			msg = ex.getLocalizedMessage();
 		}
-		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,msg, request.getHeader(HttpHeaders.ACCEPT));
+		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,msg);
 	}
 	
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
 			HttpMediaTypeNotSupportedException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
+		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
 	}
 
 	
 	@Override
 	protected ResponseEntity<Object> handleMissingServletRequestParameter(
 			MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-		return buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
+		return buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
 	}
 	
 	/**
@@ -141,7 +141,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
 			HttpMediaTypeNotAcceptableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
-		return buildResponseProblem(HttpStatus.NOT_ACCEPTABLE, ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
+		return buildResponseProblem(HttpStatus.NOT_ACCEPTABLE, ex.getLocalizedMessage());
 	}
 	
 	
@@ -152,7 +152,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 		if (HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.ordinal()).equals(statusCode)) {
 			request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, ex, RequestAttributes.SCOPE_REQUEST);
 		}
-		return 	buildResponseProblem(HttpStatus.INTERNAL_SERVER_ERROR,ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
+		return 	buildResponseProblem(HttpStatus.INTERNAL_SERVER_ERROR,ex.getLocalizedMessage());
 	}
 	
 	/**
@@ -161,9 +161,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 * 	
 	 */
 	public static String extractValidationError(ObjectError error) {
-		if (error instanceof FieldError) {			
-			var ferror = (FieldError) error;
-			
+		if (error instanceof FieldError ferror) {
 			return "Field error in object '" + error.getObjectName() + "' on field '" + ferror.getField() +
 					"': rejected value [" + ObjectUtils.nullSafeToString(ferror.getRejectedValue()) + "]; " +
 					error.getDefaultMessage();

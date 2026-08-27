@@ -10,6 +10,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,33 +35,44 @@ public class PaymentNoticeController implements PaymentNoticeApi {
 
 	private static Logger logger = LoggerFactory.getLogger(PaymentNoticeController.class);
 
-	@Qualifier("labelAvvisiProperties")
-	@Autowired
-	LabelAvvisiProperties labelAvvisiProperties;
+	private final LabelAvvisiProperties labelAvvisiProperties;
+
+	private final ViolazioneCdsMapperImpl violazioneCdsMapper;
+
+	private final AvvisoPagamentoMapperImpl avvisoPagamentoMapper;
+
+	private final AvvisoPagamentoBilingueMapperImpl avvisoPagamentoBilingueMapper;
+
+	private final ViolazioneCdsService violazioneCdsService;
+
+	private final AvvisoSempliceService avvisoSempliceService;
+
+	private final AvvisoPostaleService avvisoPostaleService;
+
+	private final AvvisoBilingueService avvisoBilingueService;
+
+	private final SemanticValidator semanticValidator;
 
 	@Autowired
-	ViolazioneCdsMapperImpl violazioneCdsMapper;
-
-	@Autowired
-	AvvisoPagamentoMapperImpl avvisoPagamentoMapper;
-
-	@Autowired
-	AvvisoPagamentoBilingueMapperImpl avvisoPagamentoBilingueMapper;
-
-	@Autowired
-	ViolazioneCdsService violazioneCdsService;
-
-	@Autowired
-	AvvisoSempliceService avvisoSempliceService;
-
-	@Autowired
-	AvvisoPostaleService avvisoPostaleService;
-
-	@Autowired
-	AvvisoBilingueService avvisoBilingueService;
-
-	@Autowired
-	SemanticValidator semanticValidator;
+	public PaymentNoticeController(@Qualifier("labelAvvisiProperties") LabelAvvisiProperties labelAvvisiProperties,
+			ViolazioneCdsMapperImpl violazioneCdsMapper,
+			AvvisoPagamentoMapperImpl avvisoPagamentoMapper,
+			AvvisoPagamentoBilingueMapperImpl avvisoPagamentoBilingueMapper,
+			ViolazioneCdsService violazioneCdsService,
+			AvvisoSempliceService avvisoSempliceService,
+			AvvisoPostaleService avvisoPostaleService,
+			AvvisoBilingueService avvisoBilingueService,
+			SemanticValidator semanticValidator) {
+		this.labelAvvisiProperties = labelAvvisiProperties;
+		this.violazioneCdsMapper = violazioneCdsMapper;
+		this.avvisoPagamentoMapper = avvisoPagamentoMapper;
+		this.avvisoPagamentoBilingueMapper = avvisoPagamentoBilingueMapper;
+		this.violazioneCdsService = violazioneCdsService;
+		this.avvisoSempliceService = avvisoSempliceService;
+		this.avvisoPostaleService = avvisoPostaleService;
+		this.avvisoBilingueService = avvisoBilingueService;
+		this.semanticValidator = semanticValidator;
+	}
 
 	@Override
 	public ResponseEntity<Resource> createCdsViolationNotice(@Valid @RequestBody CdsViolation cdsViolation) {
@@ -72,7 +84,7 @@ public class PaymentNoticeController implements PaymentNoticeApi {
 		// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 		String nomePdf = this.violazioneCdsMapper.nomePdf(cdsViolation);
 
-		AvvisoPagamentoInput avvisoPagamentoInput = this.violazioneCdsMapper.toViolazioneAvvisoPagamentoInput(cdsViolation, labelAvvisiProperties);
+		AvvisoPagamentoInput avvisoPagamentoInput = this.violazioneCdsMapper.toViolazioneAvvisoPagamentoInput(cdsViolation, this.labelAvvisiProperties);
 
 		logger.debug("Conversione CdsViolation in AvvisoPagamentoInput completata, generazione del pdf...");
 
@@ -97,7 +109,7 @@ public class PaymentNoticeController implements PaymentNoticeApi {
 
 		logger.info("Creazione avviso di violazione codice della strada completata.");
 
-        return ResponseEntity.created(null).headers(headers).body(resource);
+        return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(resource);
 	}
 
 	@Override
@@ -114,7 +126,7 @@ public class PaymentNoticeController implements PaymentNoticeApi {
 			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 			nomePdf = this.avvisoPagamentoMapper.nomePdf(paymentNotice);
 
-			AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, labelAvvisiProperties);
+			AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, this.labelAvvisiProperties);
 
 			if(avvisoPagamentoInput.getDiPoste() != null) {
 				logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf con bollettino postale...");
@@ -127,7 +139,7 @@ public class PaymentNoticeController implements PaymentNoticeApi {
 			// calcolare il nome prima della conversione l'algoritmo attuale elimina le rate inserite nell'input jasper
 			nomePdf = this.avvisoPagamentoBilingueMapper.nomePdf(paymentNotice);
 
-			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, labelAvvisiProperties);
+			it.govpay.stampe.model.v2.AvvisoPagamentoInput avvisoPagamentoInput = this.avvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput(logger, paymentNotice, this.labelAvvisiProperties);
 
 			logger.debug("Conversione PaymentNotice in AvvisoPagamentoInput completata, generazione del pdf bilingue...");
 
@@ -146,6 +158,6 @@ public class PaymentNoticeController implements PaymentNoticeApi {
 
 		logger.info("Creazione avviso standard completata.");
 
-		 return ResponseEntity.created(null).headers(headers).body(resource);
+		 return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(resource);
 	}
 }

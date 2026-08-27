@@ -4,13 +4,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.slf4j.Logger;
 
 import it.govpay.stampe.beans.Creditor;
-import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.beans.ThresholdPayment;
@@ -24,10 +22,12 @@ import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
 import it.govpay.stampe.model.v1.PaginaAvvisoTripla;
 import it.govpay.stampe.model.v1.PagineAvviso;
 import it.govpay.stampe.model.v1.RataAvviso;
-import it.govpay.stampe.utils.AvvisoPagamentoUtils;
 
 @Mapper(componentModel = "spring")
 public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
+
+	/** numero massimo di rate riportate in una pagina con layout multiplo */
+	int NUMERO_RATE_PAGINA_MULTIPLA = 9;
 
 	public default String nomePdf(PaymentNotice paymentNotice) {
 		String noticeNumber = null;
@@ -47,7 +47,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		AvvisoPagamentoInput avvisoPagamentoInput = toPaymentNoticeAvvisoPagamentoInput(paymentNotice);
 
-		Boolean postal = paymentNotice.getPostal();
+		boolean postale = Boolean.TRUE.equals(paymentNotice.getPostal());
 
 		avvisoPagamentoInput.setPagine(new PagineAvviso());
 
@@ -55,12 +55,12 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
 
 		if(hasReducedPayments) {
-			if(postal != null && postal.booleanValue()) {
+			if(postale) {
 				creaRateRidottePerAvvisoPostale(logger, paymentNotice, avvisoPagamentoInput);
 			} else {
 				creaRateRidottePerAvvisoSemplice(logger, paymentNotice, avvisoPagamentoInput);
 			}
-		} else if(postal != null && postal.booleanValue()) { // avviso postale
+		} else if(postale) { // avviso postale
 			creaRatePerAvvisoPostale(logger, paymentNotice, avvisoPagamentoInput);
 		} else { // avviso semplice
 			creaRatePerAvvisoSemplice(logger, paymentNotice, avvisoPagamentoInput);
@@ -68,11 +68,11 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		return avvisoPagamentoInput;
 	}
+
 	public default void creaRatePerAvvisoPostale(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput) {
 		// rata unica
-		RataAvviso rataUnica = null;
 		if(paymentNotice.getFull() != null) {
-			rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
+			RataAvviso rataUnica = amountToRata(paymentNotice.getFull(), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
 
 			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 			pagina.setRata(rataUnica);
@@ -84,30 +84,23 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		List<Instalment> instalments = paymentNotice.getInstalments();
 		if(instalments != null && !instalments.isEmpty()) {
 			while(instalments.size() > 1 && instalments.size()%3 != 0) {
-				Instalment v1 = instalments.remove(0);
-				Instalment v2 = instalments.remove(0);
 				PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
-				pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-				pagina.getRata().add(instalmentToRata(v2, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+				pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
+				pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 			}
 
 			while(instalments.size() > 1) {
-				Instalment v1 = instalments.remove(0);
-				Instalment v2 = instalments.remove(0);
-				Instalment v3 = instalments.remove(0);
-
 				PaginaAvvisoTripla pagina = new PaginaAvvisoTripla();
-				pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-				pagina.getRata().add(instalmentToRata(v2, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-				pagina.getRata().add(instalmentToRata(v3, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+				pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
+				pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
+				pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 			}
 
 			if(instalments.size() == 1) {
-				Instalment v1 = instalments.remove(0);
 				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-				pagina.setRata(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
+				pagina.setRata(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
 				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
 			}
 		}
@@ -122,98 +115,116 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		// rate
 		List<Instalment> instalments = paymentNotice.getInstalments();
-		if(instalments != null && !instalments.isEmpty()) {
-			log.debug("Numero rate: [{}]", instalments.size());
 
-			if(instalments.size() > 1) {
-
-				if(this.isMultipla(instalments)) { // numero rate > 3
-					log.debug("Abilito pagine multiple");	
-
-					// pagina 1 con due rate se (#rate - 4 ) mod 9 ==0 || (#rate -8) mod 9 == 0
-					if(isPaginaPrincipaleDoppia(instalments)) {
-						log.debug("Selezionato layout pagina principale a 2 colonne");
-						creaPaginaPrincipaleDoppia(avvisoPagamentoInput, rataUnica, instalments);
-					} else {
-						log.debug("Selezionato layout pagina principale a 3 colonne");
-						creaPaginaPrincipaleTripla(avvisoPagamentoInput, rataUnica, instalments);
-					}
-
-
-					while(instalments.size() > 8) {
-						log.debug("Inserisco una pagina con 9 rate");
-						Instalment v1 = instalments.remove(0);
-						Instalment v2 = instalments.remove(0);
-						Instalment v3 = instalments.remove(0);
-						Instalment v4 = instalments.remove(0);
-						Instalment v5 = instalments.remove(0);
-						Instalment v6 = instalments.remove(0);
-						Instalment v7 = instalments.remove(0);
-						Instalment v8 = instalments.remove(0);
-						Instalment v9 = instalments.remove(0);
-
-						PaginaAvvisoMultipla pagina = new PaginaAvvisoMultipla();
-						// layout a 3 colonne
-						pagina.setColonne(BigInteger.valueOf(3l));
-
-						pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v2, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v3, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v4, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v5, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v6, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v7, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v8, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						pagina.getRata().add(instalmentToRata(v9, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
-					}
-
-					// qui creo l'ultima pagina multipla sono rimasti un numero di pendenze da 2 a 8
-					// quando ho 2 o 4 metto il layout a 2 colonne altrimenti a 3
-					if(!instalments.isEmpty()) {
-						log.debug("Inserisco pagina finale con {} rate", instalments.size());
-						PaginaAvvisoMultipla pagina = new PaginaAvvisoMultipla();
-						if(instalments.size() < 6 && instalments.size() %3 != 0) {
-							log.debug("Selezionato layout pagina multipla finale a 2 colonne");
-							// layout a 2 colonne
-							pagina.setColonne(BigInteger.valueOf(2l));
-						} else {
-							log.debug("Selezionato layout pagina multipla finale a 3 colonne");
-							// layout a 3 colonne
-							pagina.setColonne(BigInteger.valueOf(3l));
-						}
-
-						while(!instalments.isEmpty()) {
-							Instalment v1 = instalments.remove(0);
-							pagina.getRata().add(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-						}
-
-						avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
-					}
-				} else {
-					log.debug("Layout in pagina singola");
-					// 2/3 rate in una sola pagina
-					if(instalments.size()%3 != 0) { // 2 rate
-						log.debug("Selezionato layout a 2 colonne");
-						creaPaginaPrincipaleDoppia(avvisoPagamentoInput, rataUnica, instalments);
-					} else { // 3 rate
-						log.debug("Selezionato layout a 3 colonne");
-						creaPaginaPrincipaleTripla(avvisoPagamentoInput, rataUnica, instalments);
-					}
-				}
-			} else {
-				Instalment v1 = instalments.remove(0);
-				PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
-				pagina.setRata(instalmentToRata(v1, paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor()));
-				avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
-				log.debug("Aggiunta rata unica");
-			}
-		} else {
+		if(instalments == null || instalments.isEmpty()) {
 			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 			pagina.setRata(rataUnica);
 
 			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+			return;
 		}
+
+		log.debug("Numero rate: [{}]", instalments.size());
+
+		if(instalments.size() == 1) {
+			PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
+			pagina.setRata(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+			log.debug("Aggiunta rata unica");
+			return;
+		}
+
+		if(this.isMultipla(instalments)) { // numero rate > 3
+			creaPagineMultiple(log, paymentNotice, avvisoPagamentoInput, rataUnica, instalments);
+		} else {
+			creaPaginaUnicaConRate(log, avvisoPagamentoInput, rataUnica, instalments);
+		}
+	}
+
+	/***
+	 * Crea le pagine dell'avviso quando le rate sono piu' di 3: una pagina principale
+	 * seguita dalle pagine con il layout multiplo.
+	 *
+	 */
+	public default void creaPagineMultiple(Logger log, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput, RataAvviso rataUnica, List<Instalment> instalments) {
+		log.debug("Abilito pagine multiple");
+
+		// pagina 1 con due rate se (#rate - 4 ) mod 9 ==0 || (#rate -8) mod 9 == 0
+		if(isPaginaPrincipaleDoppia(instalments)) {
+			log.debug("Selezionato layout pagina principale a 2 colonne");
+			creaPaginaPrincipaleDoppia(avvisoPagamentoInput, rataUnica, instalments);
+		} else {
+			log.debug("Selezionato layout pagina principale a 3 colonne");
+			creaPaginaPrincipaleTripla(avvisoPagamentoInput, rataUnica, instalments);
+		}
+
+		while(instalments.size() > (NUMERO_RATE_PAGINA_MULTIPLA - 1)) {
+			log.debug("Inserisco una pagina con {} rate", NUMERO_RATE_PAGINA_MULTIPLA);
+			PaginaAvvisoMultipla pagina = new PaginaAvvisoMultipla();
+			// layout a 3 colonne
+			pagina.setColonne(BigInteger.valueOf(3l));
+
+			for (int i = 0; i < NUMERO_RATE_PAGINA_MULTIPLA; i++) {
+				pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
+			}
+
+			avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+		}
+
+		// qui creo l'ultima pagina multipla sono rimasti un numero di pendenze da 2 a 8
+		if(!instalments.isEmpty()) {
+			creaUltimaPaginaMultipla(log, paymentNotice, avvisoPagamentoInput, instalments);
+		}
+	}
+
+	/***
+	 * Crea l'ultima pagina con layout multiplo: quando le rate residue sono 2 o 4 si utilizza
+	 * il layout a 2 colonne, altrimenti quello a 3 colonne.
+	 *
+	 */
+	public default void creaUltimaPaginaMultipla(Logger log, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput, List<Instalment> instalments) {
+		log.debug("Inserisco pagina finale con {} rate", instalments.size());
+
+		PaginaAvvisoMultipla pagina = new PaginaAvvisoMultipla();
+		if(instalments.size() < 6 && instalments.size() %3 != 0) {
+			log.debug("Selezionato layout pagina multipla finale a 2 colonne");
+			// layout a 2 colonne
+			pagina.setColonne(BigInteger.valueOf(2l));
+		} else {
+			log.debug("Selezionato layout pagina multipla finale a 3 colonne");
+			// layout a 3 colonne
+			pagina.setColonne(BigInteger.valueOf(3l));
+		}
+
+		while(!instalments.isEmpty()) {
+			pagina.getRata().add(prossimaRata(paymentNotice, avvisoPagamentoInput, instalments));
+		}
+
+		avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla().add(pagina);
+	}
+
+	/***
+	 * Crea l'unica pagina dell'avviso quando le rate sono 2 o 3.
+	 *
+	 */
+	public default void creaPaginaUnicaConRate(Logger log, AvvisoPagamentoInput avvisoPagamentoInput, RataAvviso rataUnica, List<Instalment> instalments) {
+		log.debug("Layout in pagina singola");
+
+		if(instalments.size()%3 != 0) { // 2 rate
+			log.debug("Selezionato layout a 2 colonne");
+			creaPaginaPrincipaleDoppia(avvisoPagamentoInput, rataUnica, instalments);
+		} else { // 3 rate
+			log.debug("Selezionato layout a 3 colonne");
+			creaPaginaPrincipaleTripla(avvisoPagamentoInput, rataUnica, instalments);
+		}
+	}
+
+	/***
+	 * Rimuove la prima rata dall'elenco e la converte nella rata dell'avviso.
+	 *
+	 */
+	public default RataAvviso prossimaRata(PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput, List<Instalment> instalments) {
+		return instalmentToRata(instalments.remove(0), paymentNotice.getPostal(), avvisoPagamentoInput, paymentNotice.getCreditor());
 	}
 
 	public default void creaPaginaPrincipaleTripla(AvvisoPagamentoInput avvisoPagamentoInput, RataAvviso rataUnica, List<Instalment> instalments) {
@@ -259,27 +270,11 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		// imposta tipo e giorni per la soglia
 		rataAvviso.setTipo(thresholdPayment.getThresholdType() == ThresholdType.ENTRO ? Costanti.TIPO_RATA_ENTRO : Costanti.TIPO_RATA_OLTRE);
-		rataAvviso.setGiorni(java.math.BigInteger.valueOf(thresholdPayment.getThresholdDays()));
+		rataAvviso.setGiorni(BigInteger.valueOf(thresholdPayment.getThresholdDays()));
 
-		if(postale != null && postale.booleanValue()){
-			Iban iban = thresholdPayment.getIban();
-			String noticeNumber = thresholdPayment.getNoticeNumber();
-			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
-			String cfEnte = avvisoPagamentoInput.getCfEnte();
-			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC,
-					thresholdPayment.getAmount().doubleValue(),
-						cfEnte,
-						avvisoPagamentoInput.getCfDestinatario(),
-						avvisoPagamentoInput.getNomeCognomeDestinatario(),
-						avvisoPagamentoInput.getOggettoDelPagamento()));
-			rataAvviso.setNumeroCcPostale(numeroCC);
-			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
-
-			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
-			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
-			else
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
+		if(Boolean.TRUE.equals(postale)){
+			impostaDatiPostaliNellaRata(rataAvviso, thresholdPayment.getNoticeNumber(), thresholdPayment.getIban(),
+					thresholdPayment.getAmount().doubleValue(), avvisoPagamentoInput, creditor);
 		}
 
 		return rataAvviso;
@@ -381,29 +376,13 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	@Mapping(target = "qrCode", source="qrcode")
 	@Mapping(target = "numeroRata", source="instalmentNumber")
 	public RataAvviso instalmentToRataBase(Instalment instalment);
-	
+
 	public default RataAvviso instalmentToRata(Instalment instalment, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = instalmentToRataBase(instalment);
 
-		if(postale.booleanValue()){
-			Iban iban = instalment.getIban();
-			String noticeNumber = instalment.getNoticeNumber();
-			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
-			String cfEnte = avvisoPagamentoInput.getCfEnte();
-			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, 
-					instalment.getAmount().doubleValue(),
-						cfEnte,
-						avvisoPagamentoInput.getCfDestinatario(),
-						avvisoPagamentoInput.getNomeCognomeDestinatario(),
-						avvisoPagamentoInput.getOggettoDelPagamento()));
-			rataAvviso.setNumeroCcPostale(numeroCC);
-			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
-			
-			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
-			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
-			else 
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
+		if(Boolean.TRUE.equals(postale)){
+			impostaDatiPostaliNellaRata(rataAvviso, instalment.getNoticeNumber(), instalment.getIban(),
+					instalment.getAmount().doubleValue(), avvisoPagamentoInput, creditor);
 		}
 
 		return rataAvviso;

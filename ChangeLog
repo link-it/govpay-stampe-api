@@ -1,3 +1,55 @@
+2026-08-27  Giuliano Pintori <pintori@link.it>
+
+	* [Qualita' del codice]
+	Risolte le segnalazioni SonarCloud aperte (30 issue, 3 Blocker, 3 High).
+
+	Blocker - NullPointerException certi nei mapper degli avvisi: la
+	dereferenziazione di Creditor nella costruzione del bollettino postale e'
+	stata resa null-safe con il nuovo metodo
+	BaseAvvisoMapper.getAutorizzazionePostale(Creditor, Iban), utilizzato dai tre
+	punti che prima invocavano direttamente creditor.getPostalAuthMessage()
+	(BaseAvvisoMapper, AvvisoPagamentoMapper, AvvisoPagamentoBilingueMapper).
+	BaseAvvisoMapper.getLabelLingua(..) non restituisce piu' null: se la lingua
+	non e' indicata o non sono configurate le label per quella lingua viene
+	sollevata una CodificaInesistenteException (HTTP 400) al posto del
+	NullPointerException (HTTP 503) che si verificava in
+	AvvisoPagamentoBilingueMapper sulle etichette non valorizzate. Il caso e'
+	raggiungibile con le lingue "en" e "fr", previste dall'enumerazione Languages
+	ma prive di label in avvisi.properties.
+
+	* [Qualita' del codice]
+	High - complessita' cognitiva: scomposti i due metodi principali di
+	costruzione delle pagine dell'avviso, che erano rispettivamente a 63 e 41
+	punti di complessita' cognitiva contro un limite di 15
+	(AvvisoPagamentoBilingueMapper.creaRatePerAvvisoBilingue e
+	AvvisoPagamentoMapper.creaRatePerAvvisoSemplice), oltre a
+	AvvisoPagamentoBilingueMapper.toPaymentNoticeAvvisoPagamentoInput.
+	La logica e' stata estratta in metodi con una singola responsabilita'
+	(creazione della pagina con la rata unica, pagina principale con sole rate,
+	pagine multiple, ultima pagina multipla, note sull'importo, label dei canali
+	di pagamento, label delle soglie). Comportamento invariato: i 140 PDF
+	generati dalla suite di test sono identici prima e dopo l'intervento.
+
+	* [Qualita' del codice]
+	Medium/Low - PaymentNoticeController e ReceiptController convertiti da field
+	injection a constructor injection (11 segnalazioni); sostituito
+	ResponseEntity.created(null) con ResponseEntity.status(HttpStatus.CREATED);
+	rimosso il parametro accept non utilizzato da
+	RestResponseEntityExceptionHandler.buildResponseProblem(..); ridotto a 7 il
+	numero di parametri di
+	AvvisoPagamentoBilingueMapper.impostaLabelsPostaliNellaRataAvviso(..)
+	eliminando i parametri non utilizzati; rimosse le condizioni ridondanti su
+	Boolean postal utilizzando Boolean.TRUE.equals(..); pattern matching per
+	instanceof in extractValidationError(..); utilizzo di StringBuilder.isEmpty()
+	e rimozione di una variabile temporanea in AvvisoPagamentoUtils.
+	Rimossa la duplicazione della logica del bollettino postale nei tre mapper
+	della v1 tramite BaseAvvisoMapper.impostaDatiPostaliNellaRata(..).
+
+	* [Test]
+	Aggiunti UC_3_42 e UC_3_43 in UC_3_AvvisoStandardFailTest: verificano che una
+	richiesta con lingua principale o secondaria senza label configurate
+	restituisca 400 Bad Request anziche' un errore interno.
+
 2026-07-26  Giuliano Pintori <pintori@link.it>
 
 	* [Sicurezza]

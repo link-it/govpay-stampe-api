@@ -26,6 +26,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.Iban;
+import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
@@ -947,6 +948,54 @@ class UC_3_AvvisoStandardFailTest {
 	    assertEquals("Bad Request", problem.getString("title"));
 	    assertTrue(problem.getString("detail").contains("Field error in object 'paymentNotice' on field 'full.iban.postalAuthMessage': rejected value"));
         assertTrue(problem.getString("detail").contains("size must be between 0 and 70"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_3_42_AvvisoStandard_LabelLinguaNonDisponibili() throws Exception {
+	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+	    avvisoRataUnica.setLanguage(Languages.EN);
+
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Label non disponibili per la lingua [EN]"));
+	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+	}
+
+	@Test
+	void UC_3_43_AvvisoStandard_LabelSecondaLinguaNonDisponibili() throws Exception {
+	    PaymentNotice avvisoRataUnica = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+	    avvisoRataUnica.getSecondLanguage().setLanguage(Languages.FR);
+
+	    String body = mapper.writeValueAsString(avvisoRataUnica);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isBadRequest())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(400, problem.getInt("status"));
+	    assertEquals("Bad Request", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("Label non disponibili per la lingua [FR]"));
 	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 	}
 }

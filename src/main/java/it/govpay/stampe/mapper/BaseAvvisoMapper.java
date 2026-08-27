@@ -39,46 +39,74 @@ public interface BaseAvvisoMapper {
 	public default RataAvviso amountToRata(Amount amount, Boolean postale, AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
 		RataAvviso rataAvviso = amountToRataBase(amount);
 
-		if(postale != null && postale.booleanValue()){
-			Iban iban = amount.getIban();
-			String noticeNumber = amount.getNoticeNumber();
-			String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
-			String cfEnte = avvisoPagamentoInput.getCfEnte();
-			rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC, 
-						amount.getAmount().doubleValue(),
-						cfEnte,
-						avvisoPagamentoInput.getCfDestinatario(),
-						avvisoPagamentoInput.getNomeCognomeDestinatario(),
-						avvisoPagamentoInput.getOggettoDelPagamento()));
-			rataAvviso.setNumeroCcPostale(numeroCC);
-			rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
-
-			rataAvviso.setAutorizzazione(AvvisoPagamentoUtils.getAutorizzazionePoste(creditor.getPostalAuthMessage(), iban.getPostalAuthMessage()));
-			if(StringUtils.isBlank(iban.getOwnerBusinessName()))
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
-			else 
-				avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
+		if(Boolean.TRUE.equals(postale)){
+			impostaDatiPostaliNellaRata(rataAvviso, amount.getNoticeNumber(), amount.getIban(),
+					amount.getAmount().doubleValue(), avvisoPagamentoInput, creditor);
 		}
 
 		return rataAvviso;
 	}
 
+	/***
+	 * Imposta nella rata i dati del bollettino postale: datamatrix, numero di conto corrente,
+	 * codice avviso, autorizzazione e intestatario del conto corrente.
+	 *
+	 */
+	public default void impostaDatiPostaliNellaRata(RataAvviso rataAvviso, String noticeNumber, Iban iban, double importo,
+			AvvisoPagamentoInput avvisoPagamentoInput, Creditor creditor) {
+		String numeroCC = AvvisoPagamentoUtils.getNumeroCCDaIban(iban.getIbanCode());
+		rataAvviso.setDataMatrix(AvvisoPagamentoUtils.creaDataMatrix(noticeNumber, numeroCC,
+					importo,
+					avvisoPagamentoInput.getCfEnte(),
+					avvisoPagamentoInput.getCfDestinatario(),
+					avvisoPagamentoInput.getNomeCognomeDestinatario(),
+					avvisoPagamentoInput.getOggettoDelPagamento()));
+		rataAvviso.setNumeroCcPostale(numeroCC);
+		rataAvviso.setCodiceAvvisoPostale(rataAvviso.getCodiceAvviso());
+		rataAvviso.setAutorizzazione(getAutorizzazionePostale(creditor, iban));
+
+		if(StringUtils.isBlank(iban.getOwnerBusinessName()))
+			avvisoPagamentoInput.setIntestatarioContoCorrentePostale(avvisoPagamentoInput.getEnteCreditore());
+		else
+			avvisoPagamentoInput.setIntestatarioContoCorrentePostale(iban.getOwnerBusinessName());
+	}
+
+	/***
+	 * Restituisce l'autorizzazione delle poste da riportare sul bollettino: viene utilizzata quella
+	 * associata all'iban, se presente, altrimenti quella dell'ente creditore.
+	 *
+	 */
+	public default String getAutorizzazionePostale(Creditor creditor, Iban iban) {
+		String autorizzazioneEnte = creditor != null ? creditor.getPostalAuthMessage() : null;
+		String autorizzazioneIban = iban != null ? iban.getPostalAuthMessage() : null;
+
+		return AvvisoPagamentoUtils.getAutorizzazionePoste(autorizzazioneEnte, autorizzazioneIban);
+	}
+
+	/***
+	 * Restituisce le label configurate per la lingua indicata.
+	 *
+	 * Non restituisce mai null: se la lingua non e' indicata o non sono configurate le label
+	 * per quella lingua viene sollevata una CodificaInesistenteException.
+	 *
+	 */
 	public default Map<String, String> getLabelLingua(Languages languages, LabelAvvisiProperties labelAvvisiProperties){
-		if(languages == null) return null;
-		
-		switch (languages) {
-		case DE:
-			return labelAvvisiProperties.getDe();
-		case EN:
-			return labelAvvisiProperties.getEn();
-		case FR:
-			return labelAvvisiProperties.getFr();
-		case IT:
-			return labelAvvisiProperties.getIt();
-		case SL:
-			return labelAvvisiProperties.getSl();
-		}
-		throw new CodificaInesistenteException("Label non disponibili per la lingua ["+languages.name()+"]");
+		if(languages == null)
+			throw new CodificaInesistenteException("Lingua non indicata: impossibile determinare le label dell'avviso");
+
+		Map<String, String> labelLingua = switch (languages) {
+			case DE -> labelAvvisiProperties.getDe();
+			case EN -> labelAvvisiProperties.getEn();
+			case FR -> labelAvvisiProperties.getFr();
+			case IT -> labelAvvisiProperties.getIt();
+			case SL -> labelAvvisiProperties.getSl();
+			default -> throw new CodificaInesistenteException("Label non disponibili per la lingua ["+languages.name()+"]");
+		};
+
+		if(labelLingua == null)
+			throw new CodificaInesistenteException("Label non disponibili per la lingua ["+languages.name()+"]");
+
+		return labelLingua;
 	}
 	
 	@Named("mapLogo")
@@ -107,7 +135,7 @@ public interface BaseAvvisoMapper {
 		}
 
 		if(StringUtils.isNotBlank(enteCreditore.getInfoLine2())){
-			if(sb.length() > 0) {
+			if(!sb.isEmpty()) {
 				sb.append("<br/>");
 			}
 
@@ -119,7 +147,7 @@ public interface BaseAvvisoMapper {
 
 	@Named("mapPostale")
 	public default String mapPostale(Boolean postal) {
-		if(postal != null && postal.booleanValue()) {
+		if(Boolean.TRUE.equals(postal)) {
 			return Costanti.DI_POSTE;
 		}
 
@@ -128,7 +156,7 @@ public interface BaseAvvisoMapper {
 
 	@Named("mapDelTuoEnte")
 	public default String mapDelTuoEnte(Boolean postal) {
-		if(postal != null && postal.booleanValue()) {
+		if(Boolean.TRUE.equals(postal)) {
 			return Costanti.DEL_TUO_ENTE_CREDITORE;
 		}
 

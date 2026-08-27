@@ -9,6 +9,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,11 +26,15 @@ public class ReceiptController implements ReceiptApi {
 
 	private static Logger logger = LoggerFactory.getLogger(ReceiptController.class);
 
-	@Autowired
-	RicevutaMapper ricevutaMapper;
+	private final RicevutaMapper ricevutaMapper;
+
+	private final RicevutaService ricevutaService;
 
 	@Autowired
-	RicevutaService ricevutaService;
+	public ReceiptController(RicevutaMapper ricevutaMapper, RicevutaService ricevutaService) {
+		this.ricevutaMapper = ricevutaMapper;
+		this.ricevutaService = ricevutaService;
+	}
 
 	@Override
 	public ResponseEntity<Resource> createReceipt(@Valid @RequestBody Receipt receipt) {
@@ -57,6 +62,6 @@ public class ReceiptController implements ReceiptApi {
 
 		logger.info("Creazione ricevuta di pagamento completata.");
 
-		return ResponseEntity.created(null).headers(headers).body(resource);
+		return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(resource);
 	}
 }

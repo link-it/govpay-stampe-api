@@ -38,8 +38,7 @@ public class AvvisoPagamentoUtils {
 		causaleASCII = causaleASCII.replaceAll("[^\\x00-\\x7F]", "");
 		String causaleFilled = getCausaleFilled(causaleASCII);
 
-		String dataMatrix = MessageFormat.format(Costanti.PATTERN_DATAMATRIX, codeLine, codDominio, cfDebitoreFilled, denominazioneDebitoreFilled, causaleFilled, Costanti.FILLER_DATAMATRIX);
-		return dataMatrix;
+		return MessageFormat.format(Costanti.PATTERN_DATAMATRIX, codeLine, codDominio, cfDebitoreFilled, denominazioneDebitoreFilled, causaleFilled, Costanti.FILLER_DATAMATRIX);
 	}
 
 	public static String createCodeLine(String numeroAvviso, String numeroCC, String importoInCentesimi) {
@@ -165,7 +164,7 @@ public class AvvisoPagamentoUtils {
 			// split del numero avviso a gruppi di 4 cifre
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < numeroAvviso.length(); i++) {
-				if(sb.length() > 0 && (i % 4 == 0)) {
+				if(!sb.isEmpty() && (i % 4 == 0)) {
 					sb.append(" ");
 				}
 

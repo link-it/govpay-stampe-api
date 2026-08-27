@@ -1,6 +1,18 @@
 2026-08-27  Giuliano Pintori <pintori@link.it>
 
 	* [Qualita' del codice]
+	Risolta la segnalazione SonarCloud Blocker introdotta con la scomposizione dei
+	mapper (NullPointerException in
+	AvvisoPagamentoBilingueMapper.creaEtichetteLinguaSecondaria(..)): la guardia
+	iniziale verificava solo la presenza della seconda lingua dell'avviso e non
+	quella delle relative label, mentre getEtichette(..) restituisce null quando
+	non riceve la mappa delle label. La condizione di uscita ora comprende anche
+	labelLinguaSecondaria == null, rendendo esplicito che per produrre le
+	etichette della traduzione servono entrambi gli ingredienti.
+
+2026-08-27  Giuliano Pintori <pintori@link.it>
+
+	* [Qualita' del codice]
 	Risolte le segnalazioni SonarCloud aperte (30 issue, 3 Blocker, 3 High).
 
 	Blocker - NullPointerException certi nei mapper degli avvisi: la

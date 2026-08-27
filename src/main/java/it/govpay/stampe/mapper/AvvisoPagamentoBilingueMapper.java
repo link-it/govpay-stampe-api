@@ -90,11 +90,13 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 	}
 
 	/***
-	 * Crea le etichette della lingua secondaria, se l'avviso e' bilingue, altrimenti null.
+	 * Crea le etichette della lingua secondaria: servono sia la seconda lingua dell'avviso sia
+	 * le label configurate per quella lingua, altrimenti non c'e' traduzione e viene
+	 * restituito null.
 	 *
 	 */
 	public default Etichette creaEtichetteLinguaSecondaria(PaymentNotice paymentNotice, Map<String, String> labelLinguaSecondaria) {
-		if(paymentNotice.getSecondLanguage() == null) {
+		if(paymentNotice.getSecondLanguage() == null || labelLinguaSecondaria == null) {
 			return null;
 		}
 

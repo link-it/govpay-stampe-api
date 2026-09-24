@@ -38,6 +38,9 @@
 
 		<wagon-ssh-external.version>3.5.3</wagon-ssh-external.version>
 
+		<!-- govpay-common (not in BOM) -->
+		<govpay-common.version>2.0.4-SNAPSHOT</govpay-common.version>
+
 		<!-- xalan -->
 		<xalan.version>2.7.3</xalan.version>
 		<!-- Jaxen -->
@@ -138,6 +141,29 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!--
+			govpay-common: qui serve solo per la tracciatura di transaction id e
+			correlation id (BP-LOG-3), registrata da LoggingAutoConfiguration.
+			La libreria porta con se' spring-boot-starter-data-jpa: stampe-api non
+			ha base dati, quindi le autoconfigurazioni DataSource/JPA sono escluse
+			in it.govpay.stampe.Application. Le altre autoconfigurazioni di common
+			restano inattive da sole (metriche dietro govpay.metrics.enabled, batch
+			dietro spring-batch che qui non c'e', livelli dinamici dietro un
+			ConfigurazioneService che richiede la base dati di GovPay).
+			Esclusione di spring-boot-starter-logging come per starter-web sopra.
+		-->
+		<dependency>
+			<groupId>org.gov4j.govpay</groupId>
+			<artifactId>govpay-common</artifactId>
+			<version>${govpay-common.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Endpoint di scrape Prometheus (/actuator/prometheus) -->

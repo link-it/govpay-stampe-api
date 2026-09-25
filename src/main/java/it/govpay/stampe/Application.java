@@ -5,6 +5,10 @@ import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +20,22 @@ import tools.jackson.databind.module.SimpleModule;
 
 import it.govpay.stampe.deserializer.ResourceDeserializer;
 
-@SpringBootApplication
+/**
+ * stampe-api non ha base dati: genera PDF a partire dal payload della richiesta.
+ * <p>
+ * La dipendenza da govpay-common, introdotta per la tracciatura di transaction id
+ * e correlation id (BP-LOG-3), porta pero' con se' {@code spring-boot-starter-data-jpa}.
+ * Senza esclusione, {@code DataSourceAutoConfiguration} pretenderebbe una URL di
+ * connessione e l'applicazione non partirebbe. Le quattro autoconfigurazioni qui
+ * escluse sono l'intera catena DataSource/JPA: nessuna entity e nessun repository
+ * di govpay-common viene comunque scansionato, perche' lo scan parte da
+ * {@code it.govpay.stampe}.
+ */
+@SpringBootApplication(exclude = {
+		DataSourceAutoConfiguration.class,
+		DataSourceTransactionManagerAutoConfiguration.class,
+		HibernateJpaAutoConfiguration.class,
+		DataJpaRepositoriesAutoConfiguration.class })
 public class Application extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {

@@ -1,13 +1,22 @@
 package it.govpay.stampe.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +29,11 @@ import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.mapper.AvvisoPagamentoBilingueMapper;
+import it.govpay.stampe.model.v2.AvvisoPagamentoInput;
+import it.govpay.stampe.model.v2.PaginaAvvisoDoppia;
+import it.govpay.stampe.model.v2.RataAvviso;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
@@ -31,14 +44,20 @@ import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 @ActiveProfiles("test")
 class UC_5_AvvisoBilingueTest {
 
+	private static final Logger logger = LoggerFactory.getLogger(UC_5_AvvisoBilingueTest.class);
+
 	@Autowired
 	private MockMvc mockMvc;
 
 	private ObjectMapper mapper = ObjectMapperUtils.createObjectMapper();
-	
+
 	@Autowired
 	AvvisoPagamentoBilingueMapper avvisoPagamentoBilingueMapper;
-	
+
+	@Autowired
+	@Qualifier("labelAvvisiProperties")
+	LabelAvvisiProperties labelAvvisiProperties;
+
 	@Autowired
 	AvvisiPagamentoFactory avvisiPagamentoFactory;
 
@@ -310,6 +329,107 @@ class UC_5_AvvisoBilingueTest {
 		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
 		assertNotNull(headerContentDisposition);
 		assertEquals(avvisoPagamentoBilingueMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
+	}
+
+	// ==================== issue #34 ====================
+
+	/**
+	 * {@code poste} e' letto da tutti i template V2 per decidere se mostrare il bollettino
+	 * postale: senza valorizzarlo (bug originale) l'avviso bilingue postale non lo mostrerebbe
+	 * nonostante datamatrix/numero CC/autorizzazione siano gia' calcolati nella rata.
+	 */
+	@Test
+	@DisplayName("UC_5_13: avviso bilingue postale valorizza 'poste', quello non postale lo lascia assente")
+	void UC_5_13_AvvisoBilinguePosteValorizzatoSoloSePostale() {
+		PaymentNotice avvisoPostale = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avvisoPostale.setPostal(true);
+		AvvisoPagamentoInput inputPostale = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avvisoPostale, this.labelAvvisiProperties);
+		assertTrue(Boolean.TRUE.equals(inputPostale.isPoste()));
+
+		PaymentNotice avvisoStandard = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		AvvisoPagamentoInput inputStandard = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avvisoStandard, this.labelAvvisiProperties);
+		assertNull(inputStandard.isPoste());
+	}
+
+	/**
+	 * Bug originale: nel ramo "rata con numeroRata" di {@code impostaLabelsNellaRataAvviso} la
+	 * label tradotta per "rata unica entro il" veniva scritta con {@code setScadenzaTra} invece
+	 * di {@code setScadenzaUnicaTra}, lasciando {@code scadenzaUnicaTra} sempre null e
+	 * sovrascrivendo il valore (gia' corretto) di {@code scadenzaTra}.
+	 */
+	@Test
+	@DisplayName("UC_5_14: rate con lingua secondaria valorizzano scadenzaUnicaTra, non sovrascrivono scadenzaTra")
+	void UC_5_14_RataConLinguaSecondariaValorizzaScadenzaUnicaTra() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeDueRate();
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		RataAvviso rata = input.getPagine().getSingolaOrDoppia().stream()
+				.filter(PaginaAvvisoDoppia.class::isInstance)
+				.map(PaginaAvvisoDoppia.class::cast)
+				.findFirst().orElseThrow()
+				.getRata().get(0);
+
+		String scadenzaUnicaTraAttesa = this.labelAvvisiProperties.getSl().get("rata_unica_entro_il");
+		assertEquals(scadenzaUnicaTraAttesa, rata.getScadenzaUnicaTra());
+		assertNotEquals(scadenzaUnicaTraAttesa, rata.getScadenzaTra());
+	}
+
+	/**
+	 * Bug originale: {@code creaRatePerAvvisoBilingue} scriveva la nota importo della lingua
+	 * SECONDARIA nelle etichette {@code italiano}, lasciando {@code traduzione} a null —
+	 * esattamente invertito. {@code creaRateRidottePerAvvisoBilingue} (soglie ridotte) non ha
+	 * mai avuto questo bug ed e' il riferimento del comportamento corretto.
+	 */
+	@Test
+	@DisplayName("UC_5_15: nota importo (rata unica) va in italiano con la lingua principale, in "
+			+ "traduzione con la secondaria")
+	void UC_5_15_NotaImportoNonScambiataTraLingue() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		String notaImportoIta = this.labelAvvisiProperties.getIt().get("nota_importo");
+		String notaImportoSl = this.labelAvvisiProperties.getSl().get("nota_importo");
+
+		assertEquals(notaImportoIta, input.getEtichette().getItaliano().getNota1());
+		assertEquals(notaImportoSl, input.getEtichette().getTraduzione().getNota1());
+		assertFalse(notaImportoIta.equals(notaImportoSl));
+	}
+
+	/**
+	 * Stesso comportamento del legacy ({@code AvvisoPagamentoV2Utils.impostaInformativaImportoAvviso}):
+	 * un override solo italiano non eredita mai la label di default per la traduzione, perche'
+	 * non esiste ancora un campo dedicato per la sua versione tradotta.
+	 */
+	@Test
+	@DisplayName("UC_5_16: informativaImporto valorizzato sostituisce solo il testo italiano, la traduzione resta assente")
+	void UC_5_16_InformativaImportoValorizzatoNonTraduce() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setInformativaImporto("Testo personalizzato");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertEquals("Testo personalizzato", input.getEtichette().getItaliano().getNota1());
+		assertNull(input.getEtichette().getTraduzione().getNota1());
+	}
+
+	@Test
+	@DisplayName("UC_5_17: informativaImporto a stringa vuota nasconde la nota in entrambe le lingue")
+	void UC_5_17_InformativaImportoVuotoNascondeEntrambeLeLingue() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setInformativaImporto("");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertNull(input.getEtichette().getItaliano().getNota1());
+		assertNull(input.getEtichette().getTraduzione().getNota1());
 	}
 }
 

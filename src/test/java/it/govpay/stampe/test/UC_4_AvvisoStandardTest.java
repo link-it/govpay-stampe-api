@@ -1,13 +1,19 @@
 package it.govpay.stampe.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +26,9 @@ import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.mapper.AvvisoPagamentoMapper;
+import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
@@ -31,6 +39,8 @@ import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 @ActiveProfiles("test")
 class UC_4_AvvisoStandardTest {
 
+	private static final Logger logger = LoggerFactory.getLogger(UC_4_AvvisoStandardTest.class);
+
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -38,7 +48,11 @@ class UC_4_AvvisoStandardTest {
 
 	@Autowired
 	AvvisoPagamentoMapper avvisoPagamentoMapper;
-	
+
+	@Autowired
+	@Qualifier("labelAvvisiProperties")
+	LabelAvvisiProperties labelAvvisiProperties;
+
 	@Autowired
 	AvvisiPagamentoFactory avvisiPagamentoFactory;
 
@@ -357,6 +371,48 @@ class UC_4_AvvisoStandardTest {
 		String headerContentDisposition = result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION);
 		assertNotNull(headerContentDisposition);
 		assertEquals(avvisoPagamentoMapper.nomePdf(avvisoRataUnica), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
+	}
+
+	// ==================== informativa_importo ====================
+
+	@Test
+	@DisplayName("informativaImporto assente: nascondiInformativaImportoAvviso resta false (il template applica il testo standard)")
+	void informativaImportoAssenteUsaIlTestoStandard() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setSecondLanguage(null);
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertNull(input.getInformativaImportoAvviso());
+		assertFalse(input.isNascondiInformativaImportoAvviso());
+	}
+
+	@Test
+	@DisplayName("informativaImporto valorizzato sostituisce il testo standard")
+	void informativaImportoValorizzatoSostituisceIlTesto() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setSecondLanguage(null);
+		avviso.setInformativaImporto("Testo personalizzato");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertEquals("Testo personalizzato", input.getInformativaImportoAvviso());
+		assertFalse(input.isNascondiInformativaImportoAvviso());
+	}
+
+	@Test
+	@DisplayName("informativaImporto a stringa vuota nasconde la sezione")
+	void informativaImportoVuotoNascondeLaSezione() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setSecondLanguage(null);
+		avviso.setInformativaImporto("");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertTrue(input.isNascondiInformativaImportoAvviso());
 	}
 }
 

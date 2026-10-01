@@ -400,5 +400,36 @@ class UC_5_AvvisoBilingueTest {
 		assertEquals(notaImportoSl, input.getEtichette().getTraduzione().getNota1());
 		assertFalse(notaImportoIta.equals(notaImportoSl));
 	}
+
+	/**
+	 * Stesso comportamento del legacy ({@code AvvisoPagamentoV2Utils.impostaInformativaImportoAvviso}):
+	 * un override solo italiano non eredita mai la label di default per la traduzione, perche'
+	 * non esiste ancora un campo dedicato per la sua versione tradotta.
+	 */
+	@Test
+	@DisplayName("UC_5_16: informativaImporto valorizzato sostituisce solo il testo italiano, la traduzione resta assente")
+	void UC_5_16_InformativaImportoValorizzatoNonTraduce() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setInformativaImporto("Testo personalizzato");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertEquals("Testo personalizzato", input.getEtichette().getItaliano().getNota1());
+		assertNull(input.getEtichette().getTraduzione().getNota1());
+	}
+
+	@Test
+	@DisplayName("UC_5_17: informativaImporto a stringa vuota nasconde la nota in entrambe le lingue")
+	void UC_5_17_InformativaImportoVuotoNascondeEntrambeLeLingue() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setInformativaImporto("");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertNull(input.getEtichette().getItaliano().getNota1());
+		assertNull(input.getEtichette().getTraduzione().getNota1());
+	}
 }
 

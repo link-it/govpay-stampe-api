@@ -47,6 +47,16 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 
 		AvvisoPagamentoInput avvisoPagamentoInput = toPaymentNoticeAvvisoPagamentoInput(paymentNotice);
 
+		// gestione personalizzata del messaggio di informativa importo: se assente (null) il
+		// template applica il testo standard; se stringa vuota nasconde la sezione; altrimenti
+		// sostituisce il testo standard con il valore indicato. Stesso meccanismo di
+		// AvvisoPagamentoUtils.fromVersamento (v2 legacy): a differenza del mapper bilingue, qui
+		// il modello ha gia' due campi dedicati, mai valorizzati finora.
+		String informativaImporto = paymentNotice.getInformativaImporto();
+		avvisoPagamentoInput.setInformativaImportoAvviso(informativaImporto);
+		avvisoPagamentoInput.setNascondiInformativaImportoAvviso(
+				informativaImporto != null && informativaImporto.isEmpty());
+
 		boolean postale = Boolean.TRUE.equals(paymentNotice.getPostal());
 
 		avvisoPagamentoInput.setPagine(new PagineAvviso());

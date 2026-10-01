@@ -70,6 +70,13 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		// informazioni postali
 		impostaLabelsCanaliDiPagamento(paymentNotice.getPostal(), etichette, labelLinguaPrincipale, etichetteLinguaSecondaria, labelLinguaSecondaria);
 
+		// come in AvvisoPagamentoV2Utils (v1): 'poste' si valorizza a true solo per l'avviso
+		// postale, altrimenti resta assente (letto da tutti i template V2 per decidere se
+		// mostrare il bollettino)
+		if(Boolean.TRUE.equals(paymentNotice.getPostal())) {
+			avvisoPagamentoInput.setPoste(Boolean.TRUE);
+		}
+
 		it.govpay.stampe.model.v2.AvvisoPagamentoInput.Etichette etichetteAvviso = new it.govpay.stampe.model.v2.AvvisoPagamentoInput.Etichette();
 		etichetteAvviso.setItaliano(etichette);
 		etichetteAvviso.setTraduzione(etichetteLinguaSecondaria);
@@ -134,8 +141,13 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 	public default void creaRatePerAvvisoBilingue(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
 		// nota importo viene letta dalle properties e poi viene inserita in un punto diverso a seconda della presenza o meno della rata unica
+		// (stesso pattern di creaRateRidottePerAvvisoBilingue: principale sempre in italiano,
+		// secondaria solo se presente, mai scambiate)
+		String labelNotaImporto = labelLinguaPrincipale.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
 		String labelNotaImportoTra = null;
-		String labelNotaImporto = getLabelNotaImporto(labelLinguaPrincipale, labelLinguaSecondaria);
+		if(labelLinguaSecondaria != null) {
+			labelNotaImportoTra = labelLinguaSecondaria.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
+		}
 
 		// rata unica
 		RataAvviso rataUnica = creaPaginaRataUnica(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria);
@@ -166,19 +178,6 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		}
 
 		impostaNotaImporto(avvisoPagamentoInput, labelLinguaSecondaria, labelNotaImporto, labelNotaImportoTra, addNota1);
-	}
-
-	/***
-	 * Restituisce la nota sull'importo: quando e' presente la lingua secondaria viene utilizzata
-	 * la label della lingua secondaria.
-	 *
-	 */
-	public default String getLabelNotaImporto(Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria) {
-		if(labelLinguaSecondaria != null) {
-			return labelLinguaSecondaria.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
-		}
-
-		return labelLinguaPrincipale.get(LabelAvvisiCostanti.LABEL_NOTA_IMPORTO);
 	}
 
 	/***
@@ -542,7 +541,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 			rata.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 			if(labelLinguaSecondaria != null)
-				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
+				rata.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 		}
 	}
 

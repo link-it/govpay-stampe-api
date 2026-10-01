@@ -328,6 +328,13 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ThresholdPayment'
+            informativa_importo:
+              type: string
+              maxLength: 255
+              description: >-
+                Se valorizzato, sostituisce il testo standard della nota informativa
+                sull'importo. Se valorizzato con stringa vuota, l'informativa viene omessa.
+              example: "L'importo può variare in base a sgravi, interessi o sanzioni."
 
     Iban:
       type: object

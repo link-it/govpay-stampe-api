@@ -402,13 +402,12 @@ class UC_5_AvvisoBilingueTest {
 	}
 
 	/**
-	 * Stesso comportamento del legacy ({@code AvvisoPagamentoV2Utils.impostaInformativaImportoAvviso}):
-	 * un override solo italiano non eredita mai la label di default per la traduzione, perche'
-	 * non esiste ancora un campo dedicato per la sua versione tradotta.
+	 * Senza {@code secondLanguage.informativaImporto}, la traduzione resta assente — nessun
+	 * fallback sulla label di default.
 	 */
 	@Test
-	@DisplayName("UC_5_16: informativaImporto valorizzato sostituisce solo il testo italiano, la traduzione resta assente")
-	void UC_5_16_InformativaImportoValorizzatoNonTraduce() {
+	@DisplayName("UC_5_16: informativaImporto valorizzato senza secondLanguage.informativaImporto: la traduzione resta assente")
+	void UC_5_16_InformativaImportoValorizzatoSenzaTraduzioneNonTraduce() {
 		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
 		avviso.setInformativaImporto("Testo personalizzato");
 
@@ -430,6 +429,43 @@ class UC_5_AvvisoBilingueTest {
 
 		assertNull(input.getEtichette().getItaliano().getNota1());
 		assertNull(input.getEtichette().getTraduzione().getNota1());
+	}
+
+	@Test
+	@DisplayName("UC_5_18: informativaImporto valorizzato CON secondLanguage.informativaImporto popola anche la traduzione")
+	void UC_5_18_InformativaImportoConTraduzionePopolaEntrambeLeLingue() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.setInformativaImporto("Testo personalizzato");
+		avviso.getSecondLanguage().setInformativaImporto("Custom text");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		assertEquals("Testo personalizzato", input.getEtichette().getItaliano().getNota1());
+		assertEquals("Custom text", input.getEtichette().getTraduzione().getNota1());
+	}
+
+	/**
+	 * Stesso comportamento del legacy ({@code AvvisoPagamentoV2Utils.definitoMessaggioInformativaImportoAvvisoItaliano}):
+	 * "Se non viene impostata la dicitura sostitutiva della lingua principale, non viene
+	 * modificata neanche quella della lingua secondaria indipendentemente dalla valorizzazione" —
+	 * un {@code secondLanguage.informativaImporto} valorizzato viene ignorato se l'italiano
+	 * (principale) non e' stato personalizzato: si usano le label di default per entrambe.
+	 */
+	@Test
+	@DisplayName("UC_5_19: secondLanguage.informativaImporto e' ignorato se informativaImporto principale e' assente")
+	void UC_5_19_TraduzioneIgnorataSenzaOverrideItaliano() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.getSecondLanguage().setInformativaImporto("Custom text");
+
+		AvvisoPagamentoInput input = this.avvisoPagamentoBilingueMapper
+				.toPaymentNoticeAvvisoPagamentoInput(logger, avviso, this.labelAvvisiProperties);
+
+		String notaImportoIta = this.labelAvvisiProperties.getIt().get("nota_importo");
+		String notaImportoSl = this.labelAvvisiProperties.getSl().get("nota_importo");
+
+		assertEquals(notaImportoIta, input.getEtichette().getItaliano().getNota1());
+		assertEquals(notaImportoSl, input.getEtichette().getTraduzione().getNota1());
 	}
 }
 

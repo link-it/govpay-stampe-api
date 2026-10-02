@@ -173,21 +173,21 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 	/***
 	 * Calcola ed imposta la nota sull'importo, applicando l'eventuale personalizzazione da
-	 * {@code PaymentNotice.informativaImporto} — stesso meccanismo di
-	 * {@code AvvisoPagamentoV2Utils.impostaInformativaImportoAvviso} (v2 legacy):
+	 * {@code PaymentNotice.informativaImporto}/{@code secondLanguage.informativaImporto} —
+	 * stesso meccanismo di {@code AvvisoPagamentoV2Utils.impostaInformativaImportoAvviso} (v2
+	 * legacy):
 	 * <ul>
 	 * <li>{@code null} (non configurato): si usa la label statica di default, per entrambe le
 	 * lingue;</li>
 	 * <li>stringa vuota: la nota viene nascosta del tutto, IT e traduzione insieme (non solo
 	 * IT) — stesso comportamento del legacy quando l'override e' valorizzato vuoto;</li>
-	 * <li>stringa non vuota: sostituisce il testo italiano. La traduzione resta assente
-	 * (nessuna nota) perche' non esiste ancora un campo dedicato per la sua versione tradotta
-	 * (lato legacy, {@code linguaSecondariaInformativaImportoAvviso}): il legacy stesso non la
-	 * ricava mai dalla label di default quando l'italiano e' stato personalizzato, per
-	 * costruzione — "Se non viene impostata la dicitura sostitutiva della lingua principale,
-	 * non viene modificata neanche quella della lingua secondaria indipendentemente dalla
-	 * valorizzazione" vale anche al contrario: un override solo italiano non eredita mai la
-	 * label di default per la traduzione.</li>
+	 * <li>stringa non vuota: sostituisce il testo italiano, e la traduzione prende
+	 * {@code secondLanguage.informativaImporto} se presente (altrimenti resta assente — nessun
+	 * fallback sulla label di default). Letta SOLO in questo ramo: se l'italiano non e' stato
+	 * personalizzato, non si legge/applica la traduzione a prescindere dalla sua
+	 * valorizzazione — stesso identico vincolo del legacy ("Se non viene impostata la dicitura
+	 * sostitutiva della lingua principale, non viene modificata neanche quella della lingua
+	 * secondaria indipendentemente dalla valorizzazione").</li>
 	 * </ul>
 	 *
 	 */
@@ -200,6 +200,9 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		if(informativaImporto != null) {
 			if(!informativaImporto.isEmpty()) {
 				labelNotaImporto = informativaImporto;
+				if(paymentNotice.getSecondLanguage() != null) {
+					labelNotaImportoTra = paymentNotice.getSecondLanguage().getInformativaImporto();
+				}
 			}
 			// stringa vuota: labelNotaImporto/labelNotaImportoTra restano null, nota nascosta
 		} else {

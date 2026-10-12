@@ -540,8 +540,9 @@ class UC_7_RicevutaFailTest {
 
 	@Test
 	void UC_7_30_Receipt_InvalidAmount() throws Exception {
+		// Un importo zero e' valido (ricevuta non eseguita): solo un valore negativo e' invalido.
 		Receipt receipt = creaReceipt();
-		receipt.setAmount(0.001);
+		receipt.setAmount(-0.01);
 
 		String body = mapper.writeValueAsString(receipt);
 
@@ -556,8 +557,9 @@ class UC_7_RicevutaFailTest {
 
 	@Test
 	void UC_7_31_Receipt_InvalidItemAmount() throws Exception {
+		// Un importo zero e' valido (voce non eseguita): solo un valore negativo e' invalido.
 		Receipt receipt = creaReceipt();
-		receipt.getItems().get(0).setAmount(0.001);
+		receipt.getItems().get(0).setAmount(-0.01);
 
 		String body = mapper.writeValueAsString(receipt);
 

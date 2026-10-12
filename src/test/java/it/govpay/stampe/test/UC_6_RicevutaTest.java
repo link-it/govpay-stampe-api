@@ -72,6 +72,23 @@ class UC_6_RicevutaTest {
 		assertEquals(ricevutaMapper.nomePdf(receipt), AvvisiPagamentoFactory.extractFilename(headerContentDisposition));
 	}
 
+	@Test
+	void UC_6_02_RicevutaConImportoZeroOk() throws Exception {
+		// Importo complessivo e voce a zero: ricevuta/voce non eseguita, caso reale del legacy.
+		Receipt receipt = creaReceipt();
+		receipt.setAmount(0.0);
+		receipt.setStatus(ReceiptStatus.NOT_EXECUTED);
+		receipt.getItems().get(0).setAmount(0.0);
+		receipt.getItems().get(0).setStatus(ReceiptItemStatus.NOT_EXECUTED);
+
+		String body = mapper.writeValueAsString(receipt);
+
+		this.mockMvc.perform(post(Costanti.RECEIPT_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated());
+	}
+
 	private Receipt creaReceipt() {
 		Receipt receipt = new Receipt();
 

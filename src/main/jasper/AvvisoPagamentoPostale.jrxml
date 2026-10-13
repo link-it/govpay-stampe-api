@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="AvvisoPagamento" language="groovy" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" whenResourceMissingType="Empty" uuid="39fc760f-927a-41cb-a91e-1efbc2881e4d">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="AvvisoPagamento - Xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="573"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="413"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<import value="org.apache.commons.codec.binary.Base64"/>
+	<style name="style1" isDefault="true" hAlign="Left" vAlign="Middle" fontName="TitilliumWeb" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/home/zulio/Lavoro/GovPay/Jasper/Progetti/Avviso_Pagamento_Bollettino_Rate_Subreport_As_Param/AvvisoPostale/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="RataUnicaPostale" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("RataUnicaPostale.jasper")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DoppiaRataPostale" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("DoppiaRataPostale.jasper")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="TriplaRataPostale" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("TriplaRataPostale.jasper")]]></defaultValueExpression>
+	</parameter>
+	<queryString language="xPath">
+		<![CDATA[/AvvisoPagamentoInput]]>
+	</queryString>
+	<field name="singola" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/pagine/singola]]></fieldDescription>
+	</field>
+	<field name="doppia" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/pagine/doppia]]></fieldDescription>
+	</field>
+	<field name="tripla" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/pagine/tripla]]></fieldDescription>
+	</field>
+	<field name="multipla" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/pagine/multipla]]></fieldDescription>
+	</field>
+	<field name="logo_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/logo_ente]]></fieldDescription>
+	</field>
+	<field name="logo_ente_secondario" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/logo_ente_secondario]]></fieldDescription>
+	</field>
+	<field name="oggetto_del_pagamento" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/oggetto_del_pagamento]]></fieldDescription>
+	</field>
+	<field name="cf_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/cf_ente]]></fieldDescription>
+	</field>
+	<field name="cf_destinatario" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/cf_destinatario]]></fieldDescription>
+	</field>
+	<field name="nome_cognome_destinatario" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/nome_cognome_destinatario]]></fieldDescription>
+	</field>
+	<field name="ente_creditore" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/ente_creditore]]></fieldDescription>
+	</field>
+	<field name="settore_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/settore_ente]]></fieldDescription>
+	</field>
+	<field name="indirizzo_destinatario_1" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/indirizzo_destinatario_1]]></fieldDescription>
+	</field>
+	<field name="indirizzo_destinatario_2" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/indirizzo_destinatario_2]]></fieldDescription>
+	</field>
+	<field name="info_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/info_ente]]></fieldDescription>
+	</field>
+	<field name="del_tuo_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/del_tuo_ente]]></fieldDescription>
+	</field>
+	<field name="di_poste" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/di_poste]]></fieldDescription>
+	</field>
+	<field name="cbill" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/cbill]]></fieldDescription>
+	</field>
+	<field name="intestatario_conto_corrente_postale" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/intestatario_conto_corrente_postale]]></fieldDescription>
+	</field>
+	<field name="totale_rate" class="java.lang.Integer">
+		<fieldDescription><![CDATA[count(//rata)]]></fieldDescription>
+	</field>
+	<field name="nascondi_informativa_importo_avviso" class="java.lang.Boolean">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/nascondi_informativa_importo_avviso]]></fieldDescription>
+	</field>
+	<field name="informativa_importo_avviso" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/informativa_importo_avviso]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="40">
+			<printWhenExpression><![CDATA[(!($F{singola}.equals(null)) && $F{doppia}.equals(null) && $F{tripla}.equals(null)) ||
+(!($F{doppia}.equals(null)) && $F{singola}.equals(null) && $F{tripla}.equals(null)) ||
+(!($F{tripla}.equals(null)) && $F{doppia}.equals(null) && $F{singola}.equals(null))]]></printWhenExpression>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="0" width="595" height="40" isRemoveLineWhenBlank="true" uuid="b30a30dc-a6f6-4404-84f2-93d785937e01">
+					<printWhenExpression><![CDATA[new Boolean($F{singola}.equals(null)) == false]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$F{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="totale_rate">
+					<subreportParameterExpression><![CDATA[$F{totale_rate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nascondi_informativa_importo_avviso">
+					<subreportParameterExpression><![CDATA[$F{nascondi_informativa_importo_avviso}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="informativa_importo_avviso">
+					<subreportParameterExpression><![CDATA[$F{informativa_importo_avviso}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/AvvisoPagamentoInput/pagine/singola")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{RataUnicaPostale}]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="0" width="595" height="40" isRemoveLineWhenBlank="true" uuid="1f32fe50-b83d-423d-ba30-c93c8662b49b">
+					<printWhenExpression><![CDATA[new Boolean($F{doppia}.equals(null)) == false]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$F{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/AvvisoPagamentoInput/pagine/doppia")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{DoppiaRataPostale}]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="0" width="595" height="40" isRemoveLineWhenBlank="true" uuid="84ae501d-de40-4bc7-8e02-0f364536d87f">
+					<printWhenExpression><![CDATA[new Boolean($F{tripla}.equals(null)) == false]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$F{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/AvvisoPagamentoInput/pagine/tripla")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{TriplaRataPostale}]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="30">
+			<printWhenExpression><![CDATA[(!$F{singola}.equals(null) && !$F{doppia}.equals(null) && !$F{tripla}.equals(null)) ||
+(!$F{singola}.equals(null) && !$F{doppia}.equals(null) && $F{tripla}.equals(null)) ||
+(!$F{singola}.equals(null) && $F{doppia}.equals(null) && !$F{tripla}.equals(null)) ||
+($F{singola}.equals(null) && !$F{doppia}.equals(null) && !$F{tripla}.equals(null))]]></printWhenExpression>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="0" width="595" height="10" isRemoveLineWhenBlank="true" uuid="b79313ce-8491-4b23-b151-40103a5d095f">
+					<printWhenExpression><![CDATA[new Boolean($F{singola}.equals(null)) == false]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$F{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="totale_rate">
+					<subreportParameterExpression><![CDATA[$F{totale_rate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nascondi_informativa_importo_avviso">
+					<subreportParameterExpression><![CDATA[$F{nascondi_informativa_importo_avviso}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="informativa_importo_avviso">
+					<subreportParameterExpression><![CDATA[$F{informativa_importo_avviso}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/AvvisoPagamentoInput/pagine/singola")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{RataUnicaPostale}]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="20" width="595" height="10" isRemoveLineWhenBlank="true" uuid="c44f8a2b-b624-4f15-8d8b-ab65fed959d9">
+					<printWhenExpression><![CDATA[new Boolean($F{tripla}.equals(null)) == false]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$F{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/AvvisoPagamentoInput/pagine/tripla")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{TriplaRataPostale}]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="10" width="595" height="10" isRemoveLineWhenBlank="true" uuid="d78ca899-1459-49d1-b0f4-8185ae1ee7c5">
+					<printWhenExpression><![CDATA[new Boolean($F{doppia}.equals(null)) == false]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$F{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/AvvisoPagamentoInput/pagine/doppia")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{DoppiaRataPostale}]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+</jasperReport>

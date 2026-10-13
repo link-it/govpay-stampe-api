@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Sanzione" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="39fc760f-927a-41cb-a91e-1efbc2881e4d">
+	<property name="ireport.zoom" value="1.4641000000000006"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="AvvisoPagamento - Xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="573"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="413"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<import value="org.apache.commons.codec.binary.Base64"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/home/zulio/Lavoro/GovPay/Jasper/Progetti/ViolazioneCDS/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logo_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="logo_ente_secondario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_del_pagamento" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nome_cognome_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="settore_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="info_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="del_tuo_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cbill" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_conto_corrente_postale" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="scadenza_ridotto" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="scadenza_scontato" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString language="xPath">
+		<![CDATA[/ViolazioneInput/pagine/singola]]>
+	</queryString>
+	<field name="autorizzazione" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/autorizzazione]]></fieldDescription>
+	</field>
+	<field name="qr_code" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/qr_code]]></fieldDescription>
+	</field>
+	<field name="codice_avviso" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/codice_avviso]]></fieldDescription>
+	</field>
+	<field name="codice_avviso_postale" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/codice_avviso_postale]]></fieldDescription>
+	</field>
+	<field name="numero_cc_postale" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/numero_cc_postale]]></fieldDescription>
+	</field>
+	<field name="data_matrix" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/data_matrix]]></fieldDescription>
+	</field>
+	<field name="importo_scontato" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/importo_scontato]]></fieldDescription>
+	</field>
+	<field name="importo_ridotto" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/importo_ridotto]]></fieldDescription>
+	</field>
+	<field name="qr_code_2" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/qr_code_2]]></fieldDescription>
+	</field>
+	<field name="codice_avviso_2" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/codice_avviso_2]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="794">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="231" y="778" width="149" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="f91e3b08-504b-47cc-93a5-eec3d928fb05"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="RobotoMono" size="10" isBold="true" isItalic="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codice_avviso_2}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="231" y="764" width="149" height="14" isRemoveLineWhenBlank="true" uuid="3170d40a-e5cc-43f4-b7b4-3b2c6fe245cc"/>
+				<textElement>
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Cod. Avviso]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="447" y="778" width="107" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="25398d4e-e5b2-4e52-a03e-b14e2c8365c0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="RobotoMono" size="10" isBold="true" isItalic="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cf_ente}]]></textFieldExpression>
+			</textField>
+			<textField pattern="">
+				<reportElement positionType="Float" mode="Opaque" x="275" y="628" width="299" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="aa2c4221-4806-475a-8632-26e4fb89dfc8"/>
+				<box leftPadding="0" rightPadding="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<font face=\"TitilliumWeb-Bold\">Se paghi " + $P{scadenza_ridotto}.toString().split( "\\*" )[1] + "</font> " + $P{scadenza_ridotto}.toString().split( "\\*" )[2]]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="721" width="255" height="14" isRemoveLineWhenBlank="true" uuid="0b444e9a-8151-4d66-969d-2832c262d830"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Oggetto del pagamento]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="764" width="60" height="14" isRemoveLineWhenBlank="true" uuid="c284b16e-5377-4a0e-91f8-331e33fe9088"/>
+				<textElement>
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Cod. CBILL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="657" width="255" height="14" isRemoveLineWhenBlank="true" uuid="da25079c-a4c3-4d7f-839e-7c75e72a09f7"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Destinatario]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="170" y="671" width="255" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="ce5a0fe5-4014-44e3-9a3f-ee70864a91ba"/>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nome_cognome_destinatario}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="170" y="703" width="255" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="411c8163-fb52-4472-8f25-81e5c0afb385"/>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ente_creditore}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="425" y="657" width="129" height="25" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="8cf9f0a8-c394-49db-ab82-0dc86137c6ca"/>
+				<textElement textAlignment="Right" verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="12" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Euro <style isBold=\"true\"><font face=\"RobotoMono\">"+(new java.text.DecimalFormat("#,###,##0.00", new DecimalFormatSymbols(Locale.ITALY)).format(Double.valueOf($F{importo_ridotto}))).toString() + "</font></style>"]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="170" y="778" width="60" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="943e28da-92c0-46a8-a2cd-3a107ea3ec9d"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="RobotoMono" size="10" isBold="true" isItalic="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cbill}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="-1" y="764" width="160" height="26" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="dbb00b09-5d21-4d35-98f2-0122e2a753b4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="html">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<text><![CDATA[Inquadra il <b>codice QR</b> con la tua app di pagamento o usa i dati accanto.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="689" width="255" height="14" isRemoveLineWhenBlank="true" uuid="f7c48173-420e-4168-9a8c-fe883833516a"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Ente Creditore]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="447" y="764" width="107" height="14" isRemoveLineWhenBlank="true" uuid="f6eb3a29-9288-4c9d-b414-de9cf384f444"/>
+				<textElement textAlignment="Right">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Cod. Fiscale Ente]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" mode="Opaque" x="-20" y="628" width="296" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="f34de105-3e40-4491-a926-7074beecb701">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[IMPORTO RIDOTTO]]></text>
+			</staticText>
+			<image onErrorType="Blank">
+				<reportElement positionType="Float" x="-12" y="647" width="116" height="116" isRemoveLineWhenBlank="true" uuid="2bbbcd85-35d1-4074-bec4-cdff3361c7af"/>
+				<imageExpression><![CDATA[com.google.zxing.client.j2se.MatrixToImageWriter.toBufferedImage(
+    new com.google.zxing.qrcode.QRCodeWriter().encode(
+    $F{qr_code_2},
+    com.google.zxing.BarcodeFormat.QR_CODE, 300, 300))]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="170" y="735" width="255" height="24" isRemoveLineWhenBlank="true" uuid="d10510bc-b3b2-4e38-999d-b0435f6c94f4"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="9"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{oggetto_del_pagamento}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="479" width="255" height="14" isRemoveLineWhenBlank="true" uuid="39dce656-aaa4-4ecc-aab0-1b60d2454841"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Destinatario]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="511" width="255" height="14" isRemoveLineWhenBlank="true" uuid="8a523cbc-35b5-4d70-91c0-f7cb76e52147"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Ente Creditore]]></text>
+			</staticText>
+			<textField pattern="">
+				<reportElement positionType="Float" mode="Opaque" x="275" y="450" width="299" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="34ec2482-218e-4737-a295-465ca9bafb5f"/>
+				<box leftPadding="0" rightPadding="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<font face=\"TitilliumWeb-Bold\">Se paghi " + $P{scadenza_scontato}.toString().split( "\\*" )[1] + "</font> " + $P{scadenza_scontato}.toString().split( "\\*" )[2]]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="170" y="557" width="255" height="24" isRemoveLineWhenBlank="true" uuid="f0bb5cc4-7f4b-45f1-895b-28b5525fbca4"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="9"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{oggetto_del_pagamento}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="425" y="479" width="129" height="25" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="0c3be388-53c8-4728-9a5f-9317155ba5f3"/>
+				<textElement textAlignment="Right" verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="12" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Euro <style isBold=\"true\"><font face=\"RobotoMono\">"+(new java.text.DecimalFormat("#,###,##0.00", new DecimalFormatSymbols(Locale.ITALY)).format(Double.valueOf($F{importo_scontato}))).toString() + "</font></style>"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" mode="Opaque" x="-20" y="450" width="296" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="0bd29544-4be3-48c0-a433-96815245acd7">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[IMPORTO SCONTATO DEL 30%]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="543" width="255" height="14" isRemoveLineWhenBlank="true" uuid="4a343991-69ee-4a73-b646-db876678de4f"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Oggetto del pagamento]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="170" y="493" width="255" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="042a475b-c08e-4005-9332-89af896a1833"/>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nome_cognome_destinatario}]]></textFieldExpression>
+			</textField>
+			<image onErrorType="Blank">
+				<reportElement positionType="Float" x="-12" y="469" width="116" height="116" isRemoveLineWhenBlank="true" uuid="bc8bde28-5a79-4db5-bc9f-2887bf3011e0"/>
+				<imageExpression><![CDATA[com.google.zxing.client.j2se.MatrixToImageWriter.toBufferedImage(
+    new com.google.zxing.qrcode.QRCodeWriter().encode(
+    $F{qr_code},
+    com.google.zxing.BarcodeFormat.QR_CODE, 300, 300))]]></imageExpression>
+			</image>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="170" y="525" width="255" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="d7132403-3765-4f25-8468-664dba3c0822"/>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ente_creditore}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="447" y="586" width="107" height="14" isRemoveLineWhenBlank="true" uuid="5c9e76f8-bcbd-444c-b11e-f65debad1ecf"/>
+				<textElement textAlignment="Right">
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Cod. Fiscale Ente]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="170" y="600" width="60" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="1b830804-9201-497d-a904-bc4f9c6dd73f"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="RobotoMono" size="10" isBold="true"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cbill}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="447" y="600" width="107" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="2cbeb5ea-71aa-435f-9120-8b15d2aace62"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="styled">
+					<font fontName="RobotoMono" size="10" isBold="true"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cf_ente}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="170" y="586" width="60" height="14" isRemoveLineWhenBlank="true" uuid="5fca6887-1ea3-4067-8901-f099be150d9a"/>
+				<textElement>
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Cod. CBILL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="-1" y="586" width="160" height="26" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="ecb74508-3b18-4d0c-86db-37bf0111d425">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="html">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<text><![CDATA[Inquadra il <b>codice QR</b> con la tua app di pagamento o usa i dati accanto.]]></text>
+			</staticText>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="231" y="600" width="149" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="24250a7d-e21b-4fce-9ef6-02247029a9c2"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="RobotoMono" size="10" isBold="true"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codice_avviso}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="231" y="586" width="149" height="14" isRemoveLineWhenBlank="true" uuid="b9130b8e-cd82-4bed-89fd-3c0d2ed68cd8"/>
+				<textElement>
+					<font fontName="TitilliumWeb" size="9"/>
+				</textElement>
+				<text><![CDATA[Cod. Avviso]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="169" width="275" height="34" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="210260d2-1531-43a4-bd97-026a7ba406da"/>
+				<textElement verticalAlignment="Top" markup="html">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{info_ente}.equals(null)?"":$P{info_ente}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="137" y="234" width="137" height="16" isRemoveLineWhenBlank="true" uuid="1c867210-4613-4afa-b74a-999e602da5ba">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="0" rightPadding="5"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Importo ridotto]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="23" y="423" width="516" height="16" isRemoveLineWhenBlank="true" uuid="9449a0e5-22e2-4b36-b6b2-09d2b35b40dc">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="0" rightPadding="0"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb" size="8" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Scegli l'importo corretto per i termini previsti, altrimenti riceverai altre richieste di pagamento per le somme residue ed eventuali somme aggiuntive.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="278" y="234" width="235" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="f8de535a-ce7e-4a56-8158-c40a72d4d616">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[PAGA CON L'APP IO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" mode="Opaque" x="-20" y="85" width="294" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="83558122-f773-42c7-8a9e-b791d2fec135"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold"/>
+				</textElement>
+				<text><![CDATA[ENTE CREDITORE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" mode="Opaque" x="278" y="85" width="297" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="ab8ac777-b146-42c0-8be5-16ff1d095d1c"/>
+				<box leftPadding="8" rightPadding="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold"/>
+				</textElement>
+				<text><![CDATA[DESTINATARIO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="234" width="136" height="16" isRemoveLineWhenBlank="true" uuid="0cc05d8c-003f-4c33-bbd3-d3fef5afa94f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="0" rightPadding="5"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Importo scontato del 30%]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="38" width="350" height="42" isRemoveLineWhenBlank="true" uuid="a5a037b3-2723-43f8-ab7e-4f41f90059c6">
+					<printWhenExpression><![CDATA[new Boolean(!$P{logo_ente_secondario}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="14" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="11.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{oggetto_del_pagamento}.equals(null))?"":$P{oggetto_del_pagamento}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" mode="Opaque" x="278" y="211" width="296" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="626b5374-34a1-4ba8-8627-9275008ce886">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="8" rightPadding="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[DOVE PAGARE?]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="34" y="4" width="150" height="16" isRemoveLineWhenBlank="true" uuid="bdf2ac8b-2cb3-468a-835b-54b4fd7ab4ae">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="5"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[AVVISO DI PAGAMENTO]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="278" y="251" width="235" height="44" isRemoveLineWhenBlank="true" uuid="f01f1a34-fe50-46ce-badb-769501f9c651"/>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{del_tuo_ente}.equals(null)?"": "oppure sul sito " + $P{del_tuo_ente} + ", ") + "dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati."]]></textFieldExpression>
+			</textField>
+			<image scaleImage="RetainShape" hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="0" y="0" width="34" height="34" isRemoveLineWhenBlank="true" uuid="a29acdd2-a809-486b-ac73-4291d82735aa"/>
+				<box>
+					<leftPen lineWidth="0.0"/>
+				</box>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34.67 22.99'><defs></defs><title>logo-pagopa</title><g id='Layer_2' data-name='Layer 2'><g id='Layer_1-2' data-name='Layer 1'><path fill='#0066CC' d='M24.43,6.89v2.9H22.3V0h3.92c1.26,0,1.9.34,1.91,1V5.79c0,.68-.62,1-1.85,1H24.43ZM26,1.13H24.42V5.67H26Z'/><path fill='#0066CC' d='M1.78,9.8v2.91H0V2.91H3.28c1.06,0,1.59.34,1.6,1V8.71c0,.67-.52,1-1.54,1H1.78ZM3.11,4.05H1.78V8.59H3.11Z'/><path fill='#0066CC' d='M10.36,9.72H7c-1,0-1.49-.34-1.49-1v-2C5.5,6,6,5.7,7,5.7H8.59V4.05H7.26V5H5.51v-1c0-.67.52-1,1.57-1l1.73,0q1.55,0,1.56,1ZM7.26,8.59H8.6V6.84H7.26Z'/><path fill='#0066CC' d='M14.24,9.72H12.68c-1,0-1.54-.34-1.54-1V3.93c0-.68.54-1,1.6-1H16v8.78c0,.68-.52,1-1.55,1H12.69c-1,0-1.55-.34-1.55-1v-1h1.77v.89h1.33V9.72ZM12.91,8.59h1.33V4.05H12.91Z'/><path fill='#0066CC' d='M21.5,8.71c0,.67-.53,1-1.59,1H18.19c-1,0-1.56-.34-1.56-1V3.93q0-1,1.56-1H20c1,0,1.54.34,1.54,1ZM19.74,4.05H18.4V8.59h1.33Z'/><path fill='#0066CC' d='M34.67,1.07c0-.68-.62-1-1.85-1H30.7q-1.86,0-1.86,1V9.81H31v-3h1.6v2.5a11.58,11.58,0,0,1-20.71,7.11l1.06-.81L8.66,12.76l.19,6,1.35-1.09A13.68,13.68,0,0,0,34.67,9.31ZM32.56,5.69H31V1.19h1.6Z'/></g></g></svg>")]]></imageExpression>
+			</image>
+			<image hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="0" y="357" width="11" height="11" isRemoveLineWhenBlank="true" uuid="fa5eb4f8-9406-46e3-aec3-975e838cf95d"/>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg width='11' height='11' viewBox='0 0 11 11' fill='none' xmlns='http://www.w3.org/2000/svg'><g clip-path='url(#clip0_1:960)'><path d='M8.28948 2.496H2.68422C2.44683 2.496 2.25439 2.68813 2.25439 2.92514C2.25439 3.16215 2.44683 3.35428 2.68422 3.35428H8.28948C8.52687 3.35428 8.71931 3.16215 8.71931 2.92514C8.71931 2.68813 8.52687 2.496 8.28948 2.496Z' fill='black'/><path d='M8.28948 4.36145H2.68422C2.44683 4.36145 2.25439 4.55358 2.25439 4.79059C2.25439 5.0276 2.44683 5.21973 2.68422 5.21973H8.28948C8.52687 5.21973 8.71931 5.0276 8.71931 4.79059C8.71931 4.55358 8.52687 4.36145 8.28948 4.36145Z' fill='black'/><path d='M4.78071 6.1481H2.68422C2.44683 6.1481 2.25439 6.34023 2.25439 6.57724C2.25439 6.81425 2.44683 7.00638 2.68422 7.00638H4.78071C5.0181 7.00638 5.21054 6.81425 5.21054 6.57724C5.21054 6.34023 5.0181 6.1481 4.78071 6.1481Z' fill='black'/><path d='M9.28076 8.5672e-08H1.71935C1.26156 -0.000142768 0.821845 0.178371 0.494066 0.497446C0.166287 0.816522 -0.0235894 1.25087 -0.0350342 1.70779V9.27468C-0.0350342 9.73923 0.149803 10.1848 0.478814 10.5132C0.807825 10.8417 1.25406 11.0263 1.71935 11.0263H8.0176L10.9825 8.09235V1.75159C10.9827 1.296 10.8051 0.858247 10.4874 0.53123C10.1697 0.204212 9.73687 0.0136677 9.28076 8.5672e-08ZM8.22812 9.8352V8.59156C8.22812 8.50097 8.26417 8.41408 8.32832 8.35003C8.39248 8.28597 8.4795 8.24999 8.57023 8.24999H9.82462L8.22812 9.8352ZM8.57023 7.56687C8.29722 7.56686 8.03526 7.67453 7.8414 7.86645C7.64753 8.05837 7.53745 8.31899 7.53514 8.59156V10.1505H1.71935C1.48671 10.1505 1.26359 10.0582 1.09908 9.89395C0.934578 9.7297 0.842159 9.50695 0.842159 9.27468V1.70779C0.842159 1.47551 0.934578 1.25276 1.09908 1.08852C1.26359 0.924274 1.48671 0.83199 1.71935 0.83199H9.28076C9.5134 0.83199 9.73652 0.924274 9.90103 1.08852C10.0655 1.25276 10.1579 1.47551 10.1579 1.70779V7.56687H8.57023Z' fill='black'/></g><defs><clipPath id='clip0_1:960'><rect width='11' height='11' fill='white'/></clipPath></defs></svg>")]]></imageExpression>
+			</image>
+			<image hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="0" y="321" width="11" height="11" isRemoveLineWhenBlank="true" uuid="cadb9d40-e206-4225-b917-faea92265919"/>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg xmlns='http://www.w3.org/2000/svg' x='0px' y='0px' width='11px' height='11px' viewBox='0 0 11 11' enable-background='new 0 0 11 11' xml:space='preserve'><path d='M11,7.133c0,0.237-0.192,0.43-0.43,0.43s-0.43-0.192-0.43-0.43V2.578c0-0.474-0.385-0.859-0.859-0.859H8.723v0.43	c0,0.237-0.192,0.43-0.43,0.43c-0.237,0-0.43-0.192-0.43-0.43v-0.43H5.908v0.43c0,0.237-0.192,0.43-0.43,0.43	c-0.237,0-0.43-0.192-0.43-0.43v-0.43H3.115v0.43c0,0.237-0.192,0.43-0.43,0.43c-0.237,0-0.43-0.192-0.43-0.43v-0.43H1.719	c-0.474,0-0.859,0.386-0.859,0.859v6.703c0,0.474,0.386,0.859,0.859,0.859h7.562c0.474,0,0.859-0.385,0.859-0.859	c0-0.237,0.192-0.43,0.43-0.43S11,9.044,11,9.281C11,10.229,10.229,11,9.281,11H1.719C0.771,11,0,10.229,0,9.281V2.578	C0,1.63,0.771,0.859,1.719,0.859h0.537V0.43C2.256,0.192,2.448,0,2.686,0c0.237,0,0.43,0.192,0.43,0.43v0.43h1.934V0.43	C5.049,0.192,5.241,0,5.479,0c0.237,0,0.43,0.192,0.43,0.43v0.43h1.955V0.43C7.863,0.192,8.056,0,8.293,0	c0.237,0,0.43,0.192,0.43,0.43v0.43h0.559C10.229,0.859,11,1.63,11,2.578V7.133z M8.293,4.941c0.237,0,0.43-0.192,0.43-0.43	c0-0.237-0.192-0.43-0.43-0.43c-0.237,0-0.43,0.192-0.43,0.43C7.863,4.749,8.056,4.941,8.293,4.941z M5.994,7.82	c0,0.474,0.386,0.859,0.859,0.859h1.01c0.474,0,0.859-0.386,0.859-0.859v-1.01c0-0.474-0.386-0.859-0.859-0.859h-1.01	c-0.474,0-0.859,0.386-0.859,0.859V7.82z M6.854,6.811h1.01l0.001,1.01l-0.001,0h-1.01V6.811z M6.854,4.512	c0,0.237-0.192,0.43-0.43,0.43s-0.43-0.192-0.43-0.43c0-0.237,0.192-0.43,0.43-0.43S6.854,4.274,6.854,4.512z M3.115,8.25	c0,0.237-0.192,0.43-0.43,0.43s-0.43-0.192-0.43-0.43s0.192-0.43,0.43-0.43S3.115,8.013,3.115,8.25z M2.686,4.941	c0.237,0,0.43-0.192,0.43-0.43c0-0.237-0.192-0.43-0.43-0.43s-0.43,0.192-0.43,0.43C2.256,4.749,2.448,4.941,2.686,4.941z	 M3.115,6.381c0,0.237-0.192,0.43-0.43,0.43s-0.43-0.192-0.43-0.43s0.192-0.43,0.43-0.43S3.115,6.144,3.115,6.381z M4.555,6.811	c0.237,0,0.43-0.192,0.43-0.43s-0.192-0.43-0.43-0.43s-0.43,0.192-0.43,0.43S4.317,6.811,4.555,6.811z M4.984,4.512	c0,0.237-0.192,0.43-0.43,0.43s-0.43-0.192-0.43-0.43c0-0.237,0.192-0.43,0.43-0.43S4.984,4.274,4.984,4.512z M4.555,8.68	c0.237,0,0.43-0.192,0.43-0.43s-0.192-0.43-0.43-0.43s-0.43,0.192-0.43,0.43S4.317,8.68,4.555,8.68z'/></svg>")]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement positionType="Float" mode="Transparent" x="23" y="354" width="251" height="55" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="1f0c5ed9-ed2a-43a6-ab35-45f54beed729"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="8" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<font face=\"TitilliumWeb-Bold\">Cosa succede in caso di giacenza?</font><br/>" +
+"La notifica corrisponde al giorno del ritiro, se questo avviene entro 10 giorni dalla data di deposito (la data più vecchia sull'avviso di giacenza) " +
+"Se non ritiri il verbale entro i 10 giorni, calcola le scadenze iniziando a contare dall’undicesimo giorno."]]></textFieldExpression>
+			</textField>
+			<image hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="539" y="423" width="16" height="16" isRemoveLineWhenBlank="true" uuid="8b6757b5-110d-4334-9900-efb304944f6a"/>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path fill-rule='evenodd' clip-rule='evenodd' d='M4.93236 8.34956L5.43907 8.83888L7.43383 10.9984L7.43383 10.9983L5.43916 8.83888L4.93245 8.34956C4.77071 8.19337 4.57234 8.11219 4.37506 8.11228C4.57231 8.11222 4.77065 8.19339 4.93236 8.34956ZM8.1682 13.1263C8.4997 13.1257 8.8288 12.9702 9.12938 12.659L12.3624 9.31109C12.6653 8.99741 12.6689 8.52291 12.3431 8.20835C12.2089 8.07876 12.0465 8.0072 11.8803 7.99276C12.0464 8.00721 12.2089 8.07878 12.343 8.20835C12.6688 8.52291 12.6652 8.99741 12.3623 9.31109L9.1293 12.659C8.82874 12.9702 8.49967 13.1256 8.1682 13.1263ZM8.85681 10.9734L8.8779 7.76474L8.83183 4.10641C8.83414 3.8988 8.742 3.71656 8.59723 3.57676C8.42238 3.40791 8.21079 3.31914 8.0021 3.31964C8.21076 3.31917 8.42232 3.40793 8.59714 3.57676C8.74192 3.71656 8.83405 3.8988 8.83175 4.10641L8.87781 7.76474L8.85672 10.9735L8.85681 10.9734ZM7.65835 11.5362L7.48884 7.78621L7.42514 4.13689C7.42236 3.97787 7.48067 3.8257 7.60208 3.69999C7.84027 3.45333 8.18764 3.45934 8.45821 3.72063C8.57088 3.82943 8.63329 3.9612 8.6317 4.10419L8.6778 7.76534L8.65314 11.519L10.9111 8.88055L11.3962 8.37818C11.6313 8.13481 11.973 8.129 12.2041 8.35221C12.4484 8.58808 12.4466 8.93589 12.2184 9.17215L8.98543 12.52C8.71554 12.7995 8.43863 12.9229 8.17709 12.9263C7.91518 12.9297 7.63333 12.8132 7.35315 12.5426L4.00528 9.30959C3.75986 9.07259 3.74617 8.73107 3.97911 8.48985C4.21006 8.25069 4.54587 8.25436 4.79343 8.49343L5.29603 8.97878L7.65835 11.5362Z' fill='black'/></svg>")]]></imageExpression>
+			</image>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="249" width="136" height="25" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="544bc42f-6bd3-4176-9a83-3c4f4bb90556"/>
+				<box rightPadding="5"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="15" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.DecimalFormat("#,###,##0.00", new DecimalFormatSymbols(Locale.ITALY)).format(Double.valueOf($F{importo_scontato})) + " Euro"]]></textFieldExpression>
+			</textField>
+			<image hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="520" y="304" width="35" height="35" isRemoveLineWhenBlank="true" uuid="af4304d8-1800-44f5-9f7d-8a0fb706483d"/>
+				<box>
+					<leftPen lineWidth="0.0"/>
+				</box>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 33.14 33.45'><title>canali-fisici</title><g id='Layer_2' data-name='Layer 2'><g id='Layer_1-2' data-name='Layer 1'><path d='M24,6.47a12.68,12.68,0,0,1,1.06.88.67.67,0,0,0,.91-1,12.26,12.26,0,0,0-1.18-1A.67.67,0,1,0,24,6.47Z'/><path d='M5.73,14.34a3.52,3.52,0,1,0,3.51,3.52,3.52,3.52,0,0,0-3.51-3.52Zm0,5.7a2.18,2.18,0,1,1,2.18-2.18A2.19,2.19,0,0,1,5.73,20Z'/><path d='M20.1,5.73a3.51,3.51,0,1,0-3.51,3.51A3.51,3.51,0,0,0,20.1,5.73Zm-5.69,0a2.18,2.18,0,1,1,2.18,2.18,2.19,2.19,0,0,1-2.18-2.18Z'/><path d='M30.3,18.43a13.48,13.48,0,0,0,.13-1.9,13.75,13.75,0,0,0-2.83-8.4A.67.67,0,0,0,26.66,8a.66.66,0,0,0-.12.93,12.48,12.48,0,0,1,2.56,7.6c0,.45,0,.9-.07,1.35a5.82,5.82,0,0,0-1.62-.23,5.74,5.74,0,0,0-5.73,5.73A9.3,9.3,0,0,0,23,27.27a12.55,12.55,0,0,1-15.2-1.78c.32-.46.66-1,1-1.52,1.75-2.77,2.63-4.83,2.63-6.11a5.74,5.74,0,0,0-5.73-5.74,5.62,5.62,0,0,0-.92.08,12.58,12.58,0,0,1,6.06-6.83c0,.12,0,.24,0,.36,0,1.29.89,3.34,2.63,6.11,1.27,2,2.52,3.64,2.57,3.71a.67.67,0,0,0,1.06,0c.05-.07,1.3-1.7,2.57-3.71C21.43,9.07,22.32,7,22.32,5.73a5.73,5.73,0,0,0-11.1-2,13.93,13.93,0,0,0-8,9A5.74,5.74,0,0,0,0,17.86C0,19.14.89,21.2,2.64,24c1.26,2,2.51,3.63,2.56,3.7a.67.67,0,0,0,1.06,0s.33-.44.79-1.07A13.69,13.69,0,0,0,11,29.22a13.86,13.86,0,0,0,12.68-.79c.2.34.41.69.64,1.06,1.27,2,2.52,3.63,2.57,3.7a.67.67,0,0,0,1.06,0c0-.07,1.3-1.7,2.56-3.7,1.75-2.77,2.64-4.83,2.64-6.11a5.73,5.73,0,0,0-2.84-4.95ZM16.59,1.33A4.41,4.41,0,0,1,21,5.73c0,1.87-2.81,6.12-4.4,8.3-1.59-2.18-4.4-6.43-4.4-8.3a4.41,4.41,0,0,1,4.4-4.4ZM5.73,26.15c-1.59-2.18-4.4-6.42-4.4-8.29a4.4,4.4,0,0,1,8.8,0c0,1.87-2.81,6.11-4.4,8.29Zm21.68,5.52C25.82,29.5,23,25.25,23,23.38a4.4,4.4,0,0,1,8.8,0c0,1.87-2.81,6.12-4.4,8.29Z'/><path d='M27.41,19.86a3.52,3.52,0,1,0,3.51,3.52,3.52,3.52,0,0,0-3.51-3.52Zm0,5.7a2.18,2.18,0,1,1,2.18-2.18,2.19,2.19,0,0,1-2.18,2.18Z'/></g></g></svg>")]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="278" y="151" width="277" height="16" isRemoveLineWhenBlank="true" uuid="9f417d03-ea22-4b31-b319-b9d60e24f9eb"/>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{indirizzo_destinatario_2}.equals(null))?"":$P{indirizzo_destinatario_2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="137" y="249" width="137" height="25" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="735c675b-fc84-4000-bc0e-058b82cbaf21"/>
+				<box rightPadding="5"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="15" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.DecimalFormat("#,###,##0.00", new DecimalFormatSymbols(Locale.ITALY)).format(Double.valueOf($F{importo_ridotto})) + " Euro"]]></textFieldExpression>
+			</textField>
+			<image hAlign="Right" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="374" y="-1" width="85" height="85" isRemoveLineWhenBlank="true" uuid="eb1aad8e-23f7-4cf4-8f1f-f1fa6d8366f8"/>
+				<imageExpression><![CDATA[new ByteArrayInputStream(Base64.decodeBase64((($P{logo_ente_secondario}.contains(','))?$P{logo_ente_secondario}.split(',')[1]:$P{logo_ente_secondario}).getBytes("UTF-8")))]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="278" y="211" width="277" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="5cfc1bd1-e2f8-4476-89cd-c2802ac00b6f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="html">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Vai su <b>pagopa.gov.it</b>]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="38" width="458" height="42" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="75d366f8-2d9e-4f6a-b587-beef29e7e999">
+					<printWhenExpression><![CDATA[new Boolean($P{logo_ente_secondario}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb-Bold" size="16" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="11.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{oggetto_del_pagamento}.equals(null))?"":$P{oggetto_del_pagamento}]]></textFieldExpression>
+			</textField>
+			<image hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="520" y="238" width="35" height="35" isRemoveLineWhenBlank="true" uuid="5be43797-9a0a-4485-804e-032ca7598687"/>
+				<box>
+					<leftPen lineWidth="0.0"/>
+				</box>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 33.31 31.09'><defs><style>.cls-1{fill:#1d1d1b;}</style></defs><title>canali-digitali</title><g id='Layer_2' data-name='Layer 2'><g id='Layer_1-2' data-name='Layer 1'><path class='cls-1' d='M31.65,15V2.78A2.79,2.79,0,0,0,28.87,0H4.44A2.78,2.78,0,0,0,1.67,2.78V11.1A1.67,1.67,0,0,0,0,12.77V29.43a1.67,1.67,0,0,0,1.67,1.66H13.88a1.67,1.67,0,0,0,1.67-1.66H20.2a1.65,1.65,0,0,0,1.32-.66,1.67,1.67,0,0,0,.29-1.45l-1.1-4h3.16v6.11a1.67,1.67,0,0,0,1.67,1.66h6.11a1.67,1.67,0,0,0,1.66-1.66V16.66A1.67,1.67,0,0,0,31.65,15Zm.55,1.67v1.11H25V16.66a.56.56,0,0,1,.56-.56h6.11A.56.56,0,0,1,32.2,16.66ZM25,18.88H32.2V27.2H25ZM2.78,2.78A1.66,1.66,0,0,1,4.44,1.11H28.87a1.67,1.67,0,0,1,1.67,1.67V15h-5a1.67,1.67,0,0,0-1.67,1.67v1.11H15.55v-5a1.67,1.67,0,0,0-1.67-1.67H2.78ZM14.44,27.2H1.11V15H14.44Zm-12.77-15H13.88a.56.56,0,0,1,.56.56v1.11H1.11V12.77A.56.56,0,0,1,1.67,12.21ZM13.88,30H1.67a.56.56,0,0,1-.56-.55V28.32H14.44v1.11A.56.56,0,0,1,13.88,30Zm6.76-1.88a.56.56,0,0,1-.44.22H15.55V27.2h5.07l.11.41A.54.54,0,0,1,20.64,28.1Zm-.32-2H15.55V23.32h4Zm-4.77-3.88V18.88h8.32v3.33ZM31.65,30H25.54a.56.56,0,0,1-.56-.55V28.32H32.2v1.11A.55.55,0,0,1,31.65,30Z'/></g></g></svg>")]]></imageExpression>
+			</image>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="383" y="85" width="172" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="0d083ca2-d51e-4409-9d06-ede4eba468f6"/>
+				<box leftPadding="10"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="html">
+					<font fontName="RobotoMono" size="9" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cf_destinatario}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="108" width="274" height="20" isRemoveLineWhenBlank="true" uuid="d1e5cae3-66d8-48ff-a6c8-3c03dd72fb8d"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{ente_creditore}.equals(null))?"":$P{ente_creditore}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="137" y="273" width="137" height="30" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="2f16cae7-efe6-468c-a091-7ab4d96cc7ff">
+					<printWhenExpression><![CDATA[new Boolean(!$P{scadenza_ridotto}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="5"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<font face=\"TitilliumWeb-Bold\">" + $P{scadenza_ridotto}.toString().split( "\\*" )[1] + "</font><br/>" + $P{scadenza_ridotto}.toString().split( "\\*" )[2]]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="137" y="85" width="137" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="37d6964a-88f3-4412-909d-5da27f478c84"/>
+				<box leftPadding="8" rightPadding="8"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="html">
+					<font fontName="RobotoMono" size="9" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cf_ente}]]></textFieldExpression>
+			</textField>
+			<image hAlign="Right" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="470" y="0" width="85" height="85" isRemoveLineWhenBlank="true" uuid="9e400d3f-e86a-4ff3-aa34-c36b940401ea"/>
+				<imageExpression><![CDATA[new ByteArrayInputStream(Base64.decodeBase64((($P{logo_ente}.contains(','))?$P{logo_ente}.split(',')[1]:$P{logo_ente}).getBytes("UTF-8")))]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement positionType="Float" mode="Transparent" x="23" y="318" width="251" height="32" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="293cd47c-73e8-41c9-a385-bba63b273076"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="8" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.5"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<font face=\"TitilliumWeb-Bold\">Come si calcolano le scadenze?</font><br/>Il giorno della notifica non si conta. Se la scadenza è di domenica (o festivo), puoi pagare anche il primo giorno feriale successivo."]]></textFieldExpression>
+			</textField>
+			<image hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="-4" y="423" width="16" height="16" isRemoveLineWhenBlank="true" uuid="2622ee6d-5538-4767-83c6-500e618d9611"/>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path fill-rule='evenodd' clip-rule='evenodd' d='M4.93236 8.34956L5.43907 8.83888L7.43383 10.9984L7.43383 10.9983L5.43916 8.83888L4.93245 8.34956C4.77071 8.19337 4.57234 8.11219 4.37506 8.11228C4.57231 8.11222 4.77065 8.19339 4.93236 8.34956ZM8.1682 13.1263C8.4997 13.1257 8.8288 12.9702 9.12938 12.659L12.3624 9.31109C12.6653 8.99741 12.6689 8.52291 12.3431 8.20835C12.2089 8.07876 12.0465 8.0072 11.8803 7.99276C12.0464 8.00721 12.2089 8.07878 12.343 8.20835C12.6688 8.52291 12.6652 8.99741 12.3623 9.31109L9.1293 12.659C8.82874 12.9702 8.49967 13.1256 8.1682 13.1263ZM8.85681 10.9734L8.8779 7.76474L8.83183 4.10641C8.83414 3.8988 8.742 3.71656 8.59723 3.57676C8.42238 3.40791 8.21079 3.31914 8.0021 3.31964C8.21076 3.31917 8.42232 3.40793 8.59714 3.57676C8.74192 3.71656 8.83405 3.8988 8.83175 4.10641L8.87781 7.76474L8.85672 10.9735L8.85681 10.9734ZM7.65835 11.5362L7.48884 7.78621L7.42514 4.13689C7.42236 3.97787 7.48067 3.8257 7.60208 3.69999C7.84027 3.45333 8.18764 3.45934 8.45821 3.72063C8.57088 3.82943 8.63329 3.9612 8.6317 4.10419L8.6778 7.76534L8.65314 11.519L10.9111 8.88055L11.3962 8.37818C11.6313 8.13481 11.973 8.129 12.2041 8.35221C12.4484 8.58808 12.4466 8.93589 12.2184 9.17215L8.98543 12.52C8.71554 12.7995 8.43863 12.9229 8.17709 12.9263C7.91518 12.9297 7.63333 12.8132 7.35315 12.5426L4.00528 9.30959C3.75986 9.07259 3.74617 8.73107 3.97911 8.48985C4.21006 8.25069 4.54587 8.25436 4.79343 8.49343L5.29603 8.97878L7.65835 11.5362Z' fill='black'/></svg>")]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="278" y="312" width="235" height="52" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="a5da41ba-0b3a-4c3e-b0e4-c90d9571f4ef"/>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<text><![CDATA[presso Banche e Sportelli ATM, negli Uffici Postali e Punti Postali, nei Bar, Edicole, Ricevitorie, Supermercati, Tabaccherie e altri Esercenti Convenzionati.]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="278" y="108" width="277" height="20" isRemoveLineWhenBlank="true" uuid="fe15c28a-5ba8-43be-9f2c-1c52a3df6ac8"/>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{nome_cognome_destinatario}.equals(null))?"":$P{nome_cognome_destinatario}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="273" width="136" height="30" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="35daf1a3-d53a-4a34-b6b9-c1cca9bcdaa6">
+					<printWhenExpression><![CDATA[new Boolean(!$P{scadenza_scontato}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<box rightPadding="5"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA["<font face=\"TitilliumWeb-Bold\">" + $P{scadenza_scontato}.toString().split( "\\*" )[1] + "</font><br/>" + $P{scadenza_scontato}.toString().split( "\\*" )[2]]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="136" width="274" height="25" isRemoveLineWhenBlank="true" uuid="4a158aa7-f3af-4f22-9e28-8885a6c39062"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{settore_ente}.equals(null))?"":$P{settore_ente}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="278" y="136" width="277" height="16" isRemoveLineWhenBlank="true" uuid="e273590b-8170-4177-8599-969aa25de120"/>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{indirizzo_destinatario_1}.equals(null))?"":$P{indirizzo_destinatario_1}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" mode="Opaque" x="-20" y="211" width="294" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="33738ab8-a17b-4b60-a512-3bf3301826a1">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[QUANTO E QUANDO PAGARE?]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="278" y="295" width="235" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="0cbef1be-561e-4241-9f3a-3fdf4d0b41cf">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[PAGA SUL TERRITORIO]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

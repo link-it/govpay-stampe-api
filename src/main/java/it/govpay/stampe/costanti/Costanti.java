@@ -42,7 +42,6 @@ public class Costanti {
 
 	public static final String AVVISO_PAGAMENTO_TEMPLATE_JASPER_V2 = "/AvvisoPagamentoV2.jasper";
 	public static final String MONOBAND_TEMPLATE_JASPER_V2 = "/MonoBandV2.jasper";
-	public static final String TRIBAND_TEMPLATE_JASPER_V2 = "/TriBandV2.jasper";
 	public static final String RATAUNICA_TEMPLATE_JASPER_V2 = "/RataUnicaV2.jasper";
 	public static final String RATADOPPIA_TEMPLATE_JASPER_V2 = "/DoppiaRataV2.jasper";
 	public static final String DOPPIOFORMATO_TEMPLATE_JASPER_V2 = "/DoppioFormatoV2.jasper";

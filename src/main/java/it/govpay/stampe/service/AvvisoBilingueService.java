@@ -26,7 +26,6 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 	
 	private Resource templateAvvisoV2 = null;
 	private Resource templateMonoBandV2 = null;
-	private Resource templateTriBandV2 = null;
 	private Resource templateRataUnicaV2 = null;
 	private Resource templateDoppiaRataV2 = null;
 	private Resource templateDoppioFormatoV2 = null;
@@ -47,7 +46,6 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 	public void loadResources(){
 		this.templateAvvisoV2 = new ClassPathResource(Costanti.AVVISO_PAGAMENTO_TEMPLATE_JASPER_V2);
 		this.templateMonoBandV2 = new ClassPathResource(Costanti.MONOBAND_TEMPLATE_JASPER_V2);
-		this.templateTriBandV2 = new ClassPathResource(Costanti.TRIBAND_TEMPLATE_JASPER_V2);
 		this.templateRataUnicaV2 = new ClassPathResource(Costanti.RATAUNICA_TEMPLATE_JASPER_V2);
 		this.templateDoppiaRataV2 = new ClassPathResource(Costanti.RATADOPPIA_TEMPLATE_JASPER_V2);
 		this.templateDoppioFormatoV2 = new ClassPathResource(Costanti.DOPPIOFORMATO_TEMPLATE_JASPER_V2);
@@ -60,7 +58,6 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 			Map<String, Object> parameters = new HashMap<>();
 			
 			parameters.put("MonoBandV2", this.templateMonoBandV2.getInputStream());
-			parameters.put("TriBandV2", this.templateTriBandV2.getInputStream());
 			parameters.put("RataUnicaV2", this.templateRataUnicaV2.getInputStream());
 			parameters.put("DoppiaRataV2", this.templateDoppiaRataV2.getInputStream());
 			parameters.put("DoppioFormatoV2", this.templateDoppioFormatoV2.getInputStream());

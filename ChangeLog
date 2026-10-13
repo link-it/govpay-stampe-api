@@ -1,3 +1,22 @@
+2026-10-13  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Sorgenti dei template JasperReports (#37).
+	Aggiunta la cartella src/main/jasper con i sorgenti .jrxml dei 28 template
+	usati a runtime, finora presenti solo come .jasper compilati. I 21 template
+	non bilingui sono i sorgenti originali; i 7 bilingui V2 sono ricostruiti dai
+	compilati con JRXmlWriter, perche' nell'archivio non c'e' un sorgente
+	corrispondente alla versione in produzione. Compilati con JasperReports
+	6.21.5, tutti producono report equivalenti ai .jasper in produzione. La
+	cartella non e' inclusa nel jar; il README ne riporta provenienza e
+	struttura dei sottoreport.
+
+	* [Stampe] Rimossi i template non usati (#37).
+	MonoBand.jasper, TriBand.jasper e TriBandV2.jasper non sono richiamati da
+	nessun template in uso; i 4 file in violazioneCDS/ duplicavano quelli nella
+	radice delle risorse e non erano caricati. AvvisoBilingueService passava
+	TriBandV2 come parametro, ignorato da AvvisoPagamentoV2: rimossi il campo,
+	il parametro e la costante TRIBAND_TEMPLATE_JASPER_V2.
+
 2026-09-24  Giuliano Pintori <pintori@link.it>
 
 	* [Logging] Transaction ID e Correlation ID (BP-LOG-3).

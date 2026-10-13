@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RicevutaMae_elenco_voci" language="groovy" pageWidth="515" pageHeight="802" columnWidth="515" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="b59721e4-56dc-4cdd-89b8-2a061c9bfaf1">
+	<property name="ireport.zoom" value="2.415765000000001"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="versione_oggetto" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SANP_230"]]></defaultValueExpression>
+	</parameter>
+	<queryString language="xPath">
+		<![CDATA[/root/elenco_voci/voce]]>
+	</queryString>
+	<field name="descrizione" class="java.lang.String">
+		<fieldDescription><![CDATA[descrizione]]></fieldDescription>
+	</field>
+	<field name="id_riscossione" class="java.lang.String">
+		<fieldDescription><![CDATA[id_riscossione]]></fieldDescription>
+	</field>
+	<field name="importo" class="java.lang.String">
+		<fieldDescription><![CDATA[importo]]></fieldDescription>
+	</field>
+	<field name="stato" class="java.lang.String">
+		<fieldDescription><![CDATA[stato]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="27">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="0" y="0" width="250" height="20" backcolor="#FFFFFF" uuid="c6344c19-2789-49b3-95fa-b2d1667e2a44">
+					<printWhenExpression><![CDATA[$P{versione_oggetto}.equals("SANP_230")]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="0" rightPadding="16"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb" size="12"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="8.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{descrizione}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="435" y="0" width="80" height="20" backcolor="#FFFFFF" uuid="9a89dd89-8d5e-459e-a500-0d080de2f76f"/>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="TitilliumWeb-Bold" size="12" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="8.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(new java.text.DecimalFormat("#,###,##0.00", new DecimalFormatSymbols(Locale.ITALY)).format(Double.valueOf($F{importo})))]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="250" y="0" width="185" height="20" backcolor="#FFFFFF" uuid="e88f55a7-d4a4-4a61-91e3-a8bf5bb0795e">
+					<printWhenExpression><![CDATA[$P{versione_oggetto}.equals("SANP_230")]]></printWhenExpression>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb" size="12"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="8.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{id_riscossione}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" stretchType="RelativeToTallestObject" mode="Transparent" x="0" y="0" width="435" height="20" backcolor="#FFFFFF" uuid="05b5be5f-cd1b-4be0-a185-bf615fd42ca7">
+					<printWhenExpression><![CDATA[!$P{versione_oggetto}.equals("SANP_230")]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="0" rightPadding="16"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb" size="12"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="8.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{descrizione}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

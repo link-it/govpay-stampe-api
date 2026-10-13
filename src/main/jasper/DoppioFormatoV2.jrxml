@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DoppioFormato" language="groovy" columnCount="4" printOrder="Horizontal" pageWidth="595" pageHeight="842" whenNoDataType="NoPages" columnWidth="148" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" whenResourceMissingType="Empty" uuid="39fc760f-927a-41cb-a91e-1efbc2881e4d">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="AvvisoPagamento - Xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="573"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="413"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<import value="org.apache.commons.codec.binary.Base64"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/Users/roberto/Documents/Link.it/JasperReports/iReport v.5.6.0/Avviso Pagamento Bollettino/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logo_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="logo_ente_secondario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nome_cognome_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="settore_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="info_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cbill" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_conto_corrente_postale" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="poste" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_del_pagamento_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="avviso_pagamento_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_avviso_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="quanto_quando_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="come_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app2_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio2_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_1_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_2_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_3_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="prima_rata_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="importo_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="entro_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="canali_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="descrizione_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tipo_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_cbill_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_avviso_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_fiscale_ente_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_del_pagamento_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="avviso_pagamento_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_avviso_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="quanto_quando_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="come_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app2_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio2_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_1_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_2_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_3_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="prima_rata_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="importo_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="entro_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="canali_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="descrizione_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tipo_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_cbill_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_avviso_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_fiscale_ente_tra" class="java.lang.String" isForPrompting="false"/>
+	<queryString language="xPath">
+		<![CDATA[rata]]>
+	</queryString>
+	<field name="importo" class="java.lang.String">
+		<fieldDescription><![CDATA[importo]]></fieldDescription>
+	</field>
+	<field name="data" class="java.lang.String">
+		<fieldDescription><![CDATA[data]]></fieldDescription>
+	</field>
+	<field name="qr_code" class="java.lang.String">
+		<fieldDescription><![CDATA[qr_code]]></fieldDescription>
+	</field>
+	<field name="codice_avviso" class="java.lang.String">
+		<fieldDescription><![CDATA[codice_avviso]]></fieldDescription>
+	</field>
+	<field name="codice_avviso_postale" class="java.lang.String">
+		<fieldDescription><![CDATA[codice_avviso_postale]]></fieldDescription>
+	</field>
+	<field name="numero_cc_postale" class="java.lang.String">
+		<fieldDescription><![CDATA[numero_cc_postale]]></fieldDescription>
+	</field>
+	<field name="data_matrix" class="java.lang.String">
+		<fieldDescription><![CDATA[data_matrix]]></fieldDescription>
+	</field>
+	<field name="numero_rata" class="java.lang.String">
+		<fieldDescription><![CDATA[numero_rata]]></fieldDescription>
+	</field>
+	<field name="numero_rata_tra" class="java.lang.String">
+		<fieldDescription><![CDATA[numero_rata_tra]]></fieldDescription>
+	</field>
+	<field name="scadenza" class="java.lang.String">
+		<fieldDescription><![CDATA[scadenza]]></fieldDescription>
+	</field>
+	<field name="scadenza_tra" class="java.lang.String">
+		<fieldDescription><![CDATA[scadenza_tra]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="211">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image onErrorType="Blank">
+				<reportElement positionType="Float" isPrintRepeatedValues="false" x="11" y="15" width="94" height="94" isRemoveLineWhenBlank="true" uuid="a0ab3ddb-9cc3-4be8-b407-e8464a674835"/>
+				<imageExpression><![CDATA[com.google.zxing.client.j2se.MatrixToImageWriter.toBufferedImage(
+    new com.google.zxing.qrcode.QRCodeWriter().encode(
+    $F{qr_code},
+    com.google.zxing.BarcodeFormat.QR_CODE, 300, 300))]]></imageExpression>
+			</image>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement mode="Transparent" x="0" y="3" width="160" height="18" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="d5ac7d8c-e2aa-474b-bb3b-2c35f76533e0">
+					<printWhenExpression><![CDATA[new Boolean(!$F{numero_rata}.equals(null))]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{numero_rata} + ($F{numero_rata_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · " + $F{numero_rata_tra} +"</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField pattern="">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="125" width="148" height="20" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="f2d0fad8-2851-498a-868b-6ed1310dab8f"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="12" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.DecimalFormat("#,###,##0.00", new DecimalFormatSymbols(Locale.ITALY)).format(Double.valueOf($F{importo}))]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="0" y="179" width="160" height="16" isRemoveLineWhenBlank="true" uuid="80095d89-dff0-402c-b20f-307e7b7c6a1d"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{codice_avviso_ita} + ($P{codice_avviso_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{codice_avviso_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="195" width="160" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="27c3f6e1-c22a-48b7-b886-6d21c2167547"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codice_avviso}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="147" width="160" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="95039605-3d65-42f4-b421-80ff2206c173"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single" lineSpacingSize="1.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{data}.equals(null)?$F{scadenza}:$P{entro_ita} + ($P{entro_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · " +$P{entro_tra} + "</style></font>"))]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="163" width="160" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="129ffcf4-d9dd-4f6f-97ec-71735acb79f4"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{data}.equals(null)?($F{scadenza_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\">" + $F{scadenza_tra} + "</style></font>"):$F{data}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" mode="Transparent" x="0" y="106" width="160" height="20" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="fb24a7e5-cb2d-48ac-8964-5e35a5252506"/>
+				<box leftPadding="20"/>
+				<textElement verticalAlignment="Bottom" markup="styled">
+					<font fontName="TitilliumWeb" size="12" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Euro]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

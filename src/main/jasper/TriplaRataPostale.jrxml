@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TriplaRataPostale" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="39fc760f-927a-41cb-a91e-1efbc2881e4d">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="AvvisoPagamento - Xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="573"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="413"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<import value="org.apache.commons.codec.binary.Base64"/>
+	<subDataset name="dataset1" uuid="9f706220-5b47-4344-98cc-62b21127074a"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/Users/roberto/Documents/Link.it/JasperReports/iReport v.5.6.0/Avviso Pagamento Bollettino Rate (Subreport As Param)/AvvisoPostale/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logo_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="logo_ente_secondario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_del_pagamento" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nome_cognome_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="settore_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="info_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="del_tuo_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="di_poste" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cbill" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_conto_corrente_postale" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="TriploFormatoPostale" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("TriploFormatoPostale.jasper")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BollettinoTriRataPostale" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("BollettinoTriRataPostale.jasper")]]></defaultValueExpression>
+	</parameter>
+	<queryString language="xPath">
+		<![CDATA[/tripla]]>
+	</queryString>
+	<field name="rata" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/pagine/tripla/rata]]></fieldDescription>
+	</field>
+	<field name="autorizzazione" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/autorizzazione]]></fieldDescription>
+	</field>
+	<variable name="Rate" class="java.lang.String">
+		<initialValueExpression><![CDATA[""]]></initialValueExpression>
+	</variable>
+	<detail>
+		<band height="94">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="RetainShape" hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="0" y="0" width="34" height="34" uuid="5076b5cb-7f3f-4b3c-aa71-eaf679bbeedf"/>
+				<box>
+					<leftPen lineWidth="0.0"/>
+				</box>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34.67 22.99'><defs></defs><title>logo-pagopa</title><g id='Layer_2' data-name='Layer 2'><g id='Layer_1-2' data-name='Layer 1'><path fill='#0066CC' d='M24.43,6.89v2.9H22.3V0h3.92c1.26,0,1.9.34,1.91,1V5.79c0,.68-.62,1-1.85,1H24.43ZM26,1.13H24.42V5.67H26Z'/><path fill='#0066CC' d='M1.78,9.8v2.91H0V2.91H3.28c1.06,0,1.59.34,1.6,1V8.71c0,.67-.52,1-1.54,1H1.78ZM3.11,4.05H1.78V8.59H3.11Z'/><path fill='#0066CC' d='M10.36,9.72H7c-1,0-1.49-.34-1.49-1v-2C5.5,6,6,5.7,7,5.7H8.59V4.05H7.26V5H5.51v-1c0-.67.52-1,1.57-1l1.73,0q1.55,0,1.56,1ZM7.26,8.59H8.6V6.84H7.26Z'/><path fill='#0066CC' d='M14.24,9.72H12.68c-1,0-1.54-.34-1.54-1V3.93c0-.68.54-1,1.6-1H16v8.78c0,.68-.52,1-1.55,1H12.69c-1,0-1.55-.34-1.55-1v-1h1.77v.89h1.33V9.72ZM12.91,8.59h1.33V4.05H12.91Z'/><path fill='#0066CC' d='M21.5,8.71c0,.67-.53,1-1.59,1H18.19c-1,0-1.56-.34-1.56-1V3.93q0-1,1.56-1H20c1,0,1.54.34,1.54,1ZM19.74,4.05H18.4V8.59h1.33Z'/><path fill='#0066CC' d='M34.67,1.07c0-.68-.62-1-1.85-1H30.7q-1.86,0-1.86,1V9.81H31v-3h1.6v2.5a11.58,11.58,0,0,1-20.71,7.11l1.06-.81L8.66,12.76l.19,6,1.35-1.09A13.68,13.68,0,0,0,34.67,9.31ZM32.56,5.69H31V1.19h1.6Z'/></g></g></svg>")]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement positionType="Float" x="34" y="4" width="150" height="16" uuid="d954ad48-f978-4261-b4a4-37a3604aec47">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="5"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[AVVISO DI PAGAMENTO]]></text>
+			</staticText>
+			<image hAlign="Right" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="485" y="0" width="70" height="70" uuid="d8a00a95-a05e-4c47-9e42-ffaa70912ff0"/>
+				<imageExpression><![CDATA[new ByteArrayInputStream(Base64.decodeBase64((($P{logo_ente}.contains(','))?$P{logo_ente}.split(',')[1]:$P{logo_ente}).getBytes("UTF-8")))]]></imageExpression>
+			</image>
+			<textField evaluationTime="Band">
+				<reportElement positionType="Float" x="0" y="30" width="458" height="37" uuid="27b196d2-5c7d-4872-97c2-8c456dbaf791">
+					<property name="net.sf.jasperreports.text.truncate.at.char" value="true"/>
+					<printWhenExpression><![CDATA[new Boolean($P{logo_ente_secondario}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb-Bold" size="14" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="10.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{oggetto_del_pagamento}.equals(null))?"":$P{oggetto_del_pagamento}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="-20" y="84" width="594" height="10" isRemoveLineWhenBlank="true" uuid="58703e2b-2de5-418e-8b1b-99c587cb4996"/>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$P{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$P{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$P{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$P{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$P{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$P{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$P{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$P{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$P{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$P{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$P{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="autorizzazione">
+					<subreportParameterExpression><![CDATA[$F{autorizzazione}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$P{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/tripla/rata")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{BollettinoTriRataPostale}]]></subreportExpression>
+			</subreport>
+			<image hAlign="Right" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="389" y="0" width="70" height="70" isRemoveLineWhenBlank="true" uuid="7b441b73-fde2-4fc4-8713-76003adfbe3d"/>
+				<imageExpression><![CDATA[new ByteArrayInputStream(Base64.decodeBase64((($P{logo_ente_secondario}.contains(','))?$P{logo_ente_secondario}.split(',')[1]:$P{logo_ente_secondario}).getBytes("UTF-8")))]]></imageExpression>
+			</image>
+			<textField evaluationTime="Band">
+				<reportElement positionType="Float" x="0" y="30" width="350" height="37" uuid="14ad50b1-d861-4434-bab2-23eb4ecdeca0">
+					<property name="net.sf.jasperreports.text.truncate.at.char" value="true"/>
+					<printWhenExpression><![CDATA[new Boolean(!$P{logo_ente_secondario}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="TitilliumWeb-Bold" size="14" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="10.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{oggetto_del_pagamento}.equals(null))?"":$P{oggetto_del_pagamento}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="-20" y="74" width="556" height="10" isRemoveLineWhenBlank="true" uuid="e58df264-6a08-4cf2-8f41-60fda34b526f"/>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$P{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$P{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="di_poste">
+					<subreportParameterExpression><![CDATA[$P{di_poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$P{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$P{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$P{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$P{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$P{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$P{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$P{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$P{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$P{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/tripla/rata")]]></dataSourceExpression>
+				<returnValue subreportVariable="ElencoRate" toVariable="Rate"/>
+				<subreportExpression><![CDATA[$P{TriploFormatoPostale}]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+</jasperReport>

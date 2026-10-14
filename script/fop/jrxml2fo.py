@@ -150,6 +150,157 @@ def markup_statico(testo, tipo):
     return ''.join(out)
 
 
+def run_statici(testo, tipo):
+    """Testo fisso -> lista di ('t', testo, attributi inline) e ('br',) per gli a capo."""
+    if tipo not in ('html', 'styled'):
+        out = []
+        for i, parte in enumerate(testo.split('\n')):
+            if i:
+                out.append(('br',))
+            out.append(('t', parte, {}))
+        return out
+    out, pila = [], []
+    for tok in re.split(r'(<[^>]+>)', testo):
+        if not tok:
+            continue
+        m = re.fullmatch(r'<\s*(/?)\s*(\w+)([^>]*?)(/?)>', tok)
+        if not m:
+            correnti = {}
+            for a in pila:
+                correnti.update(a)
+            for i, parte in enumerate(html.unescape(tok).split('\n')):
+                if i:
+                    out.append(('br',))
+                out.append(('t', parte, dict(correnti)))
+            continue
+        chiusura, tag, resto, vuoto = m.group(1), m.group(2).lower(), m.group(3), m.group(4)
+        if tag == 'br':
+            out.append(('br',))
+            continue
+        if chiusura:
+            if pila:
+                pila.pop()
+            continue
+        a = {}
+        if tag == 'b':
+            a['font-weight'] = 'bold'
+        elif tag == 'i':
+            a['font-style'] = 'italic'
+        elif tag in ('style', 'font'):
+            for k, v in re.findall(r'(\w+)\s*=\s*\\?"([^"\\]*)\\?"', resto):
+                if k == 'size':
+                    a['font-size'] = pt(v)
+                elif k == 'isBold' and v == 'true':
+                    a['font-weight'] = 'bold'
+                elif k == 'face':
+                    a['font-family'] = v
+                elif k == 'forecolor':
+                    a['color'] = v
+        if not vuoto:
+            pila.append(a)
+    return out
+
+
+# famiglia Jasper (fonts/fontsfamily*.xml) -> file per (grassetto, corsivo)
+FILE_FONT = {
+    'TitilliumWeb': {(False, False): 'TitilliumWeb-Regular.ttf', (True, False): 'TitilliumWeb-SemiBold.ttf',
+                     (False, True): 'TitilliumWeb-Italic.ttf', (True, True): 'TitilliumWeb-SemiBoldItalic.ttf'},
+    'TitilliumWeb-Bold': {(False, False): 'TitilliumWeb-Bold.ttf'},
+    'TitilliumWeb-Black': {(False, False): 'TitilliumWeb-Black.ttf'},
+    'RobotoMono': {(False, False): 'RobotoMono-Regular.ttf', (True, False): 'RobotoMono-Bold.ttf',
+                   (False, True): 'RobotoMono-Italic.ttf', (True, True): 'RobotoMono-BoldItalic.ttf'},
+    'Roboto': {(False, False): 'Roboto-Regular.ttf', (True, False): 'Roboto-Bold.ttf'},
+    'Roboto-Bold': {(False, False): 'Roboto-Bold.ttf'},
+}
+
+
+def file_font(base, a):
+    fam = a.get('font-family', base['font-family'])
+    grassetto = a.get('font-weight', base.get('font-weight')) == 'bold'
+    corsivo = a.get('font-style', base.get('font-style')) == 'italic'
+    varianti = FILE_FONT.get(fam)
+    if not varianti:
+        return None
+    # una famiglia senza la variante richiesta usa la normale, come il font extension di Jasper
+    return (varianti.get((grassetto, corsivo)) or varianti.get((grassetto, False))
+            or varianti[(False, False)], float(a.get('font-size', base['font-size'])[:-2]))
+
+
+def paragrafi(run):
+    correnti = [[]]
+    for x in run:
+        if x[0] == 'br':
+            correnti.append([])
+        else:
+            correnti[-1].append(x)
+    return correnti
+
+
+# uuid del testo fisso -> posizioni di a capo per paragrafo, calcolate come in Jasper
+a_capo = {}
+
+
+def calcola_a_capo(radice):
+    """Raccoglie i testi fissi del template e ne calcola gli a capo con SpezzaRighe.java in un solo avvio."""
+    import subprocess
+    from pathlib import Path
+    richieste = []
+    for el in radice.iter(f'{J}staticText'):
+        re_el = el.find(f'{J}reportElement')
+        te = el.find(f'{J}textElement')
+        markup = (te.get('markup') if te is not None else None) or 'none'
+        base = font_attrs(el)
+        pad = padding_block(el, avvisa=False)
+        larghezza = float(re_el.get('width')) - float(pad.get('start-indent', '0pt')[:-2]) - float(pad.get('end-indent', '0pt')[:-2])
+        for k, par in enumerate(paragrafi(run_statici((el.findtext(f'{J}text') or '').strip('\n'), markup))):
+            parti = []
+            for _, t, a in par:
+                ff = file_font(base, a)
+                if ff is None:
+                    break
+                parti.append(f'{ff[0]}\x1f{ff[1]}\x1f{t}')
+            else:
+                if parti:
+                    richieste.append(f"{re_el.get('uuid')}#{k}\t{larghezza}\t" + '\x1e'.join(parti))
+    if not richieste:
+        return
+    radice_repo = Path(__file__).resolve().parents[2]
+    esito = subprocess.run(['java', '-Djava.awt.headless=true', str(Path(__file__).with_name('SpezzaRighe.java')),
+                            str(radice_repo / 'src/main/resources/fonts')],
+                           input='\n'.join(richieste) + '\n', capture_output=True, text=True, check=True)
+    for riga in esito.stdout.splitlines():
+        chiave, _, posizioni = riga.partition('\t')
+        uuid, _, k = chiave.rpartition('#')
+        a_capo.setdefault(uuid, {})[int(k)] = [int(p) for p in posizioni.split(',') if p]
+
+
+def fo_statico(run, posizioni):
+    """FO del testo fisso, con gli a capo di Jasper espliciti (posizioni: paragrafo -> offset)."""
+    out = []
+    for k, par in enumerate(paragrafi(run)):
+        if k:
+            out.append('<fo:block/>')
+        tagli = set(posizioni.get(k, [])) if posizioni is not None else set()
+        pos = 0
+        for _, t, a in par:
+            pezzi, inizio = [], 0
+            for i in range(len(t)):
+                if pos + i in tagli and i > inizio:
+                    pezzi.append(t[inizio:i]); inizio = i
+                    pezzi.append(None)
+                elif pos + i in tagli:
+                    pezzi.append(None)
+            pezzi.append(t[inizio:])
+            for pz in pezzi:
+                if pz is None:
+                    out.append('<fo:block/>')
+                elif pz:
+                    e = html.escape(pz, quote=False)
+                    out.append(f'<fo:inline{attrs(a)}>{e}</fo:inline>' if a else e)
+            pos += len(t)
+    return ''.join(out)
+
+
 # --- espressioni ---------------------------------------------------------------
 
 class Contesto:
@@ -229,7 +380,7 @@ def contenitore(re_el, ox, oy, extra=None):
     return a
 
 
-def padding_block(el):
+def padding_block(el, avvisa=True):
     box = el.find(f'{J}box')
     a = {}
     if box is not None:
@@ -241,7 +392,7 @@ def padding_block(el):
         if dx:
             a['end-indent'] = pt(dx)
         for lato in ('topPadding', 'bottomPadding'):
-            if box.get(lato, pad) not in (None, '0'):
+            if avvisa and box.get(lato, pad) not in (None, '0'):
                 todo.append(f'padding verticale non convertito ({lato}={box.get(lato, pad)})')
     return a
 
@@ -269,11 +420,12 @@ def testo(el, ox, oy, ctx, out, rientro):
     if re_el.get('uuid') in personalizzazioni['elemento']:
         corpo = personalizzazioni['elemento'][re_el.get('uuid')]
     elif el.tag == f'{J}staticText':
-        testo_fisso = el.findtext(f'{J}text') or ''
-        if '\n' in testo_fisso.strip():
-            # a capo espliciti nel testo fisso: Jasper li rispetta
-            blocco['linefeed-treatment'] = 'preserve'
-        corpo = markup_statico(testo_fisso.strip('\n'), markup)
+        run = run_statici((el.findtext(f'{J}text') or '').strip('\n'), markup)
+        posizioni = a_capo.get(re_el.get('uuid'))
+        if posizioni is not None:
+            # a capo calcolati come in Jasper: FOP non deve spezzare di nuovo le righe
+            blocco['wrap-option'] = 'no-wrap'
+        corpo = fo_statico(run, posizioni)
     else:
         espr = el.findtext(f'{J}textFieldExpression') or ''
         xp = xpath_semplice(espr, ctx)
@@ -395,6 +547,7 @@ def main():
              for f in r.findall(f'{J}field')}
     ctx = Contesto(campi, a.param_xpath)
 
+    calcola_a_capo(r)
     ox = a.offset_x + float(r.get('leftMargin', 0))
     oy = a.offset_y + float(r.get('topMargin', 0))
     out = []

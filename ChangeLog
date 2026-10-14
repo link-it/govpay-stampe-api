@@ -11,6 +11,11 @@
 	Migrato il solo layout della pagina singola dell'avviso semplice
 	(RataUnica), generato dal sorgente .jrxml con script/fop/jrxml2fo.py e
 	completato con le parti in script/fop/personalizzazioni/.
+	Gli a capo dei testi fissi sono calcolati come in Jasper (LineBreakMeasurer
+	con gli stessi font, script/fop/SpezzaRighe.java) e scritti esplicitamente:
+	FOP bilancerebbe le righe del paragrafo e andrebbe a capo in punti diversi.
+	Il grassetto su TitilliumWeb-Bold, simulato da Jasper con un contorno, usa
+	in FOP la variante TitilliumWeb-Black.
 
 2026-10-13  Giuliano Pintori <pintori@link.it>
 

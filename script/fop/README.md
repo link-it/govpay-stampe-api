@@ -5,7 +5,8 @@ Apache FOP (`src/main/resources/fop/*.xsl`), issue [#37](https://github.com/link
 
 ## Flusso
 
-1. `jrxml2fo.py` converte un `.jrxml` nello scheletro di un template XSLT. In automatico:
+1. `jrxml2fo.py` converte un `.jrxml` nello scheletro di un template XSLT. In automatico, compresi gli
+   a capo dei testi fissi calcolati come in Jasper:
    - posizioni e dimensioni degli elementi;
    - sfondi, padding, font e allineamenti;
    - testi fissi con markup, grafica SVG e loghi;
@@ -30,12 +31,19 @@ Il convertitore riproduce l'impaginazione di Jasper con parametri misurati sui P
 - **Prima riga:** spostata in basso di 0,217 volte il corpo. Jasper allinea la prima linea di base
   all'ascendente del font, FOP la alza di metà della differenza tra interlinea e altezza del font.
 
+**A capo dei testi fissi.** FOP spezza le righe con l'algoritmo di Knuth-Plass, che bilancia il paragrafo,
+mentre Jasper riempie ogni riga finché c'è spazio. Per i testi fissi `jrxml2fo.py` calcola gli a capo come
+Jasper con `SpezzaRighe.java`: `LineBreakMeasurer`, gli stessi file di font e la larghezza utile del
+riquadro. Le righe vengono poi scritte esplicitamente con `wrap-option="no-wrap"`. Il convertitore
+avvia una sola JVM per template e richiede `java` nel PATH.
+
 Differenze note:
-- FOP spezza le righe dei paragrafi con l'algoritmo di Knuth-Plass (righe bilanciate), mentre Jasper
-  riempie ogni riga finché c'è spazio. Su testi lunghi una parola può andare a capo in un punto
-  diverso.
-- Il grassetto applicato con `<b>` a una famiglia che ha solo la variante normale (`TitilliumWeb-Bold`)
-  è simulato da Jasper; FOP non lo simula.
+- Testi variabili (oggetto, nomi, indirizzi): gli a capo li sceglie FOP, quindi su testi lunghi una
+  parola può andare a capo in un punto diverso da Jasper.
+- Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
+  Jasper con un contorno ai caratteri. FOP non lo simula: `fop.xconf` usa `TitilliumWeb-Black`, più
+  marcato e leggermente più largo. Per "Vai su pagopa.gov.it", allineato a destra, l'inizio della riga
+  si sposta di circa 3,6 pt.
 
 ## Verifica
 

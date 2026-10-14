@@ -17,9 +17,13 @@
 
 				<font embed-url="TitilliumWeb-Bold.ttf">
 					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="normal"/>
-					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="bold"/>
 				</font>
+				<!--
+					TitilliumWeb-Bold non ha una variante bold: con <b> Jasper (OpenPDF) simula il grassetto
+					aggiungendo un contorno ai caratteri. FOP non lo simula: si usa la variante piu' pesante.
+				-->
 				<font embed-url="TitilliumWeb-Black.ttf">
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="bold"/>
 					<font-triplet name="TitilliumWeb-Black" style="normal" weight="normal"/>
 					<font-triplet name="TitilliumWeb-Black" style="normal" weight="bold"/>
 				</font>

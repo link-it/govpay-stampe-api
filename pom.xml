@@ -53,6 +53,8 @@
 		<xmlgraphics.commons.version>2.11</xmlgraphics.commons.version>
 		<!-- xmlgraphics-batik-bridge -->
 		<batik-bridge.version>1.19</batik-bridge.version>
+		<!-- Apache FOP: motore XSL-FO che sostituira' JasperReports (#37), allineato a batik e xmlgraphics-commons -->
+		<fop.version>2.11</fop.version>
 		<!-- com.google.zxing.javase -->
 		<com.google.zxing.javase.version>3.5.3</com.google.zxing.javase.version>
 		<!-- dynamicreports-core -->
@@ -395,6 +397,19 @@
 			<groupId>org.apache.xmlgraphics</groupId>
 			<artifactId>batik-dom</artifactId>
 			<version>${batik-bridge.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Apache FOP (#37): xml-apis escluso come per batik-dom, le API sono gia' nel JDK -->
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>fop-core</artifactId>
+			<version>${fop.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>xml-apis</groupId>

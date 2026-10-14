@@ -1,3 +1,17 @@
+2026-10-14  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Prototipo di generazione degli avvisi con Apache FOP (#37).
+	Aggiunta la dipendenza org.apache.xmlgraphics:fop-core 2.11 (Apache 2.0),
+	allineata a batik 1.19 e xmlgraphics-commons 2.11 gia' presenti; escluso
+	xml-apis come per batik-dom. Il nuovo package it.govpay.stampe.fop genera il
+	PDF di un avviso dallo stesso XML oggi passato a Jasper: QR code calcolato con
+	zxing come nei template Jasper e passato al layout come SVG, fogli XSLT e
+	configurazione di FOP letti una sola volta. Il renderer non e' ancora
+	collegato ai servizi: gli avvisi continuano a essere generati con Jasper.
+	Migrato il solo layout della pagina singola dell'avviso semplice
+	(RataUnica), generato dal sorgente .jrxml con script/fop/jrxml2fo.py e
+	completato con le parti in script/fop/personalizzazioni/.
+
 2026-10-13  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Sorgenti dei template JasperReports (#37).

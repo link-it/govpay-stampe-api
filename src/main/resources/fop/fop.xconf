@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Configurazione Apache FOP (issue #37). I font sono gli stessi .ttf usati da JasperReports
+	(src/main/resources/fonts), registrati con gli stessi nomi di famiglia del font extension Jasper
+	(fonts/fontsfamily1620136860820.xml), cosi' i layout usano i nomi dei template originali.
+	I percorsi sono relativi alla base URI impostata dal renderer (la cartella fonts del classpath).
+-->
+<fop version="1.0">
+	<strict-configuration>true</strict-configuration>
+	<renderers>
+		<renderer mime="application/pdf">
+			<fonts>
+				<font embed-url="TitilliumWeb-Regular.ttf"><font-triplet name="TitilliumWeb" style="normal" weight="normal"/></font>
+				<font embed-url="TitilliumWeb-SemiBold.ttf"><font-triplet name="TitilliumWeb" style="normal" weight="bold"/></font>
+				<font embed-url="TitilliumWeb-Italic.ttf"><font-triplet name="TitilliumWeb" style="italic" weight="normal"/></font>
+				<font embed-url="TitilliumWeb-SemiBoldItalic.ttf"><font-triplet name="TitilliumWeb" style="italic" weight="bold"/></font>
+
+				<font embed-url="TitilliumWeb-Bold.ttf">
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="normal"/>
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="bold"/>
+				</font>
+				<font embed-url="TitilliumWeb-Black.ttf">
+					<font-triplet name="TitilliumWeb-Black" style="normal" weight="normal"/>
+					<font-triplet name="TitilliumWeb-Black" style="normal" weight="bold"/>
+				</font>
+
+				<font embed-url="RobotoMono-Regular.ttf"><font-triplet name="RobotoMono" style="normal" weight="normal"/></font>
+				<font embed-url="RobotoMono-Bold.ttf"><font-triplet name="RobotoMono" style="normal" weight="bold"/></font>
+				<font embed-url="RobotoMono-Italic.ttf"><font-triplet name="RobotoMono" style="italic" weight="normal"/></font>
+				<font embed-url="RobotoMono-BoldItalic.ttf"><font-triplet name="RobotoMono" style="italic" weight="bold"/></font>
+
+				<font embed-url="Roboto-Regular.ttf"><font-triplet name="Roboto" style="normal" weight="normal"/></font>
+				<font embed-url="Roboto-Bold.ttf">
+					<font-triplet name="Roboto" style="normal" weight="bold"/>
+					<font-triplet name="Roboto-Bold" style="normal" weight="normal"/>
+					<font-triplet name="Roboto-Bold" style="normal" weight="bold"/>
+				</font>
+			</fonts>
+		</renderer>
+	</renderers>
+</fop>

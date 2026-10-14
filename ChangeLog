@@ -14,8 +14,8 @@
 	Gli a capo dei testi fissi sono calcolati come in Jasper (LineBreakMeasurer
 	con gli stessi font, script/fop/SpezzaRighe.java) e scritti esplicitamente:
 	FOP bilancerebbe le righe del paragrafo e andrebbe a capo in punti diversi.
-	Il grassetto su TitilliumWeb-Bold, simulato da Jasper con un contorno, usa
-	in FOP la variante TitilliumWeb-Black.
+	Il grassetto su TitilliumWeb-Bold, che Jasper simula con un contorno, in FOP
+	resta sullo stesso font: meno marcato, ma nella stessa posizione.
 
 2026-10-13  Giuliano Pintori <pintori@link.it>
 

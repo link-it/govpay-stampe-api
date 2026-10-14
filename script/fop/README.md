@@ -41,9 +41,9 @@ Differenze note:
 - Testi variabili (oggetto, nomi, indirizzi): gli a capo li sceglie FOP, quindi su testi lunghi una
   parola può andare a capo in un punto diverso da Jasper.
 - Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
-  Jasper con un contorno ai caratteri. FOP non lo simula: `fop.xconf` usa `TitilliumWeb-Black`, più
-  marcato e leggermente più largo. Per "Vai su pagopa.gov.it", allineato a destra, l'inizio della riga
-  si sposta di circa 3,6 pt.
+  Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
+  ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`
+  è stato provato e scartato perché troppo marcato.
 
 ## Verifica
 

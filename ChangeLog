@@ -1,3 +1,13 @@
+2026-10-14  Giuliano Pintori <pintori@link.it>
+
+	* [Docker] Rimosso container/Dockerfile (base rockylinux:9.3.20231119).
+	Immagine non costruita dalla pipeline ne' distribuita: quelle pubblicate
+	nascono da docker/govpay-stampe (Dockerfile.daFile per lo sviluppo,
+	Dockerfile.github per i rilasci), su base eclipse-temurin:25-jre-alpine.
+	Tenerlo avrebbe significato una seconda immagine da mantenere e da
+	includere nella scansione delle vulnerabilita' (issue #40), con una base
+	ferma al 2023.
+
 2026-09-24  Giuliano Pintori <pintori@link.it>
 
 	* [Logging] Transaction ID e Correlation ID (BP-LOG-3).

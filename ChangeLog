@@ -1,3 +1,13 @@
+2026-10-15  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Posizione di testo e immagini come in Jasper nel prototipo FOP (#37).
+	Interlinea e posizione verticale del testo seguono un modello di Jasper e di
+	FOP misurato su report di taratura: in Jasper l'interlinea fissa dipende dal
+	numero di righe, e centrato e allineamento in basso usano l'altezza naturale
+	del font. Disattivati in FOP kerning ed elaborazione OpenType, che Jasper non
+	usa. Immagini SVG con tutto il riquadro come area di disegno, raster allineate
+	secondo hAlign/vAlign.
+
 2026-10-14  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Prototipo di generazione degli avvisi con Apache FOP (#37).

@@ -22,7 +22,9 @@ Uso:
   --personalizzazioni FILE
                  parti scritte a mano, legate all'uuid degli elementi Jasper:
                  <elemento uuid="..."> sostituisce il contenuto di un testo o di
-                 un'immagine, <condizione uuid="..."> la printWhenExpression
+                 un'immagine, <condizione uuid="..."> la printWhenExpression;
+                 attributi="nome=valore;..." cambia gli attributi del blocco, e
+                 righe=N indica il numero di righe di un testo variabile
 
 Il file generato va su stdout.
 """
@@ -48,8 +50,13 @@ def carica_personalizzazioni(path):
     # lettura testuale: i frammenti vanno copiati cosi' come sono scritti, con i prefissi xsl: e fo:
     testo = open(path, encoding='utf-8').read()
     testo = re.sub(r'<!--.*?-->', '', testo, flags=re.S)
+    # <elemento uuid="..." attributi="..."/> senza contenuto: cambia solo gli attributi del blocco
+    for uuid, extra in re.findall(r'<elemento uuid="([^"]+)"([^>]*?)/>', testo):
+        m = re.search(r'attributi="([^"]*)"', extra)
+        if m:
+            personalizzazioni['attributi'][uuid] = dict(kv.split('=', 1) for kv in m.group(1).split(';') if kv.strip())
     for tipo in ('elemento', 'condizione'):
-        for uuid, extra, corpo in re.findall(r'<%s uuid="([^"]+)"([^>]*)>(.*?)</%s>' % (tipo, tipo), testo, re.S):
+        for uuid, extra, corpo in re.findall(r'<%s uuid="([^"]+)"([^>]*)(?<!/)>(.*?)</%s>' % (tipo, tipo), testo, re.S):
             personalizzazioni[tipo][uuid] = corpo.strip()
             # attributi="nome=valore;nome=valore": sostituiscono o aggiungono attributi del blocco di testo
             m = re.search(r'attributi="([^"]*)"', extra)
@@ -76,27 +83,52 @@ def font_attrs(el):
         a['font-weight'] = 'bold'
     if italic:
         a['font-style'] = 'italic'
-    # Interlinea tarata sui PDF prodotti da Jasper: per Titillium la distanza tra le righe misurata
-    # e' 1,266 volte il corpo, anche quando lineSpacing="Fixed" indica un valore piu' piccolo
-    # (Jasper non scende sotto l'altezza utile del font). Un valore fisso piu' grande viene rispettato.
-    corpo = float(size)
-    interlinea = corpo * INTERLINEA.get(famiglia(nome), 1.2)
-    p = el.find(f'{J}textElement/{J}paragraph')
-    if p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize'):
-        interlinea = max(interlinea, float(p.get('lineSpacingSize')))
-    a['line-height'] = pt(round(interlinea, 2))
     return a
-
-
-# famiglia di font -> rapporto interlinea/corpo misurato sui PDF di Jasper
-INTERLINEA = {'TitilliumWeb': 1.266, 'RobotoMono': 1.266, 'Roboto': 1.266}
-# spostamento verso il basso della prima riga, in frazione del corpo: Jasper allinea la prima linea
-# di base all'ascendente del font, FOP la alza di meta' della differenza tra interlinea e altezza del font
-ALLINEAMENTO_PRIMA_RIGA = {'TitilliumWeb': 0.217, 'RobotoMono': 0.0, 'Roboto': 0.217}
 
 
 def famiglia(nome):
     return nome.split('-')[0]
+
+
+# --- geometria del testo: modello di Jasper e di FOP misurato sui PDF (pdf-riferimento/taratura) ---
+#
+# Jasper (6.21.5, metriche AWT del font, ascendente A e discendente D per unita' di corpo):
+#   - la prima riga parte dal bordo superiore del riquadro (allineamento in alto);
+#   - distanza tra le righe p: interlinea Single -> (A + D) * corpo;
+#     Fixed F -> F + D*corpo + (A*corpo - F) / n, con n numero di righe del testo;
+#   - in verticale centra, o allinea in fondo, l'altezza T = (A + D)*corpo + (n - 1) * p.
+# FOP 2.11: distanza tra le righe = line-height L; la prima riga sta a (L - K*corpo)/2 dal bordo
+# del blocco, con K costante per file di font.
+# Imponendo L = p e un padding superiore si ottiene la stessa posizione di Jasper per ogni allineamento.
+METRICHE_AWT = {'TitilliumWeb': (1.133, 0.388), 'RobotoMono': (1.0479, 0.2711), 'Roboto': (0.9277, 0.2441)}
+K_FOP = {'TitilliumWeb-Regular.ttf': 1.668, 'TitilliumWeb-SemiBold.ttf': 1.709, 'TitilliumWeb-Bold.ttf': 1.738,
+         'TitilliumWeb-Italic.ttf': 1.67, 'TitilliumWeb-SemiBoldItalic.ttf': 1.709,
+         'RobotoMono-Regular.ttf': 1.547, 'RobotoMono-Bold.ttf': 1.547,
+         'RobotoMono-Italic.ttf': 1.547, 'RobotoMono-BoldItalic.ttf': 1.547}
+
+
+def geometria_testo(el, blocco, n, altezza):
+    """line-height e padding-top che riproducono in FOP la posizione delle righe di Jasper."""
+    corpo = float(blocco['font-size'][:-2])
+    ff = file_font(blocco, {})
+    metriche = METRICHE_AWT.get(famiglia(blocco['font-family']))
+    if ff is None or metriche is None or ff[0] not in K_FOP:
+        todo.append(f"geometria non tarata per {blocco['font-family']}")
+        return {}
+    a, d = metriche[0] * corpo, metriche[1] * corpo
+    p = el.find(f'{J}textElement/{J}paragraph')
+    if p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize'):
+        f = float(p.get('lineSpacingSize'))
+        passo = f + d + (a - f) / n
+    else:
+        passo = a + d
+    totale = a + d + (n - 1) * passo
+    te = el.find(f'{J}textElement')
+    verticale = (te.get('verticalAlignment') if te is not None else None) or 'Top'
+    scarto = {'Top': 0.0, 'Middle': (altezza - totale) / 2, 'Bottom': altezza - totale}.get(verticale, 0.0)
+    padding = scarto + (K_FOP[ff[0]] * corpo - passo) / 2
+    # un testo piu' alto del riquadro farebbe un padding negativo, che FO non ammette
+    return {'line-height': pt(round(passo, 3)), 'padding-top': pt(round(max(padding, 0), 3))}
 
 
 def attrs(d):
@@ -408,20 +440,20 @@ def testo(el, ox, oy, ctx, out, rientro):
         blocco['text-align'] = ALLINEAMENTO.get(te.get('textAlignment'), 'start')
     blocco.update(padding_block(el))
     cont = contenitore(re_el, ox, oy)
-    verticale = VERTICALE.get(te.get('verticalAlignment') if te is not None else None, 'before')
-    if verticale != 'before':
-        cont['display-align'] = verticale
-    else:
-        spostamento = float(blocco['font-size'][:-2]) * ALLINEAMENTO_PRIMA_RIGA.get(famiglia(blocco['font-family']), 0)
-        if spostamento:
-            blocco['padding-top'] = pt(round(spostamento, 2))
 
-    blocco.update(personalizzazioni['attributi'].get(re_el.get('uuid'), {}))
+    # numero di righe: per i testi fissi dagli a capo calcolati, per gli altri dall'indicazione
+    # righe=N nelle personalizzazioni (default 1)
+    extra = dict(personalizzazioni['attributi'].get(re_el.get('uuid'), {}))
+    righe = int(extra.pop('righe', 0))
+    posizioni = a_capo.get(re_el.get('uuid')) if el.tag == f'{J}staticText' else None
+    if not righe:
+        righe = sum(len(v) + 1 for v in posizioni.values()) if posizioni else 1
+    blocco.update(geometria_testo(el, blocco, righe, float(re_el.get('height'))))
+    blocco.update(extra)
     if re_el.get('uuid') in personalizzazioni['elemento']:
         corpo = personalizzazioni['elemento'][re_el.get('uuid')]
     elif el.tag == f'{J}staticText':
         run = run_statici((el.findtext(f'{J}text') or '').strip('\n'), markup)
-        posizioni = a_capo.get(re_el.get('uuid'))
         if posizioni is not None:
             # a capo calcolati come in Jasper: FOP non deve spezzare di nuovo le righe
             blocco['wrap-option'] = 'no-wrap'
@@ -445,19 +477,31 @@ def immagine(el, ox, oy, ctx, out, rientro):
     re_el = el.find(f'{J}reportElement')
     espr = el.findtext(f'{J}imageExpression') or ''
     w, h = pt(re_el.get('width')), pt(re_el.get('height'))
-    grafica = {'content-width': w, 'content-height': h, 'scaling': 'uniform'}
     cont = contenitore(re_el, ox, oy)
     svg = svg_da_batik(espr)
     m_logo = re.search(r'decodeBase64\(\(\(\$P\{(\w+)\}\.contains', espr)
+    # font-size 0: senza, FOP allinea l'immagine alla linea di base del testo e la alza di qualche punto
+    blocco = {'font-size': '0pt', 'line-height': '0pt'}
     out.append(f'{rientro}<fo:block-container{attrs(cont)}>')
     if re_el.get('uuid') in personalizzazioni['elemento']:
         out.append(f"{rientro}\t{personalizzazioni['elemento'][re_el.get('uuid')]}")
     elif svg:
-        out.append(f'{rientro}\t<fo:block line-height="0"><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
+        # Jasper (BatikRenderer) passa all'SVG tutto il riquadro come area di disegno: e' l'SVG stesso
+        # (preserveAspectRatio) a centrare il disegno, indipendentemente da hAlign/vAlign
+        grafica = {'content-width': w, 'content-height': h, 'scaling': 'non-uniform'}
+        out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
     elif m_logo:
         xp = ctx.p(m_logo.group(1))
+        # immagine raster: proporzioni mantenute (scaleImage RetainShape) e posizione da hAlign/vAlign
+        grafica = {'content-width': 'scale-to-fit', 'content-height': 'scale-to-fit', 'width': w, 'height': h, 'scaling': 'uniform'}
+        allineamento = {'Center': 'center', 'Right': 'end'}.get(el.get('hAlign'))
+        if allineamento:
+            grafica['text-align'] = allineamento
+        verticale = {'Middle': 'center', 'Bottom': 'after'}.get(el.get('vAlign'))
+        if verticale:
+            grafica['display-align'] = verticale
         # logo assente: Jasper lascia il riquadro vuoto (onErrorType Blank)
-        out.append(f'{rientro}\t<fo:block line-height="0"><xsl:if test="normalize-space({xp})"><fo:external-graphic{attrs(grafica)}>'
+        out.append(f'{rientro}\t<fo:block{attrs(blocco)}><xsl:if test="normalize-space({xp})"><fo:external-graphic{attrs(grafica)}>'
                    f'<xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="{xp}"/></xsl:call-template>)</xsl:attribute>'
                    f'</fo:external-graphic></xsl:if></fo:block>')
     else:

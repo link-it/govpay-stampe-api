@@ -5,6 +5,8 @@
 	all'uuid dell'elemento nel sorgente src/main/jasper/RataUnica.jrxml:
 	- elemento: contenuto del blocco di testo o dell'immagine, al posto della traduzione automatica
 	- condizione: test XPath al posto della printWhenExpression
+	- attributi="nome=valore;...": attributi del blocco di testo; righe=N indica il numero di righe di un
+	  testo variabile, che determina l'interlinea fissa di Jasper (default 1)
 	Contesto dei percorsi relativi: l'elemento pagine/singola.
 -->
 <personalizzazioni xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
@@ -13,19 +15,22 @@
 	<elemento uuid="aa2c4221-4806-475a-8632-26e4fb89dfc8"><xsl:choose><xsl:when test="normalize-space(rata/numero_rata)"><xsl:value-of select="rata/numero_rata"/>° RATA</xsl:when><xsl:otherwise>Rata unica</xsl:otherwise></xsl:choose><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><xsl:value-of select="concat(' ', rata/tipo, ' ')"/><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></xsl:when><xsl:when test="normalize-space(rata/data)"> entro il <xsl:value-of select="rata/data"/></xsl:when></xsl:choose></elemento>
 
 	<!-- QR code: SVG calcolato dal renderer (AvvisoFopRenderer) e aggiunto all'XML come qr_code_svg -->
-	<elemento uuid="2bbbcd85-35d1-4074-bec4-cdff3361c7af"><fo:block line-height="0"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></fo:block></elemento>
+	<elemento uuid="2bbbcd85-35d1-4074-bec4-cdff3361c7af"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></fo:block></elemento>
 
 	<!-- "Importo" + importo formattato + " Euro ": due blocchi, perche' in Jasper ogni riga ha l'altezza del proprio corpo -->
-	<elemento uuid="b6232d33-f535-4571-8ff9-ccd2cbd9aae1" attributi="padding-top=1.74pt"><fo:block font-size="8pt" line-height="10.13pt">Importo</fo:block><fo:block space-before="7.2pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template> Euro</fo:block></elemento>
+	<elemento uuid="b6232d33-f535-4571-8ff9-ccd2cbd9aae1" attributi="padding-top=1.74pt"><fo:block font-size="8pt" line-height="10.13pt">Importo</fo:block><fo:block space-before="5.16pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template> Euro</fo:block></elemento>
 
 	<!-- "Euro" + importo in RobotoMono grassetto -->
 	<elemento uuid="8cf9f0a8-c394-49db-ab82-0dc86137c6ca"><fo:inline font-size="10pt">Euro</fo:inline>&#160;&#160;<fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template></fo:inline></elemento>
 
 	<!-- scadenza ("entro il" + data) oppure soglia (tipo + giorni) -->
-	<elemento uuid="a4b1b4d8-218b-4c9e-afe6-576ba388fe93" attributi="padding-top=1.74pt"><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="rata/tipo"/></fo:block><fo:block space-before="7.2pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(rata/data)"><fo:block font-size="8pt" line-height="10.13pt">entro il</fo:block><fo:block space-before="7.2pt"><xsl:value-of select="rata/data"/></fo:block></xsl:when></xsl:choose></elemento>
+	<elemento uuid="a4b1b4d8-218b-4c9e-afe6-576ba388fe93" attributi="padding-top=1.74pt"><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="rata/tipo"/></fo:block><fo:block space-before="5.16pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(rata/data)"><fo:block font-size="8pt" line-height="10.13pt">entro il</fo:block><fo:block space-before="5.16pt"><xsl:value-of select="rata/data"/></fo:block></xsl:when></xsl:choose></elemento>
 
 	<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
-	<elemento uuid="d647fb00-fa40-4ef1-888d-6bf923cadfd6"><xsl:if test="normalize-space(/AvvisoPagamentoInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /AvvisoPagamentoInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</elemento>
+	<elemento uuid="d647fb00-fa40-4ef1-888d-6bf923cadfd6" attributi="righe=2"><xsl:if test="normalize-space(/AvvisoPagamentoInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /AvvisoPagamentoInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</elemento>
+
+	<!-- informazioni dell'ente (sito, telefono, PEC): tre righe separate da <br/>, per l'interlinea fissa di Jasper -->
+	<elemento uuid="ebf271a0-bb97-456d-a3b7-3da899d53fbc" attributi="righe=3"/>
 
 	<!-- informativa sull'importo: testo di default se non personalizzata, altrimenti quella indicata -->
 	<condizione uuid="82503c5f-96f7-4138-bdd3-3f63d134c979">not(/AvvisoPagamentoInput/nascondi_informativa_importo_avviso = 'true') and not(normalize-space(/AvvisoPagamentoInput/informativa_importo_avviso))</condizione>

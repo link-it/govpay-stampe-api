@@ -25,11 +25,31 @@ Un layout è migrato quando il file generato non contiene più `TODO`.
 
 ## Taratura sui PDF di Jasper
 
-Il convertitore riproduce l'impaginazione di Jasper con parametri misurati sui PDF di riferimento:
-- **Interlinea:** 1,266 volte il corpo per Titillium. Jasper non scende sotto questo valore anche
-  quando il template indica un `lineSpacing="Fixed"` più piccolo.
-- **Prima riga:** spostata in basso di 0,217 volte il corpo. Jasper allinea la prima linea di base
-  all'ascendente del font, FOP la alza di metà della differenza tra interlinea e altezza del font.
+La posizione del testo viene da un modello di Jasper e di FOP misurato su report di taratura. Le
+combinazioni sono quelle usate nei template: font, corpo da 6 a 24 pt, interlinea `Single` o `Fixed`,
+markup, allineamento verticale. Report e misure sono in `pdf-riferimento/taratura/`, che resta locale.
+
+- **Jasper 6.21.5** usa le metriche AWT del font: ascendente A e discendente D per unità di corpo,
+  1,133 e 0,388 per Titillium, 1,0479 e 0,2711 per RobotoMono.
+  - La prima riga parte dal bordo superiore del riquadro.
+  - La distanza tra le righe con `Single` è (A + D) × corpo.
+  - Con `Fixed` F è F + D × corpo + (A × corpo − F) / n, dove n è il numero di righe del testo.
+  - Il centrato e l'allineamento in basso si applicano all'altezza T = (A + D) × corpo + (n − 1) × distanza.
+  - Markup e grassetto non cambiano la distanza.
+- **FOP 2.11** distanzia le righe esattamente di `line-height` L e mette la prima riga a (L − K × corpo)/2
+  dal bordo del blocco. K dipende dal file del font: 1,668 Regular, 1,709 SemiBold, 1,738 Bold,
+  1,547 RobotoMono.
+
+`jrxml2fo.py` imposta `line-height` uguale alla distanza di Jasper e un `padding-top` che riproduce
+l'allineamento in alto, al centro o in basso. Il numero di righe lo ricava dagli a capo per i testi
+fissi. Per i testi variabili lo legge da `righe=N` nelle personalizzazioni, e in sua assenza usa 1.
+
+`fop.xconf` disattiva il kerning (`kerning="no"`) e l'elaborazione OpenType (`complex-scripts`), che
+applicherebbe comunque il kerning delle tabelle GPOS: Jasper non ne usa.
+
+**Immagini.** Gli SVG ricevono tutto il riquadro come area di disegno e si centrano da soli, come in
+Jasper. Le immagini raster seguono `hAlign`/`vAlign`. Il blocco che le contiene ha corpo 0, perché
+FOP non le allinei alla linea di base del testo.
 
 **A capo dei testi fissi.** FOP spezza le righe con l'algoritmo di Knuth-Plass, che bilancia il paragrafo,
 mentre Jasper riempie ogni riga finché c'è spazio. Per i testi fissi `jrxml2fo.py` calcola gli a capo come
@@ -39,7 +59,10 @@ avvia una sola JVM per template e richiede `java` nel PATH.
 
 Differenze note:
 - Testi variabili (oggetto, nomi, indirizzi): gli a capo li sceglie FOP, quindi su testi lunghi una
-  parola può andare a capo in un punto diverso da Jasper.
+  parola può andare a capo in un punto diverso da Jasper. Se il numero di righe non è quello indicato
+  con `righe=N`, l'interlinea fissa differisce di qualche decimo di punto.
+- Lo stemma dell'ente (immagine raster allineata a destra) è spostato di circa 0,7 pt per un diverso
+  arrotondamento della scalatura.
 - Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
   Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
   ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`

@@ -7,13 +7,22 @@
 -->
 <fop version="1.0">
 	<strict-configuration>true</strict-configuration>
+	<!--
+		Niente elaborazione OpenType avanzata (GSUB/GPOS): applicherebbe comunque il kerning e le legature
+		dei font, che Jasper non usa. Gli avvisi contengono solo testo latino.
+	-->
+	<complex-scripts disabled="true"/>
+	<!--
+		kerning="no" su ogni font: Jasper misura e disegna il testo con le metriche AWT, senza kerning;
+		con il kerning le parole di FOP scivolerebbero fino a 1 pt lungo la riga.
+	-->
 	<renderers>
 		<renderer mime="application/pdf">
 			<fonts>
-				<font embed-url="TitilliumWeb-Regular.ttf"><font-triplet name="TitilliumWeb" style="normal" weight="normal"/></font>
-				<font embed-url="TitilliumWeb-SemiBold.ttf"><font-triplet name="TitilliumWeb" style="normal" weight="bold"/></font>
-				<font embed-url="TitilliumWeb-Italic.ttf"><font-triplet name="TitilliumWeb" style="italic" weight="normal"/></font>
-				<font embed-url="TitilliumWeb-SemiBoldItalic.ttf"><font-triplet name="TitilliumWeb" style="italic" weight="bold"/></font>
+				<font embed-url="TitilliumWeb-Regular.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="normal" weight="normal"/></font>
+				<font embed-url="TitilliumWeb-SemiBold.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="normal" weight="bold"/></font>
+				<font embed-url="TitilliumWeb-Italic.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="italic" weight="normal"/></font>
+				<font embed-url="TitilliumWeb-SemiBoldItalic.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="italic" weight="bold"/></font>
 
 				<!--
 					TitilliumWeb-Bold non ha una variante bold: con <b> Jasper (OpenPDF) simula il grassetto
@@ -21,22 +30,22 @@
 					risulta meno marcato ma con la stessa larghezza, quindi nella stessa posizione.
 					TitilliumWeb-Black e' stato scartato perche' troppo marcato.
 				-->
-				<font embed-url="TitilliumWeb-Bold.ttf">
+				<font embed-url="TitilliumWeb-Bold.ttf" kerning="no">
 					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="normal"/>
 					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="bold"/>
 				</font>
-				<font embed-url="TitilliumWeb-Black.ttf">
+				<font embed-url="TitilliumWeb-Black.ttf" kerning="no">
 					<font-triplet name="TitilliumWeb-Black" style="normal" weight="normal"/>
 					<font-triplet name="TitilliumWeb-Black" style="normal" weight="bold"/>
 				</font>
 
-				<font embed-url="RobotoMono-Regular.ttf"><font-triplet name="RobotoMono" style="normal" weight="normal"/></font>
-				<font embed-url="RobotoMono-Bold.ttf"><font-triplet name="RobotoMono" style="normal" weight="bold"/></font>
-				<font embed-url="RobotoMono-Italic.ttf"><font-triplet name="RobotoMono" style="italic" weight="normal"/></font>
-				<font embed-url="RobotoMono-BoldItalic.ttf"><font-triplet name="RobotoMono" style="italic" weight="bold"/></font>
+				<font embed-url="RobotoMono-Regular.ttf" kerning="no"><font-triplet name="RobotoMono" style="normal" weight="normal"/></font>
+				<font embed-url="RobotoMono-Bold.ttf" kerning="no"><font-triplet name="RobotoMono" style="normal" weight="bold"/></font>
+				<font embed-url="RobotoMono-Italic.ttf" kerning="no"><font-triplet name="RobotoMono" style="italic" weight="normal"/></font>
+				<font embed-url="RobotoMono-BoldItalic.ttf" kerning="no"><font-triplet name="RobotoMono" style="italic" weight="bold"/></font>
 
-				<font embed-url="Roboto-Regular.ttf"><font-triplet name="Roboto" style="normal" weight="normal"/></font>
-				<font embed-url="Roboto-Bold.ttf">
+				<font embed-url="Roboto-Regular.ttf" kerning="no"><font-triplet name="Roboto" style="normal" weight="normal"/></font>
+				<font embed-url="Roboto-Bold.ttf" kerning="no">
 					<font-triplet name="Roboto" style="normal" weight="bold"/>
 					<font-triplet name="Roboto-Bold" style="normal" weight="normal"/>
 					<font-triplet name="Roboto-Bold" style="normal" weight="bold"/>

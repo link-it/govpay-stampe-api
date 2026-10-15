@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Base64;
+
+import javax.imageio.ImageIO;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -28,6 +31,7 @@ import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.MimeConstants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -89,6 +93,7 @@ public class AvvisoFopRenderer {
 		try {
 			Document doc = leggi(xmlInput);
 			aggiungiQrCode(doc);
+			aggiungiDimensioniLoghi(doc);
 
 			ByteArrayOutputStream pdf = new ByteArrayOutputStream();
 			Fop fop = this.fopFactory.newFop(MimeConstants.MIME_PDF, pdf);
@@ -115,6 +120,36 @@ public class AvvisoFopRenderer {
 		dbf.setXIncludeAware(false);
 		dbf.setExpandEntityReferences(false);
 		return dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xml));
+	}
+
+	/**
+	 * Per ogni logo (elementi logo_* della radice) aggiunge l'elemento {@code <nome>_px} con larghezza e
+	 * altezza in pixel, per esempio "500 572". Serve al layout per posizionare l'immagine come Jasper,
+	 * che con scaleImage RetainShape tronca a un numero intero di punti lo spazio libero nel riquadro.
+	 * Un logo non decodificabile resta senza dimensioni: il layout lo scala nel riquadro senza troncamenti.
+	 */
+	private static void aggiungiDimensioniLoghi(Document doc) {
+		Element radice = doc.getDocumentElement();
+		for (Node n = radice.getFirstChild(); n != null; n = n.getNextSibling()) {
+			if (!(n instanceof Element logo) || !logo.getTagName().startsWith("logo") || logo.getTagName().endsWith("_px")) {
+				continue;
+			}
+			String valore = logo.getTextContent() == null ? "" : logo.getTextContent().trim();
+			if (valore.isEmpty()) {
+				continue;
+			}
+			try {
+				byte[] dati = Base64.getMimeDecoder().decode(valore.contains(",") ? valore.substring(valore.indexOf(',') + 1) : valore);
+				java.awt.image.BufferedImage img = ImageIO.read(new ByteArrayInputStream(dati));
+				if (img != null) {
+					Element px = doc.createElement(logo.getTagName() + "_px");
+					px.setTextContent(img.getWidth() + " " + img.getHeight());
+					radice.insertBefore(px, logo.getNextSibling());
+				}
+			} catch (IOException | IllegalArgumentException e) {
+				// logo non leggibile: nessuna dimensione, come per un logo assente
+			}
+		}
 	}
 
 	private static void aggiungiQrCode(Document doc) throws WriterException {

@@ -7,6 +7,13 @@
 	del font. Disattivati in FOP kerning ed elaborazione OpenType, che Jasper non
 	usa. Immagini SVG con tutto il riquadro come area di disegno, raster allineate
 	secondo hAlign/vAlign.
+	La posizione del testo e' tarata sull'inchiostro e non sulle caselle di
+	pdftotext, che dipendono da come ogni PDF descrive il font. Le immagini raster
+	sono posizionate come in Jasper, con lo spazio libero troncato a punti
+	interi: il renderer aggiunge all'XML le dimensioni in pixel dei loghi.
+	Aggiunto script/fop/verifica_pdf.py con i criteri di accettazione dei layout
+	migrati: testo e a capo, inchiostro per riga entro 0,25 pt, confronto raster
+	con tolleranza di 1 pixel, immagini entro 1 pt, QR letto.
 
 2026-10-14  Giuliano Pintori <pintori@link.it>
 

@@ -37,8 +37,10 @@ markup, allineamento verticale. Report e misure sono in `pdf-riferimento/taratur
   - Il centrato e l'allineamento in basso si applicano all'altezza T = (A + D) × corpo + (n − 1) × distanza.
   - Markup e grassetto non cambiano la distanza.
 - **FOP 2.11** distanzia le righe esattamente di `line-height` L e mette la prima riga a (L − K × corpo)/2
-  dal bordo del blocco. K dipende dal file del font: 1,668 Regular, 1,709 SemiBold, 1,738 Bold,
-  1,547 RobotoMono.
+  dal bordo del blocco. K è misurato sulla posizione dell'inchiostro: 1,772 per tutte le varianti di
+  Titillium, 1,551 per RobotoMono.
+  - Le caselle delle parole di `pdftotext` non bastano: Jasper e FOP descrivono il font con ascendenti
+    diverse, quindi due caselle allineate non garantiscono caratteri allineati.
 
 `jrxml2fo.py` imposta `line-height` uguale alla distanza di Jasper e un `padding-top` che riproduce
 l'allineamento in alto, al centro o in basso. Il numero di righe lo ricava dagli a capo per i testi
@@ -47,9 +49,16 @@ fissi. Per i testi variabili lo legge da `righe=N` nelle personalizzazioni, e in
 `fop.xconf` disattiva il kerning (`kerning="no"`) e l'elaborazione OpenType (`complex-scripts`), che
 applicherebbe comunque il kerning delle tabelle GPOS: Jasper non ne usa.
 
-**Immagini.** Gli SVG ricevono tutto il riquadro come area di disegno e si centrano da soli, come in
-Jasper. Le immagini raster seguono `hAlign`/`vAlign`. Il blocco che le contiene ha corpo 0, perché
-FOP non le allinei alla linea di base del testo.
+**Immagini.**
+- **SVG:** ricevono tutto il riquadro come area di disegno e si centrano da soli, come in Jasper.
+- **Raster (loghi):** Jasper le scala per stare nel riquadro mantenendo le proporzioni, poi le sposta
+  secondo `hAlign`/`vAlign` di uno spazio libero troncato a punti interi. Il renderer aggiunge all'XML le
+  dimensioni in pixel di ogni logo (`<logo>_px`) e il layout ripete lo stesso calcolo.
+- **Blocco contenitore:** ha corpo 0, perché FOP non allinei l'immagine alla linea di base del testo.
+
+**Righe con font diversi.** Se su una riga ci sono font con ascendenti diverse, per esempio Titillium e
+RobotoMono, FOP abbassa la linea di base rispetto a Jasper. Va compensato nella personalizzazione,
+come per "Euro 122,50" in `RataUnica` (0,48 pt).
 
 **A capo dei testi fissi.** FOP spezza le righe con l'algoritmo di Knuth-Plass, che bilancia il paragrafo,
 mentre Jasper riempie ogni riga finché c'è spazio. Per i testi fissi `jrxml2fo.py` calcola gli a capo come
@@ -61,12 +70,31 @@ Differenze note:
 - Testi variabili (oggetto, nomi, indirizzi): gli a capo li sceglie FOP, quindi su testi lunghi una
   parola può andare a capo in un punto diverso da Jasper. Se il numero di righe non è quello indicato
   con `righe=N`, l'interlinea fissa differisce di qualche decimo di punto.
-- Lo stemma dell'ente (immagine raster allineata a destra) è spostato di circa 0,7 pt per un diverso
-  arrotondamento della scalatura.
 - Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
   Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
   ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`
   è stato provato e scartato perché troppo marcato.
+
+## Criteri di accettazione
+
+Un layout migrato è accettato quando `verifica_pdf.py` passa su tutti i suoi casi di riferimento:
+
+| Criterio | Soglia |
+| --- | --- |
+| Testo | stesse righe con le stesse parole, quindi stessi a capo |
+| Inchiostro per riga | bordi superiore, inferiore, sinistro e destro entro 0,25 pt (misura a 600 dpi) |
+| Raster | a 200 dpi con tolleranza di 1 pixel (circa 0,36 pt), al massimo 5 pixel fuori tolleranza, escluse le immagini e le differenze accettate indicate con `--escludi` |
+| Immagini | riquadro dell'inchiostro entro 1 pt |
+| QR code | letto dal PDF FOP, con il contenuto del `qr_code` dell'XML |
+
+Differenze accettate in `RataUnica`: il grassetto simulato di "pagopa.gov.it" (`--escludi 480,250,100,22`).
+
+```bash
+python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input.xml \
+  --classpath "$(mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout)" --escludi 480,250,100,22
+```
+
+Il file FO (`layout.fo`) si ottiene dall'XML con `xsltproc src/main/resources/fop/avviso-semplice.xsl input.xml`.
 
 ## Verifica
 

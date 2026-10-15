@@ -98,13 +98,15 @@ def famiglia(nome):
 #     Fixed F -> F + D*corpo + (A*corpo - F) / n, con n numero di righe del testo;
 #   - in verticale centra, o allinea in fondo, l'altezza T = (A + D)*corpo + (n - 1) * p.
 # FOP 2.11: distanza tra le righe = line-height L; la prima riga sta a (L - K*corpo)/2 dal bordo
-# del blocco, con K costante per file di font.
+# del blocco. K e' misurato sulla posizione dell'inchiostro (pdf-riferimento/taratura/inchiostro),
+# non sulle caselle di pdftotext: Jasper e FOP descrivono il font con ascendenti diverse, e caselle
+# allineate non garantiscono caratteri allineati. Tutte le varianti di Titillium hanno lo stesso K.
 # Imponendo L = p e un padding superiore si ottiene la stessa posizione di Jasper per ogni allineamento.
 METRICHE_AWT = {'TitilliumWeb': (1.133, 0.388), 'RobotoMono': (1.0479, 0.2711), 'Roboto': (0.9277, 0.2441)}
-K_FOP = {'TitilliumWeb-Regular.ttf': 1.668, 'TitilliumWeb-SemiBold.ttf': 1.709, 'TitilliumWeb-Bold.ttf': 1.738,
-         'TitilliumWeb-Italic.ttf': 1.67, 'TitilliumWeb-SemiBoldItalic.ttf': 1.709,
-         'RobotoMono-Regular.ttf': 1.547, 'RobotoMono-Bold.ttf': 1.547,
-         'RobotoMono-Italic.ttf': 1.547, 'RobotoMono-BoldItalic.ttf': 1.547}
+K_FOP = {'TitilliumWeb-Regular.ttf': 1.772, 'TitilliumWeb-SemiBold.ttf': 1.772, 'TitilliumWeb-Bold.ttf': 1.772,
+         'TitilliumWeb-Italic.ttf': 1.772, 'TitilliumWeb-SemiBoldItalic.ttf': 1.772,
+         'RobotoMono-Regular.ttf': 1.551, 'RobotoMono-Bold.ttf': 1.551,
+         'RobotoMono-Italic.ttf': 1.551, 'RobotoMono-BoldItalic.ttf': 1.551}
 
 
 def geometria_testo(el, blocco, n, altezza):
@@ -492,18 +494,26 @@ def immagine(el, ox, oy, ctx, out, rientro):
         out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
     elif m_logo:
         xp = ctx.p(m_logo.group(1))
-        # immagine raster: proporzioni mantenute (scaleImage RetainShape) e posizione da hAlign/vAlign
-        grafica = {'content-width': 'scale-to-fit', 'content-height': 'scale-to-fit', 'width': w, 'height': h, 'scaling': 'uniform'}
-        allineamento = {'Center': 'center', 'Right': 'end'}.get(el.get('hAlign'))
-        if allineamento:
-            grafica['text-align'] = allineamento
-        verticale = {'Middle': 'center', 'Bottom': 'after'}.get(el.get('vAlign'))
-        if verticale:
-            grafica['display-align'] = verticale
-        # logo assente: Jasper lascia il riquadro vuoto (onErrorType Blank)
-        out.append(f'{rientro}\t<fo:block{attrs(blocco)}><xsl:if test="normalize-space({xp})"><fo:external-graphic{attrs(grafica)}>'
-                   f'<xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="{xp}"/></xsl:call-template>)</xsl:attribute>'
-                   f'</fo:external-graphic></xsl:if></fo:block>')
+        lw, lh = float(re_el.get('width')), float(re_el.get('height'))
+        # Immagine raster come Jasper (scaleImage RetainShape): scalata per stare nel riquadro, poi
+        # spostata secondo hAlign/vAlign di uno spazio libero TRONCATO a punti interi. Le dimensioni in
+        # pixel le aggiunge il renderer (elemento <logo>_px); senza, si scala nel riquadro senza troncare.
+        oriz = {'Center': 'floor(($W - $iw * $sc) div 2)', 'Right': 'floor($W - $iw * $sc)'}.get(el.get('hAlign'), '0')
+        vert = {'Middle': 'floor(($H - $ih * $sc) div 2)', 'Bottom': 'floor($H - $ih * $sc)'}.get(el.get('vAlign'), '0')
+        sorgente = (f'<xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="{xp}"/>'
+                    f'</xsl:call-template>)</xsl:attribute>')
+        out.append(f"""{rientro}\t<fo:block{attrs(blocco)}><xsl:if test="normalize-space({xp})"><xsl:choose>
+{rientro}\t\t<xsl:when test="normalize-space({xp}_px)">
+{rientro}\t\t\t<xsl:variable name="W" select="{lw}"/><xsl:variable name="H" select="{lh}"/>
+{rientro}\t\t\t<xsl:variable name="iw" select="number(substring-before(normalize-space({xp}_px), ' '))"/>
+{rientro}\t\t\t<xsl:variable name="ih" select="number(substring-after(normalize-space({xp}_px), ' '))"/>
+{rientro}\t\t\t<xsl:variable name="sc"><xsl:choose><xsl:when test="$W div $iw &lt; $H div $ih"><xsl:value-of select="$W div $iw"/></xsl:when><xsl:otherwise><xsl:value-of select="$H div $ih"/></xsl:otherwise></xsl:choose></xsl:variable>
+{rientro}\t\t\t<fo:block-container absolute-position="absolute" left="{{{oriz}}}pt" top="{{{vert}}}pt" width="{{$iw * $sc}}pt" height="{{$ih * $sc}}pt">
+{rientro}\t\t\t\t<fo:block{attrs(blocco)}><fo:external-graphic content-width="{{$iw * $sc}}pt" content-height="{{$ih * $sc}}pt" scaling="non-uniform">{sorgente}</fo:external-graphic></fo:block>
+{rientro}\t\t\t</fo:block-container>
+{rientro}\t\t</xsl:when>
+{rientro}\t\t<xsl:otherwise><fo:external-graphic{attrs({'content-width': 'scale-to-fit', 'content-height': 'scale-to-fit', 'width': w, 'height': h, 'scaling': 'uniform'})}>{sorgente}</fo:external-graphic></xsl:otherwise>
+{rientro}\t</xsl:choose></xsl:if></fo:block>""")
     else:
         todo.append('immagine')
         out.append(f'{rientro}\t<!-- TODO immagine: {commento(espr)} -->')

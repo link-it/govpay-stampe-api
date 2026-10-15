@@ -20,8 +20,8 @@
 	<!-- "Importo" + importo formattato + " Euro ": due blocchi, perche' in Jasper ogni riga ha l'altezza del proprio corpo -->
 	<elemento uuid="b6232d33-f535-4571-8ff9-ccd2cbd9aae1" attributi="padding-top=1.74pt"><fo:block font-size="8pt" line-height="10.13pt">Importo</fo:block><fo:block space-before="5.16pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template> Euro</fo:block></elemento>
 
-	<!-- "Euro" + importo in RobotoMono grassetto -->
-	<elemento uuid="8cf9f0a8-c394-49db-ab82-0dc86137c6ca"><fo:inline font-size="10pt">Euro</fo:inline>&#160;&#160;<fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template></fo:inline></elemento>
+	<!-- "Euro" + importo in RobotoMono grassetto: con due font sulla riga FOP abbassa la linea di base di 0,48 pt, compensati nel padding -->
+	<elemento uuid="8cf9f0a8-c394-49db-ab82-0dc86137c6ca" attributi="white-space-collapse=false;padding-top=1.277pt"><fo:inline font-size="10pt">Euro</fo:inline><xsl:text>  </xsl:text><fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template></fo:inline></elemento>
 
 	<!-- scadenza ("entro il" + data) oppure soglia (tipo + giorni) -->
 	<elemento uuid="a4b1b4d8-218b-4c9e-afe6-576ba388fe93" attributi="padding-top=1.74pt"><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="rata/tipo"/></fo:block><fo:block space-before="5.16pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(rata/data)"><fo:block font-size="8pt" line-height="10.13pt">entro il</fo:block><fo:block space-before="5.16pt"><xsl:value-of select="rata/data"/></fo:block></xsl:when></xsl:choose></elemento>

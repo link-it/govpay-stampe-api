@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Parti di RataUnicaPostale scritte a mano, applicate da jrxml2fo.py durante la generazione di
+	src/main/resources/fop/RataUnicaPostale.xsl. RataUnicaPostale deriva da RataUnica: gli elementi in
+	comune hanno lo stesso uuid e, salvo dove indicato, la stessa personalizzazione di RataUnica.xml.
+	Attenzione: lo stesso uuid puo' avere contenuto diverso nei due template (per esempio "Euro" seguito
+	da uno spazio qui e da due in RataUnica): ogni voce va verificata sul proprio sorgente.
+	Contesto dei percorsi relativi: l'elemento pagine/singola.
+-->
+<personalizzazioni xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+
+	<!-- ===== in comune con RataUnica ===== -->
+	<!-- ($F{numero_rata}.equals(null)?"Rata unica":$F{numero_rata}+"° RATA") + entro il / soglia -->
+	<elemento uuid="aa2c4221-4806-475a-8632-26e4fb89dfc8"><xsl:choose><xsl:when test="normalize-space(rata/numero_rata)"><xsl:value-of select="rata/numero_rata"/>° RATA</xsl:when><xsl:otherwise>Rata unica</xsl:otherwise></xsl:choose><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><xsl:value-of select="concat(' ', rata/tipo, ' ')"/><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></xsl:when><xsl:when test="normalize-space(rata/data)"> entro il <xsl:value-of select="rata/data"/></xsl:when></xsl:choose></elemento>
+	<!-- "Importo" + importo formattato + " Euro ": due blocchi, perche' in Jasper ogni riga ha l'altezza del proprio corpo -->
+	<elemento uuid="b6232d33-f535-4571-8ff9-ccd2cbd9aae1" attributi="padding-top=2.023pt"><fo:block font-size="8pt" line-height="10.13pt">Importo</fo:block><fo:block space-before="5.057pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template> Euro</fo:block></elemento>
+	<!-- "Euro" + importo in RobotoMono grassetto: con due font sulla riga FOP abbassa la linea di base di 0,48 pt, compensati nel padding -->
+	<elemento uuid="8cf9f0a8-c394-49db-ab82-0dc86137c6ca" attributi="white-space-collapse=false;padding-top=1.277pt"><fo:inline font-size="10pt">Euro</fo:inline><xsl:text> </xsl:text><fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template></fo:inline></elemento>
+	<!-- scadenza ("entro il" + data) oppure soglia (tipo + giorni) -->
+	<elemento uuid="a4b1b4d8-218b-4c9e-afe6-576ba388fe93" attributi="padding-top=2.023pt"><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="rata/tipo"/></fo:block><fo:block space-before="5.057pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(rata/data)"><fo:block font-size="8pt" line-height="10.13pt">entro il</fo:block><fo:block space-before="4.877pt"><xsl:value-of select="rata/data"/></fo:block></xsl:when></xsl:choose></elemento>
+	<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
+	<elemento uuid="d647fb00-fa40-4ef1-888d-6bf923cadfd6" attributi="righe=2"><xsl:if test="normalize-space(/AvvisoPagamentoInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /AvvisoPagamentoInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</elemento>
+	<!-- informazioni dell'ente (sito, telefono, PEC): tre righe separate da <br/>, per l'interlinea fissa di Jasper -->
+	<elemento uuid="ebf271a0-bb97-456d-a3b7-3da899d53fbc" attributi="righe=3"/>
+	<!-- informativa sull'importo: testo di default se non personalizzata, altrimenti quella indicata -->
+	<condizione uuid="82503c5f-96f7-4138-bdd3-3f63d134c979">not(/AvvisoPagamentoInput/nascondi_informativa_importo_avviso = 'true') and not(normalize-space(/AvvisoPagamentoInput/informativa_importo_avviso))</condizione>
+
+	<!-- ===== solo in RataUnicaPostale ===== -->
+	<!-- bollettino: "sul C/C n." + numero di conto in RobotoMono grassetto: riga con due font, padding ridotto di 0,48 pt come per "Euro" -->
+	<elemento uuid="ccc9f519-25f6-403e-aafc-9a25755c8476" attributi="padding-top=1.4pt">sul C/C n. <fo:inline font-weight="bold" font-family="RobotoMono"><xsl:value-of select="rata/numero_cc_postale"/></fo:inline></elemento>
+
+	<!-- bollettino: "Euro" + importo, come l'elemento 8cf9f0a8 dei dati per il pagamento -->
+	<elemento uuid="0028ce29-80f4-492d-96ec-f01e7b3726f8" attributi="white-space-collapse=false;padding-top=1.277pt"><fo:inline font-size="10pt">Euro</fo:inline><xsl:text> </xsl:text><fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template></fo:inline></elemento>
+
+	<!-- bollettino: "Rata unica entro il ..." / "N° RATA" / soglia, come l'elemento aa2c4221 -->
+	<elemento uuid="1b565e3b-dbbc-4339-86d6-dcc25526fef0"><xsl:choose><xsl:when test="normalize-space(rata/numero_rata)"><xsl:value-of select="rata/numero_rata"/>° RATA</xsl:when><xsl:otherwise>Rata unica</xsl:otherwise></xsl:choose><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><xsl:value-of select="concat(' ', rata/tipo, ' ')"/><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></xsl:when><xsl:when test="normalize-space(rata/data)"> entro il <xsl:value-of select="rata/data"/></xsl:when></xsl:choose></elemento>
+
+	<!-- $V{totaleRate} = $P{totale_rate} = count(//rata) del documento: icona e testo solo se le rate sono piu' di una -->
+	<condizione uuid="ab5a30f4-392c-4f57-ad3d-c8bc91edaf6b">count(/AvvisoPagamentoInput/pagine//rata) &gt; 1</condizione>
+	<condizione uuid="866df13b-6f7b-4ab9-9156-cccb4a804c5c">count(/AvvisoPagamentoInput/pagine//rata) &gt; 1</condizione>
+	<elemento uuid="866df13b-6f7b-4ab9-9156-cccb4a804c5c">Puoi pagare per intero oppure in <xsl:value-of select="count(/AvvisoPagamentoInput/pagine//rata) - 1"/> rate.</elemento>
+
+	<!-- informativa personalizzata, come eb8fa14c in RataUnica -->
+	<condizione uuid="6c025ba3-310a-43c1-9095-bbcf0f2b8a37">not(/AvvisoPagamentoInput/nascondi_informativa_importo_avviso = 'true') and normalize-space(/AvvisoPagamentoInput/informativa_importo_avviso)</condizione>
+
+</personalizzazioni>

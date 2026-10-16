@@ -86,15 +86,24 @@ Un layout migrato è accettato quando `verifica_pdf.py` passa su tutti i suoi ca
 | Raster | a 200 dpi con tolleranza di 1 pixel (circa 0,36 pt), al massimo 5 pixel fuori tolleranza, escluse le immagini e le differenze accettate indicate con `--escludi` |
 | Immagini | riquadro dell'inchiostro entro 1 pt |
 | QR code | letto dal PDF FOP, con il contenuto del `qr_code` dell'XML |
+| DataMatrix (bollettino postale) | letto dal PDF FOP, con il contenuto del `data_matrix` dell'XML |
 
-Differenze accettate in `RataUnica`: il grassetto simulato di "pagopa.gov.it" (`--escludi 480,250,100,22`).
+Differenze accettate in `RataUnica` e `RataUnicaPostale`: il grassetto simulato di "pagopa.gov.it" (`--escludi 480,250,100,22`).
+
+Il DataMatrix del bollettino è generato da zxing, mentre Jasper usa barcode4j. Ha la stessa dimensione
+(48×48) e lo stesso contenuto, ma il disegno dei moduli è diverso perché le due librerie scelgono una
+codifica interna diversa. Per questo si confronta il contenuto letto, non il disegno.
 
 ```bash
 python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input.xml \
   --classpath "$(mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout)" --escludi 480,250,100,22
 ```
 
-Il file FO (`layout.fo`) si ottiene dall'XML con `xsltproc src/main/resources/fop/avviso-semplice.xsl input.xml`.
+Il file FO (`layout.fo`) si ottiene dall'XML con `xsltproc src/main/resources/fop/avviso-semplice.xsl input.xml`
+(`avviso-postale.xsl` per gli avvisi con bollettino postale).
+
+**Bordi dei riquadri.** Jasper disegna la linea centrata sul bordo del riquadro. FOP disegna il bordo
+superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo stesso.
 
 ## Verifica
 
@@ -105,4 +114,7 @@ I casi restano fuori dal repository e si indicano da riga di comando:
 mvn test -Dtest=PrototipoFopTest \
   -Dprototipo.run=$PWD/pdf-riferimento/run-20261012 \
   -Dprototipo.casi=casi-prototipo-RataUnica.json
+# avvisi con bollettino postale
+mvn test -Dtest=PrototipoFopTest -Dprototipo.run=$PWD/pdf-riferimento/run-20261012 \
+  -Dprototipo.casi=casi-prototipo-RataUnicaPostale.json -Dprototipo.foglio=avviso-postale.xsl
 ```

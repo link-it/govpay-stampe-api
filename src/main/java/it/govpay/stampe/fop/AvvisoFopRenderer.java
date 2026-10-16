@@ -44,9 +44,10 @@ import com.google.zxing.WriterException;
  * Configurazione di FOP e fogli XSLT sono letti una volta sola: {@link FopFactory} e
  * {@link Templates} sono thread-safe e riusabili tra le richieste.
  * <p>
- * Prima della trasformazione ogni {@code rata} con un {@code qr_code} riceve l'elemento
- * {@code qr_code_svg} con il QR code gia' calcolato (URI data:), perche' XSLT non puo' generarlo.
- * L'elemento non fa parte dello schema: esiste solo nel documento passato alla trasformazione.
+ * Prima della trasformazione il documento viene arricchito con cio' che XSLT non puo' calcolare:
+ * QR code e DataMatrix come SVG ({@code qr_code_svg}, {@code data_matrix_svg}) e dimensioni in pixel
+ * dei loghi ({@code <logo>_px}). Questi elementi non fanno parte dello schema: esistono solo nel
+ * documento passato alla trasformazione.
  */
 public class AvvisoFopRenderer {
 
@@ -92,7 +93,7 @@ public class AvvisoFopRenderer {
 	public byte[] genera(byte[] xmlInput) {
 		try {
 			Document doc = leggi(xmlInput);
-			aggiungiQrCode(doc);
+			aggiungiCodici(doc);
 			aggiungiDimensioniLoghi(doc);
 
 			ByteArrayOutputStream pdf = new ByteArrayOutputStream();
@@ -152,22 +153,35 @@ public class AvvisoFopRenderer {
 		}
 	}
 
-	private static void aggiungiQrCode(Document doc) throws WriterException {
+	/**
+	 * Aggiunge a ogni {@code rata} i codici gia' calcolati, come URI data: SVG: {@code qr_code_svg} dal
+	 * {@code qr_code} e {@code data_matrix_svg} dal {@code data_matrix} del bollettino postale.
+	 * Il contenuto del DataMatrix e' passato cosi' com'e', spazi compresi: fanno parte del tracciato.
+	 */
+	private static void aggiungiCodici(Document doc) throws WriterException {
 		NodeList rate = doc.getElementsByTagName("rata");
 		for (int i = 0; i < rate.getLength(); i++) {
 			Element rata = (Element) rate.item(i);
-			NodeList qr = rata.getElementsByTagName("qr_code");
-			if (qr.getLength() == 0) {
-				continue;
+			String qr = testo(rata, "qr_code");
+			if (qr != null && !qr.isBlank()) {
+				aggiungi(doc, rata, "qr_code_svg", CodiciSvg.qrCodeDataUri(qr.trim()));
 			}
-			String contenuto = qr.item(0).getTextContent();
-			if (contenuto == null || contenuto.isBlank()) {
-				continue;
+			String dm = testo(rata, "data_matrix");
+			if (dm != null && !dm.isBlank()) {
+				aggiungi(doc, rata, "data_matrix_svg", CodiciSvg.dataMatrixDataUri(dm));
 			}
-			Element svg = doc.createElement("qr_code_svg");
-			svg.setTextContent(QrCodeSvg.dataUri(contenuto.trim()));
-			rata.appendChild(svg);
 		}
+	}
+
+	private static String testo(Element padre, String nome) {
+		NodeList n = padre.getElementsByTagName(nome);
+		return n.getLength() == 0 ? null : n.item(0).getTextContent();
+	}
+
+	private static void aggiungi(Document doc, Element padre, String nome, String valore) {
+		Element e = doc.createElement(nome);
+		e.setTextContent(valore);
+		padre.appendChild(e);
 	}
 
 	private static URL risorsa(String percorso) {

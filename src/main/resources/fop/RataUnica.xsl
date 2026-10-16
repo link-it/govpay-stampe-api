@@ -111,7 +111,7 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="20pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">DATI PER IL PAGAMENTO</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="9pt" top="445pt" width="105pt" height="105pt">
-			<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></fo:block>
+			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/qr_code_svg)"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="299pt" top="289pt" width="213pt" height="20pt">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="8pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">PAGA CON L'APP IO</fo:block>
@@ -121,14 +121,14 @@
 		</fo:block-container>
 		<xsl:if test="not(/AvvisoPagamentoInput/nascondi_informativa_importo_avviso = 'true')">
 			<fo:block-container absolute-position="absolute" left="20pt" top="352pt" width="20pt" height="20pt">
-				<fo:block font-size="0pt" line-height="0pt"><fo:instream-foreign-object content-width="20pt" content-height="20pt" scaling="non-uniform"><svg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='#000000'><path d='M0 0h24v24H0V0z' fill='none'/><path d='M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'/></svg></fo:instream-foreign-object></fo:block>
+				<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="20pt" height="20pt"><fo:block font-size="0pt" line-height="0pt"><fo:instream-foreign-object content-width="20pt" content-height="20pt" scaling="uniform"><svg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='#000000'><path d='M0 0h24v24H0V0z' fill='none'/><path d='M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'/></svg></fo:instream-foreign-object></fo:block></fo:block-container></fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="191pt" top="512pt" width="255pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.836pt" wrap-option="no-wrap">Oggetto del pagamento</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="20pt" top="289pt" width="149pt" height="42pt">
-			<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" line-height="24.336pt" padding-top="1.74pt"><fo:block font-size="8pt" line-height="10.13pt">Importo</fo:block><fo:block space-before="5.16pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template> Euro</fo:block></fo:block>
+			<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" line-height="24.336pt" padding-top="2.023pt"><fo:block font-size="8pt" line-height="10.13pt">Importo</fo:block><fo:block space-before="5.057pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo"/></xsl:call-template> Euro</fo:block></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="191pt" top="547pt" width="60pt" height="14pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. CBILL</fo:block>
@@ -166,7 +166,7 @@
 			<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.836pt" wrap-option="no-wrap">Ente Creditore</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="191pt" top="289pt" width="103pt" height="42pt">
-			<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" line-height="24.336pt" padding-top="1.74pt"><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="rata/tipo"/></fo:block><fo:block space-before="5.16pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(rata/data)"><fo:block font-size="8pt" line-height="10.13pt">entro il</fo:block><fo:block space-before="5.16pt"><xsl:value-of select="rata/data"/></fo:block></xsl:when></xsl:choose></fo:block>
+			<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" line-height="24.336pt" padding-top="2.023pt"><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="rata/tipo"/></fo:block><fo:block space-before="5.057pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(rata/data)"><fo:block font-size="8pt" line-height="10.13pt">entro il</fo:block><fo:block space-before="4.877pt"><xsl:value-of select="rata/data"/></fo:block></xsl:when></xsl:choose></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="401pt" top="547pt" width="174pt" height="14pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" text-align="end" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. Fiscale Ente</fo:block>

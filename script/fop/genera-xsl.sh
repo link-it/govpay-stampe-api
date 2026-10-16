@@ -19,3 +19,4 @@ genera() {
 
 # layout migrati
 genera RataUnica
+genera RataUnicaPostale

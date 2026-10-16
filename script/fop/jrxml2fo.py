@@ -478,6 +478,10 @@ def testo(el, ox, oy, ctx, out, rientro):
 def immagine(el, ox, oy, ctx, out, rientro):
     re_el = el.find(f'{J}reportElement')
     espr = el.findtext(f'{J}imageExpression') or ''
+    m_qr = re.search(r'QRCodeWriter\(\)\.encode\(\s*\$F\{(\w+)\}', espr)
+    if m_qr and re_el.get('uuid') not in personalizzazioni['elemento']:
+        codice(re_el, ctx.f(m_qr.group(1)), ox, oy, out, rientro)
+        return
     w, h = pt(re_el.get('width')), pt(re_el.get('height'))
     cont = contenitore(re_el, ox, oy)
     svg = svg_da_batik(espr)
@@ -488,10 +492,27 @@ def immagine(el, ox, oy, ctx, out, rientro):
     if re_el.get('uuid') in personalizzazioni['elemento']:
         out.append(f"{rientro}\t{personalizzazioni['elemento'][re_el.get('uuid')]}")
     elif svg:
-        # Jasper (BatikRenderer) passa all'SVG tutto il riquadro come area di disegno: e' l'SVG stesso
-        # (preserveAspectRatio) a centrare il disegno, indipendentemente da hAlign/vAlign
-        grafica = {'content-width': w, 'content-height': h, 'scaling': 'non-uniform'}
-        out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
+        apertura = re.search(r'<svg[^>]*>', svg).group(0)
+        iw = re.search(r'''\swidth=['"]([\d.]+)''', apertura)
+        ih = re.search(r'''\sheight=['"]([\d.]+)''', apertura)
+        if iw and ih:
+            # SVG con dimensioni proprie: Jasper lo tratta come un'immagine (RetainShape), adattata al
+            # riquadro con le sue proporzioni e allineata secondo hAlign/vAlign, con lo spazio libero
+            # troncato a punti interi come per le immagini raster
+            bw, bh = float(re_el.get('width')), float(re_el.get('height'))
+            sc = min(bw / float(iw.group(1)), bh / float(ih.group(1)))
+            dw, dh = float(iw.group(1)) * sc, float(ih.group(1)) * sc
+            dx = {'Center': (bw - dw) // 2, 'Right': (bw - dw) // 1}.get(el.get('hAlign'), 0)
+            dy = {'Middle': (bh - dh) // 2, 'Bottom': (bh - dh) // 1}.get(el.get('vAlign'), 0)
+            interno = {'absolute-position': 'absolute', 'left': pt(dx), 'top': pt(dy), 'width': pt(round(dw, 3)), 'height': pt(round(dh, 3))}
+            grafica = {'content-width': pt(round(dw, 3)), 'content-height': pt(round(dh, 3)), 'scaling': 'uniform'}
+            out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:block-container{attrs(interno)}><fo:block{attrs(blocco)}>'
+                       f'<fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block></fo:block-container></fo:block>')
+        else:
+            # SVG senza dimensioni: Jasper (BatikRenderer) gli passa tutto il riquadro come area di disegno,
+            # ed e' l'SVG stesso (preserveAspectRatio) a centrare il disegno, indipendentemente da hAlign/vAlign
+            grafica = {'content-width': w, 'content-height': h, 'scaling': 'non-uniform'}
+            out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
     elif m_logo:
         xp = ctx.p(m_logo.group(1))
         lw, lh = float(re_el.get('width')), float(re_el.get('height'))
@@ -520,6 +541,18 @@ def immagine(el, ox, oy, ctx, out, rientro):
     out.append(f'{rientro}</fo:block-container>')
 
 
+def codice(re_el, campo_xpath, ox, oy, out, rientro):
+    """QR code o DataMatrix: SVG calcolato dal renderer (AvvisoFopRenderer) nell'elemento <campo>_svg,
+    disegnato su tutto il riquadro come fa Jasper."""
+    w, h = pt(re_el.get('width')), pt(re_el.get('height'))
+    cont = contenitore(re_el, ox, oy)
+    grafica = {'content-width': w, 'content-height': h, 'scaling': 'non-uniform'}
+    out.append(f'{rientro}<fo:block-container{attrs(cont)}>')
+    out.append(f'{rientro}\t<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space({campo_xpath}_svg)"><fo:external-graphic{attrs(grafica)}>'
+               f'<xsl:attribute name="src">url(<xsl:value-of select="{campo_xpath}_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>')
+    out.append(f'{rientro}</fo:block-container>')
+
+
 def linea_o_rettangolo(el, ox, oy, out, rientro):
     re_el = el.find(f'{J}reportElement')
     pen = el.find(f'{J}graphicElement/{J}pen')
@@ -542,6 +575,34 @@ def linea_o_rettangolo(el, ox, oy, out, rientro):
             extra['border'] = f'{pt(spessore)} solid {colore}'
         cont = contenitore(re_el, ox, oy, extra)
     out.append(f'{rientro}<fo:block-container{attrs(cont)}><fo:block/></fo:block-container>')
+
+
+def bordi(el, ox, oy, out, rientro):
+    box = el.find(f'{J}box')
+    re_el = el.find(f'{J}reportElement')
+    if box is None or re_el is None:
+        return
+    x = float(re_el.get('x', 0)) + ox; y = float(re_el.get('y', 0)) + oy
+    w = float(re_el.get('width')); h = float(re_el.get('height'))
+    comune = box.find(f'{J}pen')
+    for lato, (lx, ly, lw, lh) in {'topPen': (x, y, w, 0), 'bottomPen': (x, y + h, w, 0),
+                                   'leftPen': (x, y, 0, h), 'rightPen': (x + w, y, 0, h)}.items():
+        pen = box.find(f'{J}{lato}')
+        spessore = float((pen if pen is not None and pen.get('lineWidth') else comune).get('lineWidth', '0')) \
+            if (pen is not None and pen.get('lineWidth')) or comune is not None else 0.0
+        if spessore <= 0:
+            continue
+        colore = (pen.get('lineColor') if pen is not None else None) or (comune.get('lineColor') if comune is not None else None) or re_el.get('forecolor') or '#000000'
+        stile = {'Dashed': 'dashed', 'Dotted': 'dotted'}.get((pen.get('lineStyle') if pen is not None else None) or '', 'solid')
+        if lh == 0:
+            # FOP disegna il bordo superiore sotto il bordo del riquadro: posizionato sul bordo, la linea
+            # cade dove Jasper la disegna centrata
+            a = {'absolute-position': 'absolute', 'left': pt(lx), 'top': pt(ly), 'width': pt(lw), 'height': '0pt',
+                 'border-top': f'{pt(spessore)} {stile} {colore}'}
+        else:
+            a = {'absolute-position': 'absolute', 'left': pt(round(lx - spessore / 2, 3)), 'top': pt(ly), 'width': '0pt', 'height': pt(lh),
+                 'border-left': f'{pt(spessore)} {stile} {colore}'}
+        out.append(f'{rientro}<fo:block-container{attrs(a)}><fo:block/></fo:block-container>')
 
 
 def commento(s):
@@ -568,10 +629,19 @@ def elementi(contenitore_xml, ox, oy, ctx, out, rientro):
             r2 = rientro
         if tag in ('staticText', 'textField'):
             testo(el, ox, oy, ctx, out, r2)
+            bordi(el, ox, oy, out, r2)
         elif tag == 'image':
             immagine(el, ox, oy, ctx, out, r2)
         elif tag in ('line', 'rectangle'):
             linea_o_rettangolo(el, ox, oy, out, r2)
+        elif tag == 'componentElement' and el.find('{http://jasperreports.sourceforge.net/jasperreports/components}DataMatrix') is not None:
+            dm = el.find('{http://jasperreports.sourceforge.net/jasperreports/components}DataMatrix')
+            m = re.fullmatch(r'\s*\$F\{(\w+)\}\s*', dm.findtext('{http://jasperreports.sourceforge.net/jasperreports/components}codeExpression') or '')
+            if m:
+                codice(re_el, ctx.f(m.group(1)), ox, oy, out, r2)
+            else:
+                todo.append('DataMatrix')
+                out.append(f'{r2}<!-- TODO DataMatrix con espressione non semplice -->')
         elif tag == 'frame':
             x = float(re_el.get('x', 0)) + ox
             y = float(re_el.get('y', 0)) + oy

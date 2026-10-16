@@ -10,11 +10,13 @@ Criteri di accettazione (ogni criterio deve passare):
                 uno dei due PDF senza corrispondente nell'altro (rumore di rasterizzazione), escluse
                 le zone delle immagini
   4. immagini   per ogni immagine il riquadro dell'inchiostro differisce al massimo di 1 pt
-  5. qr         il QR code del PDF FOP si legge e contiene il qr_code dell'XML (opzionale)
+  5. codici     QR code e DataMatrix del PDF FOP si leggono e contengono il qr_code e il data_matrix
+                dell'XML (opzionale, con --xml e --classpath)
 
 Le posizioni delle parole vengono da pdftotext, ma sono usate solo per trovare le righe: Jasper e
 FOP descrivono le metriche del font in modo diverso, quindi lo scarto si misura sull'inchiostro.
-Le zone delle immagini si ricavano dal file FO del layout (block-container con un'immagine).
+Le zone delle immagini si ricavano dal file FO del layout: sono i block-container il cui blocco ha
+corpo 0, come li genera jrxml2fo.py per immagini, QR code e DataMatrix.
 
 Uso:
   verifica_pdf.py JASPER.pdf FOP.pdf --fo LAYOUT.fo [--xml INPUT.xml --classpath CP] [--escludi X,Y,W,H]...
@@ -42,13 +44,16 @@ SOGLIA_RASTER = 5          # pixel isolati a 200 dpi
 DPI_INCHIOSTRO = 600
 DPI_RASTER = 200
 
-LEGGI_QR = """
+LEGGI_CODICI = """
 import java.io.File; import java.util.Map; import javax.imageio.ImageIO; import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource; import com.google.zxing.common.HybridBinarizer;
-public class LeggiQr { public static void main(String[] a) throws Exception {
-  try { System.out.print(new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(ImageIO.read(new File(a[0]))))),
-        Map.of(DecodeHintType.TRY_HARDER, true, DecodeHintType.POSSIBLE_FORMATS, java.util.List.of(BarcodeFormat.QR_CODE))).getText());
-  } catch (NotFoundException e) { System.out.print(""); } } }
+public class LeggiCodici { public static void main(String[] a) throws Exception {
+  for (String f : a) {
+    String letto = "";
+    try { letto = new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(ImageIO.read(new File(f))))),
+        Map.of(DecodeHintType.TRY_HARDER, true, DecodeHintType.POSSIBLE_FORMATS, java.util.List.of(BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX))).getText();
+    } catch (NotFoundException e) { }
+    System.out.print(java.util.Base64.getEncoder().encodeToString(letto.getBytes(java.nio.charset.StandardCharsets.UTF_8)) + "\\n"); } } }
 """
 
 
@@ -59,12 +64,18 @@ def parole(pdf):
 
 
 def righe(ws):
-    """Parole raggruppate per riga: stessa yMin (entro 0,5 pt) e vicine in orizzontale."""
-    gruppi = defaultdict(list)
-    for w in ws:
-        gruppi[round(w[2] * 2) / 2].append(w)
+    """Parole raggruppate per riga: centro verticale entro 2,5 pt e vicine in orizzontale."""
+    gruppi = []
+    # centro verticale entro 2,5 pt: le caselle di font diversi sulla stessa riga hanno yMin diversi
+    # (ogni font ha la sua ascendente), mentre due righe vere distano almeno 6 pt
+    centro = lambda w: (w[2] + w[4]) / 2
+    for w in sorted(ws, key=centro):
+        if gruppi and abs(centro(w) - centro(gruppi[-1][0])) < 2.5:
+            gruppi[-1].append(w)
+        else:
+            gruppi.append([w])
     risultato = []
-    for y, g in gruppi.items():
+    for g in gruppi:
         g.sort(key=lambda w: w[1])
         corrente = [g[0]]
         for w in g[1:]:
@@ -80,8 +91,8 @@ def righe(ws):
 def zone_immagini(fo):
     testo = Path(fo).read_text(encoding='utf-8')
     zone = []
-    for m in re.finditer(r'<fo:block-container[^>]*?left="([\d.]+)pt" top="([\d.]+)pt" width="([\d.]+)pt" height="([\d.]+)pt"[^>]*>(.*?)</fo:block-container>', testo, re.S):
-        if 'fo:external-graphic' in m.group(5) or 'fo:instream-foreign-object' in m.group(5):
+    for m in re.finditer(r'<fo:block-container[^>]*?left="([\d.]+)pt" top="([\d.]+)pt" width="([\d.]+)pt" height="([\d.]+)pt"[^>]*>\s*<fo:block([^>]*)>', testo):
+        if 'font-size="0pt"' in m.group(5):
             zone.append(tuple(map(float, m.group(1, 2, 3, 4))))
     return zone
 
@@ -103,6 +114,7 @@ def main():
     ap.add_argument('jasper'); ap.add_argument('fop')
     ap.add_argument('--fo', required=True); ap.add_argument('--xml'); ap.add_argument('--classpath')
     ap.add_argument('--escludi', action='append', default=[])
+    ap.add_argument('--dettagli', type=int, default=0, help='mostra comunque le N righe con lo scarto maggiore')
     a = ap.parse_args()
     esiti = {}
     tmp = tempfile.mkdtemp()
@@ -133,7 +145,7 @@ def main():
     peggiori.sort(reverse=True)
     massimo = peggiori[0][0] if peggiori else 0
     esiti['inchiostro'] = (massimo <= SOGLIA_INCHIOSTRO, f'scarto massimo {massimo:.2f} pt' +
-                           ''.join(f'\n      {s:.2f} pt {t[:40]!r} (sinistra, alto, destra, basso: {d})' for s, t, d in peggiori[:3] if s > SOGLIA_INCHIOSTRO))
+                           ''.join(f'\n      {s:.2f} pt {t[:40]!r} (sinistra, alto, destra, basso: {d})' for s, t, d in peggiori[:max(3, a.dettagli)] if s > SOGLIA_INCHIOSTRO or a.dettagli))
 
     # 3. raster con tolleranza, fuori dalle immagini
     zone = zone_immagini(a.fo)
@@ -172,18 +184,21 @@ def main():
     esiti['immagini'] = (massimo <= SOGLIA_IMMAGINI, f'{len(scarti)} immagini, scarto massimo {massimo:.2f} pt' +
                          ''.join(f'\n      {s:.2f} pt immagine in ({p[0]:.0f}, {p[1]:.0f})' for s, p in scarti if s > SOGLIA_IMMAGINI))
 
-    # 5. QR code
+    # 5. QR code e DataMatrix: ogni riquadro quadrato viene letto come QR o DataMatrix
     if a.xml and a.classpath:
-        atteso = re.search(r'<qr_code>([^<]*)</qr_code>', Path(a.xml).read_text(encoding='utf-8'))
-        # il QR e' il riquadro quadrato piu' grande (lo stemma dell'ente e' piu' piccolo)
-        quadrati = sorted((z for z in zone if abs(z[2] - z[3]) < 0.5), key=lambda z: -z[2])
-        if atteso and quadrati:
-            x, y, w, h = quadrati[0]
-            png = Path(tmp) / 'qr.png'
-            if3.crop((int((x - 5) * k3), int((y - 5) * k3), int((x + w + 5) * k3), int((y + h + 5) * k3))).save(png)
-            sorgente = Path(tmp) / 'LeggiQr.java'; sorgente.write_text(LEGGI_QR)
-            letto = subprocess.run(['java', '-cp', a.classpath, str(sorgente), str(png)], capture_output=True, text=True).stdout.strip()
-            esiti['qr'] = (letto == atteso.group(1), f'letto {letto!r}')
+        import base64, html as h
+        xml = Path(a.xml).read_text(encoding='utf-8')
+        attesi = {n: h.unescape(m.group(1)) for n in ('qr_code', 'data_matrix') if (m := re.search(rf'<{n}>([^<]*)</{n}>', xml))}
+        quadrati = [z for z in zone if abs(z[2] - z[3]) < 0.5 and z[2] >= 40]
+        png = []
+        for i, (x, y, w, h_) in enumerate(quadrati):
+            f = Path(tmp) / f'codice{i}.png'
+            if3.crop((int((x - 5) * k3), int((y - 5) * k3), int((x + w + 5) * k3), int((y + h_ + 5) * k3))).save(f); png.append(str(f))
+        sorgente = Path(tmp) / 'LeggiCodici.java'; sorgente.write_text(LEGGI_CODICI)
+        out = subprocess.run(['java', '-cp', a.classpath, str(sorgente)] + png, capture_output=True, text=True).stdout
+        letti = [base64.b64decode(l).decode('utf-8') for l in out.split() if l]
+        for nome, atteso in attesi.items():
+            esiti[nome] = (atteso in letti, 'letto' if atteso in letti else f'non trovato tra {len(letti)} codici letti')
 
     ok = all(v[0] for v in esiti.values())
     for nome, (passa, dettaglio) in esiti.items():

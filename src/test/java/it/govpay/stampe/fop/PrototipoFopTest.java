@@ -19,7 +19,8 @@ import tools.jackson.databind.ObjectMapper;
  * <p>
  * I casi di riferimento non sono nel repository: il test si esegue solo indicando la directory
  * del run e l'elenco dei casi, per esempio
- * {@code -Dprototipo.run=pdf-riferimento/run-20261012 -Dprototipo.casi=casi-prototipo-RataUnica.json}.
+ * {@code -Dprototipo.run=pdf-riferimento/run-20261012 -Dprototipo.casi=casi-prototipo-RataUnica.json}
+ * e, se il layout non e' quello dell'avviso semplice, il foglio: {@code -Dprototipo.foglio=avviso-postale.xsl}.
  * I PDF generati vanno in {@code target/prototipo-fop/}.
  */
 class PrototipoFopTest {
@@ -36,7 +37,7 @@ class PrototipoFopTest {
 		Path uscita = Path.of("target", "prototipo-fop");
 		Files.createDirectories(uscita);
 
-		AvvisoFopRenderer renderer = new AvvisoFopRenderer("avviso-semplice.xsl");
+		AvvisoFopRenderer renderer = new AvvisoFopRenderer(System.getProperty("prototipo.foglio", "avviso-semplice.xsl"));
 		for (Map<String, Object> caso : elenco) {
 			String xml = (String) caso.get("xml");
 			long inizio = System.nanoTime();

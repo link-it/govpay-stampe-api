@@ -1,5 +1,11 @@
 2026-10-15  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] Avviso a rata unica con bollettino postale nel prototipo FOP (#37).
+	Nuovo layout RataUnicaPostale generato dal sorgente Jasper, con il DataMatrix
+	di Poste prodotto da zxing (stesso contenuto e dimensione di barcode4j) e i
+	bordi dei riquadri disegnati nella stessa posizione di Jasper. Verifica estesa
+	alla lettura del DataMatrix; accettati tutti i casi di riferimento.
+
 	* [Stampe] Posizione di testo e immagini come in Jasper nel prototipo FOP (#37).
 	Interlinea e posizione verticale del testo seguono un modello di Jasper e di
 	FOP misurato su report di taratura: in Jasper l'interlinea fissa dipende dal

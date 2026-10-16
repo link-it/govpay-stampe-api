@@ -1,3 +1,13 @@
+2026-10-16  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Motore di stampa FOP nel servizio (#37).
+	Nuove proprieta' stampe.motore.avviso-semplice e stampe.motore.avviso-postale
+	(jasper di default, oppure fop): con fop gli avvisi a rata unica, con e senza
+	bollettino postale, sono stampati con Apache FOP, gli altri layout restano
+	su JasperReports. Il motore riceve direttamente gli oggetti JAXB, senza XML
+	serializzato; configurazione, font e fogli XSLT sono letti una sola volta
+	dal classpath e funzionano anche dal jar eseguibile.
+
 2026-10-15  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Avviso a rata unica con bollettino postale nel prototipo FOP (#37).

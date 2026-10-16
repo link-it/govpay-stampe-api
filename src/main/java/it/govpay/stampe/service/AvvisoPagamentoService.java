@@ -16,6 +16,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
 import it.govpay.stampe.costanti.Costanti;
+import it.govpay.stampe.fop.MotoreFop;
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
@@ -40,6 +41,22 @@ public abstract class AvvisoPagamentoService {
 	protected AvvisoPagamentoService(Jaxb2Marshaller jaxb2Marshaller) {
         this.jaxb2Marshaller = jaxb2Marshaller;
     }
+
+	/**
+	 * Stampa con FOP: l'oggetto JAXB e' passato direttamente alla trasformazione XSLT, senza
+	 * serializzarlo. Con il debug attivo l'XML viene comunque scritto nel log, come per Jasper.
+	 */
+	protected byte[] creaAvvisoFop(MotoreFop motoreFop, String foglio, JAXBElement<?> jaxbElement, boolean debug) throws JAXBException {
+		if(debug) {
+			try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+				jaxb2Marshaller.createMarshaller().marshal(jaxbElement, baos);
+				logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(java.nio.charset.StandardCharsets.UTF_8));
+			} catch (IOException e) {
+				// ByteArrayOutputStream non lancia eccezioni in chiusura
+			}
+		}
+		return motoreFop.genera(foglio, jaxb2Marshaller.getJaxbContext(), jaxbElement);
+	}
 
 	protected byte[] creaAvvisoInner(JAXBElement<?> jaxbElement, Map<String, Object> parameters, Resource templatePrincipale,
 

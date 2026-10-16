@@ -7,15 +7,25 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.namespace.QName;
+import javax.xml.transform.stream.StreamSource;
+
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
+
 /**
  * Prototipo FOP (issue #37): genera con FOP i PDF dei casi di riferimento, a partire dallo stesso
- * XML di input passato a Jasper, per il confronto visivo con i PDF prodotti da Jasper.
+ * XML di input passato a Jasper, per il confronto con i PDF prodotti da Jasper.
+ * <p>
+ * L'XML e' letto nel modello JAXB e stampato come fa il servizio: {@link PreparazioneAvviso} e
+ * {@link MotoreFop} sullo stesso oggetto.
  * <p>
  * I casi di riferimento non sono nel repository: il test si esegue solo indicando la directory
  * del run e l'elenco dei casi, per esempio
@@ -37,11 +47,17 @@ class PrototipoFopTest {
 		Path uscita = Path.of("target", "prototipo-fop");
 		Files.createDirectories(uscita);
 
-		AvvisoFopRenderer renderer = new AvvisoFopRenderer(System.getProperty("prototipo.foglio", "avviso-semplice.xsl"));
+		String foglio = System.getProperty("prototipo.foglio", "avviso-semplice.xsl");
+		JAXBContext contesto = JAXBContext.newInstance(AvvisoPagamentoInput.class);
+		MotoreFop motore = new MotoreFop();
 		for (Map<String, Object> caso : elenco) {
 			String xml = (String) caso.get("xml");
+			AvvisoPagamentoInput avviso = contesto.createUnmarshaller()
+					.unmarshal(new StreamSource(dirRun.resolve("xml").resolve(xml).toFile()), AvvisoPagamentoInput.class).getValue();
 			long inizio = System.nanoTime();
-			byte[] pdf = renderer.genera(Files.readAllBytes(dirRun.resolve("xml").resolve(xml)));
+			PreparazioneAvviso.completa(avviso);
+			byte[] pdf = motore.genera(foglio, contesto,
+					new JAXBElement<>(new QName("", "AvvisoPagamentoInput"), AvvisoPagamentoInput.class, avviso));
 			long ms = (System.nanoTime() - inizio) / 1_000_000;
 			Path file = uscita.resolve(xml.replace(".xml", ".pdf"));
 			Files.write(file, pdf);

@@ -105,6 +105,24 @@ Il file FO (`layout.fo`) si ottiene dall'XML con `xsltproc src/main/resources/fo
 **Bordi dei riquadri.** Jasper disegna la linea centrata sul bordo del riquadro. FOP disegna il bordo
 superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo stesso.
 
+## Motore nel servizio
+
+`MotoreFop` è il componente Spring che stampa con FOP:
+- **Bean, non XML:** riceve l'oggetto JAXB dell'avviso e lo passa all'XSLT con `JAXBSource`, senza serializzarlo.
+- **Dati calcolati:** prima della stampa `PreparazioneAvviso` valorizza i campi opzionali dell'XSD che XSLT non può calcolare:
+  - `qr_code_svg` e `data_matrix_svg` di ogni rata;
+  - `logo_ente_px` e `logo_ente_secondario_px`.
+- **Cache:** `FopFactory` (configurazione e font) è unica; i fogli XSLT compilati sono in cache, e quelli dei tipi configurati con `fop` si compilano all'avvio.
+- **Classpath:** fogli, configurazione e font vengono letti solo dal classpath (i font come `classpath:/fonts/...`), quindi funzionano da `target/classes`, dal jar eseguibile e dal war. Ogni altra risorsa esterna viene rifiutata.
+
+Il motore si sceglie per tipo di avviso con `stampe.motore.avviso-semplice` e `stampe.motore.avviso-postale`
+(`jasper` di default). `LayoutMigrati` decide quali avvisi stampare con FOP: oggi quelli fatti solo di pagine
+`singola`. Va esteso a ogni layout migrato.
+
+Test:
+- `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
+- `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine.
+
 ## Verifica
 
 `PrototipoFopTest` genera con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper.

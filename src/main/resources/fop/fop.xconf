@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Configurazione Apache FOP (issue #37). I font sono gli stessi .ttf usati da JasperReports
+	(src/main/resources/fonts), registrati con gli stessi nomi di famiglia del font extension Jasper
+	(fonts/fontsfamily1620136860820.xml), cosi' i layout usano i nomi dei template originali.
+	I font sono indicati con lo schema classpath:, risolto dal motore (MotoreFop) dentro jar e war.
+-->
+<fop version="1.0">
+	<strict-configuration>true</strict-configuration>
+	<!-- i font sono solo quelli elencati qui sotto: nessuna cache su disco, che nel container potrebbe non essere scrivibile -->
+	<use-cache>false</use-cache>
+	<!--
+		Niente elaborazione OpenType avanzata (GSUB/GPOS): applicherebbe comunque il kerning e le legature
+		dei font, che Jasper non usa. Gli avvisi contengono solo testo latino.
+	-->
+	<complex-scripts disabled="true"/>
+	<!--
+		kerning="no" su ogni font: Jasper misura e disegna il testo con le metriche AWT, senza kerning;
+		con il kerning le parole di FOP scivolerebbero fino a 1 pt lungo la riga.
+	-->
+	<renderers>
+		<renderer mime="application/pdf">
+			<fonts>
+				<font embed-url="classpath:/fonts/TitilliumWeb-Regular.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="normal" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-SemiBold.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="normal" weight="bold"/></font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-Italic.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="italic" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-SemiBoldItalic.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="italic" weight="bold"/></font>
+
+				<!--
+					TitilliumWeb-Bold non ha una variante bold: con <b> Jasper (OpenPDF) simula il grassetto
+					aggiungendo un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo
+					risulta meno marcato ma con la stessa larghezza, quindi nella stessa posizione.
+					TitilliumWeb-Black e' stato scartato perche' troppo marcato.
+				-->
+				<font embed-url="classpath:/fonts/TitilliumWeb-Bold.ttf" kerning="no">
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="normal"/>
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="bold"/>
+				</font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-Black.ttf" kerning="no">
+					<font-triplet name="TitilliumWeb-Black" style="normal" weight="normal"/>
+					<font-triplet name="TitilliumWeb-Black" style="normal" weight="bold"/>
+				</font>
+
+				<font embed-url="classpath:/fonts/RobotoMono-Regular.ttf" kerning="no"><font-triplet name="RobotoMono" style="normal" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/RobotoMono-Bold.ttf" kerning="no"><font-triplet name="RobotoMono" style="normal" weight="bold"/></font>
+				<font embed-url="classpath:/fonts/RobotoMono-Italic.ttf" kerning="no"><font-triplet name="RobotoMono" style="italic" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/RobotoMono-BoldItalic.ttf" kerning="no"><font-triplet name="RobotoMono" style="italic" weight="bold"/></font>
+
+				<font embed-url="classpath:/fonts/Roboto-Regular.ttf" kerning="no"><font-triplet name="Roboto" style="normal" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/Roboto-Bold.ttf" kerning="no">
+					<font-triplet name="Roboto" style="normal" weight="bold"/>
+					<font-triplet name="Roboto-Bold" style="normal" weight="normal"/>
+					<font-triplet name="Roboto-Bold" style="normal" weight="bold"/>
+				</font>
+			</fonts>
+		</renderer>
+	</renderers>
+</fop>

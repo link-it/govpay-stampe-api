@@ -1,4 +1,54 @@
+2026-10-16  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Motore di stampa FOP nel servizio (#37).
+	Nuove proprieta' stampe.motore.avviso-semplice e stampe.motore.avviso-postale
+	(jasper di default, oppure fop): con fop gli avvisi a rata unica, con e senza
+	bollettino postale, sono stampati con Apache FOP, gli altri layout restano
+	su JasperReports. Il motore riceve direttamente gli oggetti JAXB, senza XML
+	serializzato; configurazione, font e fogli XSLT sono letti una sola volta
+	dal classpath e funzionano anche dal jar eseguibile.
+
+2026-10-15  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso a rata unica con bollettino postale nel prototipo FOP (#37).
+	Nuovo layout RataUnicaPostale generato dal sorgente Jasper, con il DataMatrix
+	di Poste prodotto da zxing (stesso contenuto e dimensione di barcode4j) e i
+	bordi dei riquadri disegnati nella stessa posizione di Jasper. Verifica estesa
+	alla lettura del DataMatrix; accettati tutti i casi di riferimento.
+
+	* [Stampe] Posizione di testo e immagini come in Jasper nel prototipo FOP (#37).
+	Interlinea e posizione verticale del testo seguono un modello di Jasper e di
+	FOP misurato su report di taratura: in Jasper l'interlinea fissa dipende dal
+	numero di righe, e centrato e allineamento in basso usano l'altezza naturale
+	del font. Disattivati in FOP kerning ed elaborazione OpenType, che Jasper non
+	usa. Immagini SVG con tutto il riquadro come area di disegno, raster allineate
+	secondo hAlign/vAlign.
+	La posizione del testo e' tarata sull'inchiostro e non sulle caselle di
+	pdftotext, che dipendono da come ogni PDF descrive il font. Le immagini raster
+	sono posizionate come in Jasper, con lo spazio libero troncato a punti
+	interi: il renderer aggiunge all'XML le dimensioni in pixel dei loghi.
+	Aggiunto script/fop/verifica_pdf.py con i criteri di accettazione dei layout
+	migrati: testo e a capo, inchiostro per riga entro 0,25 pt, confronto raster
+	con tolleranza di 1 pixel, immagini entro 1 pt, QR letto.
+
 2026-10-14  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Prototipo di generazione degli avvisi con Apache FOP (#37).
+	Aggiunta la dipendenza org.apache.xmlgraphics:fop-core 2.11 (Apache 2.0),
+	allineata a batik 1.19 e xmlgraphics-commons 2.11 gia' presenti; escluso
+	xml-apis come per batik-dom. Il nuovo package it.govpay.stampe.fop genera il
+	PDF di un avviso dallo stesso XML oggi passato a Jasper: QR code calcolato con
+	zxing come nei template Jasper e passato al layout come SVG, fogli XSLT e
+	configurazione di FOP letti una sola volta. Il renderer non e' ancora
+	collegato ai servizi: gli avvisi continuano a essere generati con Jasper.
+	Migrato il solo layout della pagina singola dell'avviso semplice
+	(RataUnica), generato dal sorgente .jrxml con script/fop/jrxml2fo.py e
+	completato con le parti in script/fop/personalizzazioni/.
+	Gli a capo dei testi fissi sono calcolati come in Jasper (LineBreakMeasurer
+	con gli stessi font, script/fop/SpezzaRighe.java) e scritti esplicitamente:
+	FOP bilancerebbe le righe del paragrafo e andrebbe a capo in punti diversi.
+	Il grassetto su TitilliumWeb-Bold, che Jasper simula con un contorno, in FOP
+	resta sullo stesso font: meno marcato, ma nella stessa posizione.
 
 	* [Docker] Rimosso container/Dockerfile (base rockylinux:9.3.20231119).
 	Immagine non costruita dalla pipeline ne' distribuita: quelle pubblicate
@@ -7,6 +57,25 @@
 	Tenerlo avrebbe significato una seconda immagine da mantenere e da
 	includere nella scansione delle vulnerabilita' (issue #40), con una base
 	ferma al 2023.
+
+2026-10-13  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Sorgenti dei template JasperReports (#37).
+	Aggiunta la cartella src/main/jasper con i sorgenti .jrxml dei 28 template
+	usati a runtime, finora presenti solo come .jasper compilati. I 21 template
+	non bilingui sono i sorgenti originali; i 7 bilingui V2 sono ricostruiti dai
+	compilati con JRXmlWriter, perche' nell'archivio non c'e' un sorgente
+	corrispondente alla versione in produzione. Compilati con JasperReports
+	6.21.5, tutti producono report equivalenti ai .jasper in produzione. La
+	cartella non e' inclusa nel jar; il README ne riporta provenienza e
+	struttura dei sottoreport.
+
+	* [Stampe] Rimossi i template non usati (#37).
+	MonoBand.jasper, TriBand.jasper e TriBandV2.jasper non sono richiamati da
+	nessun template in uso; i 4 file in violazioneCDS/ duplicavano quelli nella
+	radice delle risorse e non erano caricati. AvvisoBilingueService passava
+	TriBandV2 come parametro, ignorato da AvvisoPagamentoV2: rimossi il campo,
+	il parametro e la costante TRIBAND_TEMPLATE_JASPER_V2.
 
 2026-09-24  Giuliano Pintori <pintori@link.it>
 

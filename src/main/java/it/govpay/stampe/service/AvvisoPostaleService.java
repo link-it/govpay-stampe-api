@@ -18,6 +18,10 @@ import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneAvvisoException;
+import it.govpay.stampe.fop.LayoutMigrati;
+import it.govpay.stampe.fop.Motore;
+import it.govpay.stampe.fop.MotoreFop;
+import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import net.sf.jasperreports.engine.JRException;
 
@@ -35,12 +39,23 @@ public class AvvisoPostaleService extends AvvisoPagamentoService {
 	
 	@Value("${stampe.debugInputJasper:false}")
 	private Boolean debugInputJasper;
+
+	private static final String PROPRIETA_MOTORE = "stampe.motore.avviso-postale";
+	private static final String FOGLIO_FOP = "avviso-postale.xsl";
+
+	@Value("${" + PROPRIETA_MOTORE + ":jasper}")
+	private String motoreConfigurato;
+
+	private Motore motore;
+
+	private final MotoreFop motoreFop;
 	
 	private String xmlRootName = Costanti.AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME;
 
     @Autowired
-    public AvvisoPostaleService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento) {
+    public AvvisoPostaleService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento, MotoreFop motoreFop) {
     	super(jaxb2MarshallerAvvisoPagamento);
+		this.motoreFop = motoreFop;
     }
 	
 	@PostConstruct
@@ -53,9 +68,16 @@ public class AvvisoPostaleService extends AvvisoPagamentoService {
 		templateRataUnicaPostale = new ClassPathResource(Costanti.RATA_UNICA_POSTALE_TEMPLATE_JASPER);
 		templateTriplaRataPostale = new ClassPathResource(Costanti.RATA_TRIPLA_POSTALE_TEMPLATE_JASPER);
 		templateTriploFormatoPostale = new ClassPathResource(Costanti.TRIPLO_FORMATO_POSTALE_TEMPLATE_JASPER);
+		this.motore = Motore.da(PROPRIETA_MOTORE, this.motoreConfigurato);
+		if (this.motore == Motore.FOP) {
+			this.motoreFop.prepara(FOGLIO_FOP);
+		}
 	}
 	
 	public byte[] creaAvviso(AvvisoPagamentoInput input) {
+		if (this.motore == Motore.FOP && LayoutMigrati.avviso(input)) {
+			return creaAvvisoConFop(input);
+		}
 		try {
 			Map<String, Object> parameters = new HashMap<>();
 			
@@ -75,6 +97,16 @@ public class AvvisoPostaleService extends AvvisoPagamentoService {
 		}
 	}
 	
+	private byte[] creaAvvisoConFop(AvvisoPagamentoInput input) {
+		try {
+			PreparazioneAvviso.completa(input);
+			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
+			return creaAvvisoFop(this.motoreFop, FOGLIO_FOP, jaxbElement, this.debugInputJasper);
+		} catch (JAXBException | IllegalStateException e) {
+			throw new GenerazioneAvvisoException(e);
+		}
+	}
+
 	@Override
 	protected String getXmlRootName() {
 		return this.xmlRootName;

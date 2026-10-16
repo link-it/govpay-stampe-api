@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Violazione" language="groovy" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" whenResourceMissingType="Empty" uuid="39fc760f-927a-41cb-a91e-1efbc2881e4d">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="AvvisoPagamento - Xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="573"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="413"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<import value="org.apache.commons.codec.binary.Base64"/>
+	<style name="style1" isDefault="true" hAlign="Left" vAlign="Middle" fontName="TitilliumWeb" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/home/zulio/Lavoro/GovPay/Jasper/Progetti/ViolazioneCDS/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="Formato" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("Formato.jasper")]]></defaultValueExpression>
+	</parameter>
+	<queryString language="xPath">
+		<![CDATA[/ViolazioneInput]]>
+	</queryString>
+	<field name="logo_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[logo_ente]]></fieldDescription>
+	</field>
+	<field name="logo_ente_secondario" class="java.lang.String">
+		<fieldDescription><![CDATA[logo_ente_secondario]]></fieldDescription>
+	</field>
+	<field name="oggetto_del_pagamento" class="java.lang.String">
+		<fieldDescription><![CDATA[oggetto_del_pagamento]]></fieldDescription>
+	</field>
+	<field name="cf_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[cf_ente]]></fieldDescription>
+	</field>
+	<field name="cf_destinatario" class="java.lang.String">
+		<fieldDescription><![CDATA[cf_destinatario]]></fieldDescription>
+	</field>
+	<field name="nome_cognome_destinatario" class="java.lang.String">
+		<fieldDescription><![CDATA[nome_cognome_destinatario]]></fieldDescription>
+	</field>
+	<field name="ente_creditore" class="java.lang.String">
+		<fieldDescription><![CDATA[ente_creditore]]></fieldDescription>
+	</field>
+	<field name="settore_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[settore_ente]]></fieldDescription>
+	</field>
+	<field name="indirizzo_destinatario_1" class="java.lang.String">
+		<fieldDescription><![CDATA[indirizzo_destinatario_1]]></fieldDescription>
+	</field>
+	<field name="indirizzo_destinatario_2" class="java.lang.String">
+		<fieldDescription><![CDATA[indirizzo_destinatario_2]]></fieldDescription>
+	</field>
+	<field name="info_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[info_ente]]></fieldDescription>
+	</field>
+	<field name="del_tuo_ente" class="java.lang.String">
+		<fieldDescription><![CDATA[del_tuo_ente]]></fieldDescription>
+	</field>
+	<field name="cbill" class="java.lang.String">
+		<fieldDescription><![CDATA[cbill]]></fieldDescription>
+	</field>
+	<field name="intestatario_conto_corrente_postale" class="java.lang.String">
+		<fieldDescription><![CDATA[intestatario_conto_corrente_postale]]></fieldDescription>
+	</field>
+	<field name="scadenza_ridotto" class="java.lang.String">
+		<fieldDescription><![CDATA[scadenza_ridotto]]></fieldDescription>
+	</field>
+	<field name="scadenza_scontato" class="java.lang.String">
+		<fieldDescription><![CDATA[scadenza_scontato]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="20">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="0" width="595" height="20" isRemoveLineWhenBlank="true" uuid="247fc907-fb91-4358-93e7-82afd4b7849f"/>
+				<subreportParameter name="del_tuo_ente">
+					<subreportParameterExpression><![CDATA[$F{del_tuo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$F{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$F{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$F{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$F{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$F{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$F{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$F{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="scadenza_ridotto">
+					<subreportParameterExpression><![CDATA[$F{scadenza_ridotto}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$F{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$F{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$F{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$F{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="scadenza_scontato">
+					<subreportParameterExpression><![CDATA[$F{scadenza_scontato}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento">
+					<subreportParameterExpression><![CDATA[$F{oggetto_del_pagamento}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/ViolazioneInput/pagine/singola")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{Formato}]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+</jasperReport>

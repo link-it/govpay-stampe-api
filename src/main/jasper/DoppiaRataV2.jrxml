@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DoppiaRata" language="groovy" pageWidth="595" pageHeight="842" whenNoDataType="NoPages" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="39fc760f-927a-41cb-a91e-1efbc2881e4d">
+	<property name="ireport.zoom" value="0.75"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="AvvisoPagamento - Xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="573"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="413"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<import value="org.apache.commons.codec.binary.Base64"/>
+	<subDataset name="dataset1" uuid="9f706220-5b47-4344-98cc-62b21127074a"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/Users/roberto/Documents/Link.it/JasperReports/iReport v.5.6.0/Avviso Pagamento Bollettino/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DoppioFormatoV2" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("DoppioFormatoV2.jasper")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BollettinoRataV2" class="java.io.InputStream" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("BollettinoRataV2.jasper")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logo_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="logo_ente_secondario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cf_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nome_cognome_destinatario" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="settore_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_1" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="indirizzo_destinatario_2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="info_ente" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="cbill" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_conto_corrente_postale" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="poste" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_del_pagamento_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="avviso_pagamento_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_avviso_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="quanto_quando_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="come_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app2_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio2_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_1_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_2_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_3_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="prima_rata_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="importo_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="entro_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="canali_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="descrizione_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tipo_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_cbill_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_avviso_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_fiscale_ente_ita" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_del_pagamento_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="avviso_pagamento_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="ente_creditore_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_avviso_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="quanto_quando_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="come_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_app2_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="paga_territorio2_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_1_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_2_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="nota_3_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="prima_rata_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="importo_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="entro_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="canali_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="destinatario_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="intestatario_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="oggetto_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="descrizione_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="tipo_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_cbill_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_avviso_tra" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="codice_fiscale_ente_tra" class="java.lang.String" isForPrompting="false"/>
+	<queryString language="xPath">
+		<![CDATA[doppia]]>
+	</queryString>
+	<field name="rata" class="java.lang.String">
+		<fieldDescription><![CDATA[/AvvisoPagamentoInput/pagine/doppia/rata]]></fieldDescription>
+	</field>
+	<field name="elenco_rate" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/elenco_rate]]></fieldDescription>
+	</field>
+	<field name="elenco_rate_tra" class="java.lang.String">
+		<fieldDescription><![CDATA[rata/elenco_rate_tra]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="389">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="RetainShape" hAlign="Left" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="0" y="0" width="34" height="34" isRemoveLineWhenBlank="true" uuid="5076b5cb-7f3f-4b3c-aa71-eaf679bbeedf"/>
+				<box>
+					<leftPen lineWidth="0.0"/>
+				</box>
+				<imageExpression><![CDATA[net.sf.jasperreports.renderers.BatikRenderer.getInstanceFromText("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34.67 22.99'><defs><style>.cls-1{fill:#1d1d1b;}</style></defs><title>logo-pagopa</title><g id='Layer_2' data-name='Layer 2'><g id='Layer_1-2' data-name='Layer 1'><path class='cls-1' d='M24.43,6.89v2.9H22.3V0h3.92c1.26,0,1.9.34,1.91,1V5.79c0,.68-.62,1-1.85,1H24.43ZM26,1.13H24.42V5.67H26Z'/><path class='cls-1' d='M1.78,9.8v2.91H0V2.91H3.28c1.06,0,1.59.34,1.6,1V8.71c0,.67-.52,1-1.54,1H1.78ZM3.11,4.05H1.78V8.59H3.11Z'/><path class='cls-1' d='M10.36,9.72H7c-1,0-1.49-.34-1.49-1v-2C5.5,6,6,5.7,7,5.7H8.59V4.05H7.26V5H5.51v-1c0-.67.52-1,1.57-1l1.73,0q1.55,0,1.56,1ZM7.26,8.59H8.6V6.84H7.26Z'/><path class='cls-1' d='M14.24,9.72H12.68c-1,0-1.54-.34-1.54-1V3.93c0-.68.54-1,1.6-1H16v8.78c0,.68-.52,1-1.55,1H12.69c-1,0-1.55-.34-1.55-1v-1h1.77v.89h1.33V9.72ZM12.91,8.59h1.33V4.05H12.91Z'/><path class='cls-1' d='M21.5,8.71c0,.67-.53,1-1.59,1H18.19c-1,0-1.56-.34-1.56-1V3.93q0-1,1.56-1H20c1,0,1.54.34,1.54,1ZM19.74,4.05H18.4V8.59h1.33Z'/><path class='cls-1' d='M34.67,1.07c0-.68-.62-1-1.85-1H30.7q-1.86,0-1.86,1V9.81H31v-3h1.6v2.5a11.58,11.58,0,0,1-20.71,7.11l1.06-.81L8.66,12.76l.19,6,1.35-1.09A13.68,13.68,0,0,0,34.67,9.31ZM32.56,5.69H31V1.19h1.6Z'/></g></g></svg>")]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement positionType="Float" x="39" y="4" width="311" height="16" isRemoveLineWhenBlank="true" uuid="8088aa00-bba6-4d38-8ff9-9c2f1f2d2819"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{avviso_pagamento_ita}.toUpperCase() + ($P{avviso_pagamento_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"10\"><style forecolor=\"#999999\"> · " + $P{avviso_pagamento_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<image hAlign="Right" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="470" y="0" width="85" height="85" isRemoveLineWhenBlank="true" uuid="d8a00a95-a05e-4c47-9e42-ffaa70912ff0"/>
+				<imageExpression><![CDATA[new ByteArrayInputStream(Base64.decodeBase64((($P{logo_ente}.contains(','))?$P{logo_ente}.split(',')[1]:$P{logo_ente}).getBytes("UTF-8")))]]></imageExpression>
+			</image>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="154" width="260" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="9fee0648-8661-4f19-9875-1875021674e6">
+					<property name="net.sf.jasperreports.text.truncate.at.char" value="true"/>
+				</reportElement>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nome_cognome_destinatario}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="314" width="260" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="46a4c281-aa78-47a5-8284-a59adac05fa5"/>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cf_ente}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="0" y="266" width="260" height="16" isRemoveLineWhenBlank="true" uuid="9d2c7f76-7466-4689-87f7-cf96af1fc459"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{codice_cbill_ita} + ($P{codice_cbill_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{codice_cbill_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="0" y="139" width="260" height="16" isRemoveLineWhenBlank="true" uuid="d0cb443d-d428-4c61-bfc3-0166a5a18479"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{destinatario_ita} + ($P{destinatario_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{destinatario_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="0" y="214" width="260" height="16" isRemoveLineWhenBlank="true" uuid="f782cc33-98f9-46b1-99e8-5b29c9de11f9"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{oggetto_ita} + ($P{oggetto_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{oggetto_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="0" y="171" width="260" height="16" isRemoveLineWhenBlank="true" uuid="a94a4c98-5174-44dd-979b-33e2d51eb2a2"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ente_creditore_ita} + ($P{ente_creditore_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{ente_creditore_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="0" y="298" width="260" height="16" isRemoveLineWhenBlank="true" uuid="cb5e81d7-077f-493d-b446-6d122c6350ec"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{codice_fiscale_ente_ita} + ($P{codice_fiscale_ente_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{codice_fiscale_ente_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="282" width="260" height="16" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="356426eb-c044-4534-b32a-6734bb68708a"/>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{cbill}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="229" width="260" height="29" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="420e6dc0-11b0-4686-9560-0177a38706e3">
+					<property name="net.sf.jasperreports.text.truncate.at.char" value="true"/>
+				</reportElement>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{oggetto_del_pagamento_ita} + ($P{oggetto_del_pagamento_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · " + $P{oggetto_del_pagamento_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement positionType="Float" mode="Transparent" x="0" y="186" width="260" height="27" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="7ad17d58-94c9-48e0-ac0a-393584a16e70">
+					<property name="net.sf.jasperreports.text.truncate.at.char" value="true"/>
+				</reportElement>
+				<box leftPadding="0"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="7.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ente_creditore}]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="260" y="119" width="314" height="212" isRemoveLineWhenBlank="true" uuid="6f98a22c-ce3c-47ba-a94e-5486d86169bb"/>
+				<subreportParameter name="codice_avviso_ita">
+					<subreportParameterExpression><![CDATA[$P{codice_avviso_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_3_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_3_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio2_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio2_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_cbill_tra">
+					<subreportParameterExpression><![CDATA[$P{codice_cbill_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="importo_tra">
+					<subreportParameterExpression><![CDATA[$P{importo_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="prima_rata_tra">
+					<subreportParameterExpression><![CDATA[$P{prima_rata_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_fiscale_ente_ita">
+					<subreportParameterExpression><![CDATA[$P{codice_fiscale_ente_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_ita">
+					<subreportParameterExpression><![CDATA[$P{intestatario_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_cbill_ita">
+					<subreportParameterExpression><![CDATA[$P{codice_cbill_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="poste">
+					<subreportParameterExpression><![CDATA[$P{poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento_ita">
+					<subreportParameterExpression><![CDATA[$P{oggetto_del_pagamento_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="come_tra">
+					<subreportParameterExpression><![CDATA[$P{come_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="entro_tra">
+					<subreportParameterExpression><![CDATA[$P{entro_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app2_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_app2_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tipo_tra">
+					<subreportParameterExpression><![CDATA[$P{tipo_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_tra">
+					<subreportParameterExpression><![CDATA[$P{destinatario_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$P{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_tra">
+					<subreportParameterExpression><![CDATA[$P{intestatario_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$P{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="descrizione_tra">
+					<subreportParameterExpression><![CDATA[$P{descrizione_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app2_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_app2_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$P{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_3_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_3_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="prima_rata_ita">
+					<subreportParameterExpression><![CDATA[$P{prima_rata_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_1_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_1_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_avviso_ita">
+					<subreportParameterExpression><![CDATA[$P{destinatario_avviso_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_ita">
+					<subreportParameterExpression><![CDATA[$P{destinatario_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_2_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_2_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_fiscale_ente_tra">
+					<subreportParameterExpression><![CDATA[$P{codice_fiscale_ente_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="quanto_quando_ita">
+					<subreportParameterExpression><![CDATA[$P{quanto_quando_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_app_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="canali_ita">
+					<subreportParameterExpression><![CDATA[$P{canali_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="importo_ita">
+					<subreportParameterExpression><![CDATA[$P{importo_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_1_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_1_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_tra">
+					<subreportParameterExpression><![CDATA[$P{oggetto_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento_tra">
+					<subreportParameterExpression><![CDATA[$P{oggetto_del_pagamento_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="avviso_pagamento_tra">
+					<subreportParameterExpression><![CDATA[$P{avviso_pagamento_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio2_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio2_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$P{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="come_ita">
+					<subreportParameterExpression><![CDATA[$P{come_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_2_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_2_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tipo_ita">
+					<subreportParameterExpression><![CDATA[$P{tipo_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore_ita">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$P{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_ita">
+					<subreportParameterExpression><![CDATA[$P{oggetto_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$P{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$P{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore_tra">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_avviso_tra">
+					<subreportParameterExpression><![CDATA[$P{destinatario_avviso_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$P{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$P{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_app_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_avviso_tra">
+					<subreportParameterExpression><![CDATA[$P{codice_avviso_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="avviso_pagamento_ita">
+					<subreportParameterExpression><![CDATA[$P{avviso_pagamento_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="entro_ita">
+					<subreportParameterExpression><![CDATA[$P{entro_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="canali_tra">
+					<subreportParameterExpression><![CDATA[$P{canali_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="quanto_quando_tra">
+					<subreportParameterExpression><![CDATA[$P{quanto_quando_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="descrizione_ita">
+					<subreportParameterExpression><![CDATA[$P{descrizione_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/doppia/rata")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{DoppioFormatoV2}]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="-20" y="369" width="594" height="20" isRemoveLineWhenBlank="true" uuid="5cb760ca-942a-41d5-a2ab-20ac8aac6b8d"/>
+				<subreportParameter name="codice_avviso_ita">
+					<subreportParameterExpression><![CDATA[$P{codice_avviso_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_3_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_3_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio2_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio2_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_2">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="indirizzo_destinatario_1">
+					<subreportParameterExpression><![CDATA[$P{indirizzo_destinatario_1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_cbill_tra">
+					<subreportParameterExpression><![CDATA[$P{codice_cbill_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="importo_tra">
+					<subreportParameterExpression><![CDATA[$P{importo_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="prima_rata_tra">
+					<subreportParameterExpression><![CDATA[$P{prima_rata_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_fiscale_ente_ita">
+					<subreportParameterExpression><![CDATA[$P{codice_fiscale_ente_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_ita">
+					<subreportParameterExpression><![CDATA[$P{intestatario_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_cbill_ita">
+					<subreportParameterExpression><![CDATA[$P{codice_cbill_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="poste">
+					<subreportParameterExpression><![CDATA[$P{poste}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento_ita">
+					<subreportParameterExpression><![CDATA[$P{oggetto_del_pagamento_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="come_tra">
+					<subreportParameterExpression><![CDATA[$P{come_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="entro_tra">
+					<subreportParameterExpression><![CDATA[$P{entro_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app2_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_app2_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tipo_tra">
+					<subreportParameterExpression><![CDATA[$P{tipo_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_tra">
+					<subreportParameterExpression><![CDATA[$P{destinatario_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="settore_ente">
+					<subreportParameterExpression><![CDATA[$P{settore_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_tra">
+					<subreportParameterExpression><![CDATA[$P{intestatario_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nome_cognome_destinatario">
+					<subreportParameterExpression><![CDATA[$P{nome_cognome_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="descrizione_tra">
+					<subreportParameterExpression><![CDATA[$P{descrizione_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app2_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_app2_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente">
+					<subreportParameterExpression><![CDATA[$P{logo_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_3_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_3_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="prima_rata_ita">
+					<subreportParameterExpression><![CDATA[$P{prima_rata_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_1_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_1_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_avviso_ita">
+					<subreportParameterExpression><![CDATA[$P{destinatario_avviso_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_ita">
+					<subreportParameterExpression><![CDATA[$P{destinatario_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_2_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_2_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_fiscale_ente_tra">
+					<subreportParameterExpression><![CDATA[$P{codice_fiscale_ente_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="quanto_quando_ita">
+					<subreportParameterExpression><![CDATA[$P{quanto_quando_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_app_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="canali_ita">
+					<subreportParameterExpression><![CDATA[$P{canali_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="importo_ita">
+					<subreportParameterExpression><![CDATA[$P{importo_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_1_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_1_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_tra">
+					<subreportParameterExpression><![CDATA[$P{oggetto_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_del_pagamento_tra">
+					<subreportParameterExpression><![CDATA[$P{oggetto_del_pagamento_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="avviso_pagamento_tra">
+					<subreportParameterExpression><![CDATA[$P{avviso_pagamento_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_territorio2_ita">
+					<subreportParameterExpression><![CDATA[$P{paga_territorio2_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="logo_ente_secondario">
+					<subreportParameterExpression><![CDATA[$P{logo_ente_secondario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="come_ita">
+					<subreportParameterExpression><![CDATA[$P{come_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_2_ita">
+					<subreportParameterExpression><![CDATA[$P{nota_2_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tipo_ita">
+					<subreportParameterExpression><![CDATA[$P{tipo_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore_ita">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_destinatario">
+					<subreportParameterExpression><![CDATA[$P{cf_destinatario}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="oggetto_ita">
+					<subreportParameterExpression><![CDATA[$P{oggetto_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cf_ente">
+					<subreportParameterExpression><![CDATA[$P{cf_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="cbill">
+					<subreportParameterExpression><![CDATA[$P{cbill}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore_tra">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="destinatario_avviso_tra">
+					<subreportParameterExpression><![CDATA[$P{destinatario_avviso_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="nota_tra">
+					<subreportParameterExpression><![CDATA[$P{nota_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="intestatario_conto_corrente_postale">
+					<subreportParameterExpression><![CDATA[$P{intestatario_conto_corrente_postale}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="info_ente">
+					<subreportParameterExpression><![CDATA[$P{info_ente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ente_creditore">
+					<subreportParameterExpression><![CDATA[$P{ente_creditore}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="paga_app_tra">
+					<subreportParameterExpression><![CDATA[$P{paga_app_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="codice_avviso_tra">
+					<subreportParameterExpression><![CDATA[$P{codice_avviso_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="avviso_pagamento_ita">
+					<subreportParameterExpression><![CDATA[$P{avviso_pagamento_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="entro_ita">
+					<subreportParameterExpression><![CDATA[$P{entro_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="canali_tra">
+					<subreportParameterExpression><![CDATA[$P{canali_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="quanto_quando_tra">
+					<subreportParameterExpression><![CDATA[$P{quanto_quando_tra}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="descrizione_ita">
+					<subreportParameterExpression><![CDATA[$P{descrizione_ita}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JRXmlDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("/doppia/rata")]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{BollettinoRataV2}]]></subreportExpression>
+			</subreport>
+			<textField>
+				<reportElement positionType="Float" mode="Opaque" x="-20" y="101" width="594" height="18" isRemoveLineWhenBlank="true" backcolor="#EBEBEB" uuid="ac84bf9d-551b-443f-9924-14b0cffd0a35"/>
+				<box leftPadding="20" rightPadding="20"/>
+				<textElement verticalAlignment="Middle" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="10" isBold="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{canali_ita}.toUpperCase() + ($P{canali_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · " + $P{canali_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<image hAlign="Right" vAlign="Top" onErrorType="Blank">
+				<reportElement positionType="Float" x="373" y="0" width="85" height="85" isRemoveLineWhenBlank="true" uuid="6bec7769-08ff-4e22-8a16-76d3c0f8df08"/>
+				<imageExpression><![CDATA[new ByteArrayInputStream(Base64.decodeBase64((($P{logo_ente_secondario}.contains(','))?$P{logo_ente_secondario}.split(',')[1]:$P{logo_ente_secondario}).getBytes("UTF-8")))]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="39" width="458" height="55" isRemoveLineWhenBlank="true" uuid="6bf0c748-47a4-44bd-b159-e4a17fc86a1d">
+					<printWhenExpression><![CDATA[new Boolean($P{logo_ente_secondario}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="16" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="11.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(($F{elenco_rate}.equals(null)?"":$F{elenco_rate}) +
+    ((!$F{elenco_rate}.equals(null) && !$P{oggetto_del_pagamento_ita}.equals(null))?
+        ($P{oggetto_del_pagamento_tra}.equals(null)?($F{elenco_rate_tra}.equals(null)?" - ":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · " + $F{elenco_rate_tra} + "</style></font> - "):" - "):"") +
+    ($P{oggetto_del_pagamento_ita}.equals(null)?"":$P{oggetto_del_pagamento_ita})) +
+(!$P{oggetto_del_pagamento_tra}.equals(null)?"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · </style></font>":"") +
+((($F{elenco_rate_tra}.equals(null) || $P{oggetto_del_pagamento_tra}.equals(null))?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\">" + $F{elenco_rate_tra} + "</style></font>") +
+    ((!$F{elenco_rate_tra}.equals(null) && !$P{oggetto_del_pagamento_tra}.equals(null))?"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> - </style></font>":"") +
+    ($P{oggetto_del_pagamento_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\">" + $P{oggetto_del_pagamento_tra} + "</style></font>"))]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" mode="Transparent" x="0" y="341" width="555" height="24" isRemoveLineWhenBlank="true" backcolor="#FFFFFF" uuid="7bf13b08-b7a3-4150-9dc3-3b335f3e993d"/>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb" size="9" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="6.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nota_ita} + ($P{nota_tra}.equals(null)?"":"<font face=\"TitilliumWeb\" size=\"9\"><style forecolor=\"#999999\"> · " + $P{nota_tra} + "</style></font>")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="39" width="350" height="55" isRemoveLineWhenBlank="true" uuid="f53efa13-9fc0-4e01-9506-20c215b544e1">
+					<printWhenExpression><![CDATA[new Boolean(!$P{logo_ente_secondario}.equals( null ))]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Top" markup="styled">
+					<font fontName="TitilliumWeb-Bold" size="14" isBold="false"/>
+					<paragraph lineSpacing="Fixed" lineSpacingSize="11.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(($F{elenco_rate}.equals(null)?"":$F{elenco_rate}) +
+    ((!$F{elenco_rate}.equals(null) && !$P{oggetto_del_pagamento_ita}.equals(null))?
+        ($P{oggetto_del_pagamento_tra}.equals(null)?($F{elenco_rate_tra}.equals(null)?" - ":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · " + $F{elenco_rate_tra} + "</style></font> - "):" - "):"") +
+    ($P{oggetto_del_pagamento_ita}.equals(null)?"":$P{oggetto_del_pagamento_ita})) +
+(!$P{oggetto_del_pagamento_tra}.equals(null)?"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> · </style></font>":"") +
+((($F{elenco_rate_tra}.equals(null) || $P{oggetto_del_pagamento_tra}.equals(null))?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\">" + $F{elenco_rate_tra} + "</style></font>") +
+    ((!$F{elenco_rate_tra}.equals(null) && !$P{oggetto_del_pagamento_tra}.equals(null))?"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\"> - </style></font>":"") +
+    ($P{oggetto_del_pagamento_tra}.equals(null)?"":"<font face=\"TitilliumWeb\"><style forecolor=\"#999999\">" + $P{oggetto_del_pagamento_tra} + "</style></font>"))]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

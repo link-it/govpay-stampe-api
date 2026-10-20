@@ -1,0 +1,40 @@
+# Eccezioni al gate della scansione dell'immagine (docker/scan_image.sh).
+#
+# Un'eccezione si aggiunge solo dopo aver verificato che la vulnerabilita' non
+# e' sfruttabile nell'uso che GovPay fa del componente, o che e' un falso
+# positivo. Mai per sbloccare un rilascio: per quello c'e' la deroga
+# temporanea, SCAN_GATE=warn, da motivare in una issue.
+#
+# Ogni voce ha:
+#   id          identificativo della vulnerabilita' (CVE-... o GHSA-...)
+#   paths o purls, se l'eccezione vale solo per un componente
+#   statement   motivo, autore e riferimento alla issue
+#   expired_at  scadenza: dopo questa data l'eccezione decade e il gate torna
+#               a segnalare. Si rinnova con un nuovo motivo, o si corregge.
+#
+# Esempio:
+#   - id: CVE-2026-00000
+#     purls:
+#       - "pkg:maven/org.example/libreria"
+#     statement: "Funzione X non usata da govpay-stampe-api. P. Rossi, link-it/govpay-stampe-api#00"
+#     expired_at: 2026-12-31
+#
+# Le stesse eccezioni vanno riportate in .grype.yaml, perche' il report di
+# Grype resti confrontabile con quello di Trivy.
+
+vulnerabilities:
+  # TEMPORANEE. JasperReports 6.21.5 ha due vulnerabilita' HIGH corrette solo
+  # nella linea 7. Non si aggiorna perche' JasperReports viene sostituito da
+  # Apache FOP + XSLT (link-it/govpay-stampe-api#37, in corso): la PR che lo
+  # rimuove toglie anche queste eccezioni. Scadono a fine sprint 26W43-26W44:
+  # se a quella data la sostituzione non e' su main, il gate torna a bloccare.
+  - id: CVE-2025-10492
+    purls:
+      - "pkg:maven/net.sf.jasperreports/jasperreports"
+    statement: "JasperReports sostituito da FOP in link-it/govpay-stampe-api#37. G. Pintori, link-it/govpay-stampe-api#40"
+    expired_at: 2026-11-01
+  - id: CVE-2026-6009
+    purls:
+      - "pkg:maven/net.sf.jasperreports/jasperreports"
+    statement: "JasperReports sostituito da FOP in link-it/govpay-stampe-api#37. G. Pintori, link-it/govpay-stampe-api#40"
+    expired_at: 2026-11-01

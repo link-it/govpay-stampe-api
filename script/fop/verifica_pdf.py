@@ -2,7 +2,8 @@
 """
 Verifica un PDF generato con FOP rispetto al PDF di riferimento generato con Jasper (issue #37).
 
-Criteri di accettazione (ogni criterio deve passare):
+Criteri di accettazione (ogni criterio deve passare, su ogni pagina):
+  0. pagine     stesso numero di pagine
   1. testo      stesse righe con le stesse parole, quindi stessi a capo
   2. inchiostro per ogni riga di testo, la posizione dell'inchiostro (bordi superiore, inferiore,
                 sinistro, destro) differisce al massimo di 0,25 pt; misurata a 600 dpi
@@ -10,13 +11,14 @@ Criteri di accettazione (ogni criterio deve passare):
                 uno dei due PDF senza corrispondente nell'altro (rumore di rasterizzazione), escluse
                 le zone delle immagini
   4. immagini   per ogni immagine il riquadro dell'inchiostro differisce al massimo di 1 pt
-  5. codici     QR code e DataMatrix del PDF FOP si leggono e contengono il qr_code e il data_matrix
-                dell'XML (opzionale, con --xml e --classpath)
+  5. codici     tutti i qr_code e data_matrix dell'XML si leggono, in qualche pagina, nel PDF FOP
+                (opzionale, con --xml e --classpath)
 
 Le posizioni delle parole vengono da pdftotext, ma sono usate solo per trovare le righe: Jasper e
 FOP descrivono le metriche del font in modo diverso, quindi lo scarto si misura sull'inchiostro.
 Le zone delle immagini si ricavano dal file FO del layout: sono i block-container il cui blocco ha
-corpo 0, come li genera jrxml2fo.py per immagini, QR code e DataMatrix.
+corpo 0, come li genera jrxml2fo.py per immagini, QR code e DataMatrix. Le posizioni sono sommate
+lungo i block-container annidati (le rate dei sottoreport) e ogni page-sequence e' una pagina.
 
 Uso:
   verifica_pdf.py JASPER.pdf FOP.pdf --fo LAYOUT.fo [--xml INPUT.xml --classpath CP] [--escludi X,Y,W,H]...
@@ -57,8 +59,13 @@ public class LeggiCodici { public static void main(String[] a) throws Exception 
 """
 
 
-def parole(pdf):
-    out = subprocess.run(['pdftotext', '-bbox', pdf, '-'], capture_output=True, text=True, check=True).stdout
+def pagine(pdf):
+    out = subprocess.run(['pdfinfo', pdf], capture_output=True, text=True, check=True).stdout
+    return int(re.search(r'^Pages:\s+(\d+)', out, re.M).group(1))
+
+
+def parole(pdf, pagina):
+    out = subprocess.run(['pdftotext', '-f', str(pagina), '-l', str(pagina), '-bbox', pdf, '-'], capture_output=True, text=True, check=True).stdout
     return [(m.group(5), *map(float, m.group(1, 2, 3, 4)))
             for m in re.finditer(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([^<]*)</word>', out)]
 
@@ -79,8 +86,10 @@ def righe(ws):
         g.sort(key=lambda w: w[1])
         corrente = [g[0]]
         for w in g[1:]:
-            # parole distanti piu' di 3 corpi: elementi diversi sulla stessa riga
-            if w[1] - corrente[-1][3] > 3 * (corrente[-1][4] - corrente[-1][2]):
+            # parole distanti piu' di 8 pt: elementi diversi sulla stessa riga. La soglia e' fissa perche'
+            # l'altezza delle caselle dipende da come ogni PDF descrive il font; tra due parole dello
+            # stesso testo c'e' uno spazio di 2-4 pt
+            if w[1] - corrente[-1][3] > 8:
                 risultato.append(corrente); corrente = []
             corrente.append(w)
         risultato.append(corrente)
@@ -89,17 +98,35 @@ def righe(ws):
 
 
 def zone_immagini(fo):
-    testo = Path(fo).read_text(encoding='utf-8')
-    zone = []
-    for m in re.finditer(r'<fo:block-container[^>]*?left="([\d.]+)pt" top="([\d.]+)pt" width="([\d.]+)pt" height="([\d.]+)pt"[^>]*>\s*<fo:block([^>]*)>', testo):
-        if 'font-size="0pt"' in m.group(5):
-            zone.append(tuple(map(float, m.group(1, 2, 3, 4))))
-    return zone
+    """Zone delle immagini per pagina (una page-sequence per pagina), in punti dal bordo della pagina."""
+    import xml.etree.ElementTree as ET
+    FO = '{http://www.w3.org/1999/XSL/Format}'
+    num = lambda v: float(v[:-2]) if v and v.endswith('pt') else 0.0
+    risultato = []
+
+    def visita(el, ox, oy, zone):
+        for c in el:
+            if c.tag == f'{FO}block-container' and c.get('absolute-position') == 'absolute':
+                x, y = ox + num(c.get('left')), oy + num(c.get('top'))
+                primo = next(iter(c), None)
+                if primo is not None and primo.tag == f'{FO}block' and primo.get('font-size') == '0pt' \
+                        and c.get('width') and c.get('height'):
+                    zone.append((x, y, num(c.get('width')), num(c.get('height'))))
+                    continue
+                visita(c, x, y, zone)
+            else:
+                visita(c, ox, oy, zone)
+
+    for ps in ET.parse(fo).getroot().iter(f'{FO}page-sequence'):
+        zone = []
+        visita(ps, 0.0, 0.0, zone)
+        risultato.append(zone)
+    return risultato
 
 
-def raster(pdf, dpi, cartella, nome):
-    base = Path(cartella) / nome
-    subprocess.run(['pdftoppm', '-r', str(dpi), '-gray', '-png', '-singlefile', pdf, str(base)], check=True)
+def raster(pdf, dpi, cartella, nome, pagina):
+    base = Path(cartella) / f'{nome}-{pagina}'
+    subprocess.run(['pdftoppm', '-r', str(dpi), '-f', str(pagina), '-l', str(pagina), '-gray', '-png', '-singlefile', pdf, str(base)], check=True)
     # pdftoppm scrive comunque PNG RGB: conversione in scala di grigi
     return Image.open(f'{base}.png').convert('L')
 
@@ -109,18 +136,11 @@ def bordo_inchiostro(im, k, x, y, w, h, soglia=128):
     return None if b is None else (x + b[0] / k, y + b[1] / k, x + b[2] / k, y + b[3] / k)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('jasper'); ap.add_argument('fop')
-    ap.add_argument('--fo', required=True); ap.add_argument('--xml'); ap.add_argument('--classpath')
-    ap.add_argument('--escludi', action='append', default=[])
-    ap.add_argument('--dettagli', type=int, default=0, help='mostra comunque le N righe con lo scarto maggiore')
-    a = ap.parse_args()
+def verifica_pagina(a, pagina, zone, escluse, tmp):
     esiti = {}
-    tmp = tempfile.mkdtemp()
 
     # 1. testo
-    rj, rf = righe(parole(a.jasper)), righe(parole(a.fop))
+    rj, rf = righe(parole(a.jasper, pagina)), righe(parole(a.fop, pagina))
     testi_f = defaultdict(list)
     for r in rf:
         testi_f[r[0]].append(r)
@@ -130,7 +150,7 @@ def main():
 
     # 2. inchiostro per riga
     k = DPI_INCHIOSTRO / 72
-    ij, if_ = raster(a.jasper, DPI_INCHIOSTRO, tmp, 'j'), raster(a.fop, DPI_INCHIOSTRO, tmp, 'f')
+    ij, if_ = raster(a.jasper, DPI_INCHIOSTRO, tmp, 'j', pagina), raster(a.fop, DPI_INCHIOSTRO, tmp, 'f', pagina)
     peggiori = []
     for testo, x0, y0, x1, y1 in rj:
         cand = testi_f.get(testo)
@@ -148,13 +168,11 @@ def main():
                            ''.join(f'\n      {s:.2f} pt {t[:40]!r} (sinistra, alto, destra, basso: {d})' for s, t, d in peggiori[:max(3, a.dettagli)] if s > SOGLIA_INCHIOSTRO or a.dettagli))
 
     # 3. raster con tolleranza, fuori dalle immagini
-    zone = zone_immagini(a.fo)
     k2 = DPI_RASTER / 72
-    rj2 = raster(a.jasper, DPI_RASTER, tmp, 'j2').point(lambda v: 255 if v < 160 else 0)
-    rf2 = raster(a.fop, DPI_RASTER, tmp, 'f2').point(lambda v: 255 if v < 160 else 0)
+    rj2 = raster(a.jasper, DPI_RASTER, tmp, 'j2', pagina).point(lambda v: 255 if v < 160 else 0)
+    rf2 = raster(a.fop, DPI_RASTER, tmp, 'f2', pagina).point(lambda v: 255 if v < 160 else 0)
     diff = ImageChops.lighter(ImageChops.subtract(rj2, rf2.filter(ImageFilter.MaxFilter(3))),
                               ImageChops.subtract(rf2, rj2.filter(ImageFilter.MaxFilter(3))))
-    escluse = [tuple(map(float, e.split(','))) for e in a.escludi]
     for x, y, w, h in zone + escluse:
         diff.paste(0, (int(x * k2) - 2, int(y * k2) - 2, int((x + w) * k2) + 2, int((y + h) * k2) + 2))
     fuori = sum(diff.histogram()[1:])
@@ -174,7 +192,7 @@ def main():
     # 4. immagini
     scarti = []
     k3 = 300 / 72
-    ij3, if3 = raster(a.jasper, 300, tmp, 'j3'), raster(a.fop, 300, tmp, 'f3')
+    ij3, if3 = raster(a.jasper, 300, tmp, 'j3', pagina), raster(a.fop, 300, tmp, 'f3', pagina)
     for x, y, w, h in zone:
         bj = bordo_inchiostro(ij3, k3, x - 2, y - 2, w + 4, h + 4, 200)
         bf = bordo_inchiostro(if3, k3, x - 2, y - 2, w + 4, h + 4, 200)
@@ -184,21 +202,52 @@ def main():
     esiti['immagini'] = (massimo <= SOGLIA_IMMAGINI, f'{len(scarti)} immagini, scarto massimo {massimo:.2f} pt' +
                          ''.join(f'\n      {s:.2f} pt immagine in ({p[0]:.0f}, {p[1]:.0f})' for s, p in scarti if s > SOGLIA_IMMAGINI))
 
-    # 5. QR code e DataMatrix: ogni riquadro quadrato viene letto come QR o DataMatrix
+    # riquadri quadrati (QR code e DataMatrix) ritagliati dalla pagina FOP, letti tutti insieme alla fine
+    png = []
+    for i, (x, y, w, h_) in enumerate(z for z in zone if abs(z[2] - z[3]) < 0.5 and z[2] >= 40):
+        f = Path(tmp) / f'codice{pagina}-{i}.png'
+        if3.crop((int((x - 5) * k3), int((y - 5) * k3), int((x + w + 5) * k3), int((y + h_ + 5) * k3))).save(f); png.append(str(f))
+    misure = {'inchiostro': peggiori[0][0] if peggiori else 0, 'raster': fuori, 'immagini': max((s for s, _ in scarti), default=0), 'codici': png}
+    return esiti, misure
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('jasper'); ap.add_argument('fop')
+    ap.add_argument('--fo', required=True); ap.add_argument('--xml'); ap.add_argument('--classpath')
+    ap.add_argument('--escludi', action='append', default=[])
+    ap.add_argument('--dettagli', type=int, default=0, help='mostra comunque le N righe con lo scarto maggiore')
+    a = ap.parse_args()
+    esiti = {}
+    tmp = tempfile.mkdtemp()
+    n_j, n_f = pagine(a.jasper), pagine(a.fop)
+    esiti['pagine'] = (n_j == n_f, f'{n_j}' + ('' if n_j == n_f else f' in Jasper, {n_f} in FOP'))
+    zone_fo = zone_immagini(a.fo)
+    escluse = [tuple(map(float, e.split(','))) for e in a.escludi]
+    per_pagina = [verifica_pagina(a, p, zone_fo[p - 1] if p - 1 < len(zone_fo) else [], escluse, tmp)
+                  for p in range(1, min(n_j, n_f) + 1)]
+    # esito di ogni criterio: il peggiore tra le pagine, con il numero di pagina se sono piu' di una
+    for nome in per_pagina[0][0] if per_pagina else []:
+        falliti = [(p, e[nome]) for p, (e, _) in enumerate(per_pagina, 1) if not e[nome][0]]
+        if falliti:
+            esiti[nome] = (False, '; '.join((f'pagina {p}: ' if len(per_pagina) > 1 else '') + d for p, (_, d) in falliti))
+        else:
+            esiti[nome] = (True, per_pagina[0][0][nome][1] if len(per_pagina) == 1 else
+                           f'{len(per_pagina)} pagine, ' + per_pagina[max(range(len(per_pagina)), key=lambda i: per_pagina[i][1].get(nome, 0))][0][nome][1])
+
+    # 5. QR code e DataMatrix: ogni riquadro quadrato di ogni pagina viene letto come QR o DataMatrix
     if a.xml and a.classpath:
         import base64, html as h
         xml = Path(a.xml).read_text(encoding='utf-8')
-        attesi = {n: h.unescape(m.group(1)) for n in ('qr_code', 'data_matrix') if (m := re.search(rf'<{n}>([^<]*)</{n}>', xml))}
-        quadrati = [z for z in zone if abs(z[2] - z[3]) < 0.5 and z[2] >= 40]
-        png = []
-        for i, (x, y, w, h_) in enumerate(quadrati):
-            f = Path(tmp) / f'codice{i}.png'
-            if3.crop((int((x - 5) * k3), int((y - 5) * k3), int((x + w + 5) * k3), int((y + h_ + 5) * k3))).save(f); png.append(str(f))
+        png = [f for _, f_ in per_pagina for f in f_.get('codici', [])]
         sorgente = Path(tmp) / 'LeggiCodici.java'; sorgente.write_text(LEGGI_CODICI)
         out = subprocess.run(['java', '-cp', a.classpath, str(sorgente)] + png, capture_output=True, text=True).stdout
-        letti = [base64.b64decode(l).decode('utf-8') for l in out.split() if l]
-        for nome, atteso in attesi.items():
-            esiti[nome] = (atteso in letti, 'letto' if atteso in letti else f'non trovato tra {len(letti)} codici letti')
+        letti = {base64.b64decode(l).decode('utf-8') for l in out.split() if l}
+        for nome in ('qr_code', 'data_matrix'):
+            attesi = {h.unescape(v) for v in re.findall(rf'<{nome}>([^<]*)</{nome}>', xml)}
+            if attesi:
+                mancanti = attesi - letti
+                esiti[nome] = (not mancanti, f'{len(attesi)} letti' if not mancanti else f'{len(mancanti)} di {len(attesi)} non letti')
 
     ok = all(v[0] for v in esiti.values())
     for nome, (passa, dettaglio) in esiti.items():

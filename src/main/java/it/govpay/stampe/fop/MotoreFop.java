@@ -84,7 +84,10 @@ public class MotoreFop {
 		} catch (IOException | SAXException | URISyntaxException e) {
 			throw new IllegalStateException("Configurazione di FOP non leggibile: " + CONFIGURAZIONE, e);
 		}
-		this.transformerFactory = TransformerFactory.newInstance();
+		// il processore XSLT del JDK (XSLTC), non quello trovato nel classpath: Xalan, che arriva con
+		// JasperReports, non risolve i template con nome dei fogli inclusi, e alla rimozione di Jasper il
+		// processore cambierebbe senza che nessuno lo scelga
+		this.transformerFactory = TransformerFactory.newDefaultInstance();
 		this.transformerFactory.setURIResolver(new ClasspathUriResolver());
 	}
 

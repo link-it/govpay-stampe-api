@@ -73,7 +73,7 @@ public class AvvisoSempliceService extends AvvisoPagamentoService {
 	}
 
 	public byte[] creaAvviso(AvvisoPagamentoInput input) {
-		if (this.motore == Motore.FOP && LayoutMigrati.avviso(input)) {
+		if (this.motore == Motore.FOP && LayoutMigrati.avvisoSemplice(input)) {
 			return creaAvvisoConFop(input);
 		}
 		try {

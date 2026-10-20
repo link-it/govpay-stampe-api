@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Parti di DoppioFormato scritte a mano, applicate da jrxml2fo.py (vedi personalizzazioni/RataUnica.xml
+	per il formato). DoppioFormato e' il sottoreport di una rata: contesto dei percorsi relativi, l'elemento rata.
+-->
+<personalizzazioni xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+
+	<!-- intestazione "Rata N", vuota senza numero_rata: Jasper la rimuove (isRemoveLineWhenBlank) e il resto della rata sale -->
+	<elemento uuid="d5ac7d8c-e2aa-474b-bb3b-2c35f76533e0" attributi="vuoto=not(normalize-space(numero_rata))"><xsl:if test="normalize-space(numero_rata)">Rata <xsl:value-of select="numero_rata"/></xsl:if></elemento>
+
+	<!-- importo formattato -->
+	<elemento uuid="5af0ac81-25e8-43a8-a375-d296a6234c42"><xsl:call-template name="importo"><xsl:with-param name="valore" select="importo"/></xsl:call-template></elemento>
+
+	<!-- scadenza oppure giorni della soglia -->
+	<elemento uuid="7e26d709-95e2-4376-bc6f-5239ff2ebd56"><xsl:choose><xsl:when test="normalize-space(giorni)"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="giorni"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="data"/></xsl:otherwise></xsl:choose></elemento>
+
+	<!-- etichetta: "Entro il" oppure il tipo della soglia -->
+	<elemento uuid="88692fbb-f7ac-49a8-a71c-1b30b21ab400"><xsl:choose><xsl:when test="normalize-space(giorni)"><xsl:value-of select="tipo"/></xsl:when><xsl:when test="normalize-space(data)">Entro il</xsl:when></xsl:choose></elemento>
+
+</personalizzazioni>

@@ -75,7 +75,7 @@ public class AvvisoPostaleService extends AvvisoPagamentoService {
 	}
 	
 	public byte[] creaAvviso(AvvisoPagamentoInput input) {
-		if (this.motore == Motore.FOP && LayoutMigrati.avviso(input)) {
+		if (this.motore == Motore.FOP && LayoutMigrati.avvisoPostale(input)) {
 			return creaAvvisoConFop(input);
 		}
 		try {

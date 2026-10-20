@@ -13,10 +13,14 @@ public final class LayoutMigrati {
 	private LayoutMigrati() {
 	}
 
-	/** Avvisi v1, semplice e con bollettino postale: migrata la sola pagina singola (rata unica). */
-	public static boolean avviso(AvvisoPagamentoInput avviso) {
-		return avviso.getPagine() != null
-				&& !avviso.getPagine().getSingolaOrDoppiaOrTripla().isEmpty()
+	/** Avviso semplice v1: migrate tutte le pagine (singola, doppia, tripla e multipla). */
+	public static boolean avvisoSemplice(AvvisoPagamentoInput avviso) {
+		return avviso.getPagine() != null && !avviso.getPagine().getSingolaOrDoppiaOrTripla().isEmpty();
+	}
+
+	/** Avviso con bollettino postale v1: migrata la sola pagina singola (rata unica). */
+	public static boolean avvisoPostale(AvvisoPagamentoInput avviso) {
+		return avvisoSemplice(avviso)
 				&& avviso.getPagine().getSingolaOrDoppiaOrTripla().stream().allMatch(PaginaAvvisoSingola.class::isInstance);
 	}
 }

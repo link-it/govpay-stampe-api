@@ -31,6 +31,7 @@ Il file generato va su stdout.
 
 import argparse
 import html
+import os
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -46,6 +47,12 @@ todo = []
 personalizzazioni = {'elemento': {}, 'condizione': {}, 'attributi': {}}
 
 
+def coppie(testo):
+    """nome=valore;nome=valore: il ; separa solo se seguito da un nuovo nome= (i valori XPath possono
+    contenere entita' come &lt;)."""
+    return dict(kv.split('=', 1) for kv in re.split(r';(?=[\w-]+=)', testo) if kv.strip())
+
+
 def carica_personalizzazioni(path):
     # lettura testuale: i frammenti vanno copiati cosi' come sono scritti, con i prefissi xsl: e fo:
     testo = open(path, encoding='utf-8').read()
@@ -54,15 +61,14 @@ def carica_personalizzazioni(path):
     for uuid, extra in re.findall(r'<elemento uuid="([^"]+)"([^>]*?)/>', testo):
         m = re.search(r'attributi="([^"]*)"', extra)
         if m:
-            personalizzazioni['attributi'][uuid] = dict(kv.split('=', 1) for kv in m.group(1).split(';') if kv.strip())
+            personalizzazioni['attributi'][uuid] = coppie(m.group(1))
     for tipo in ('elemento', 'condizione'):
         for uuid, extra, corpo in re.findall(r'<%s uuid="([^"]+)"([^>]*)(?<!/)>(.*?)</%s>' % (tipo, tipo), testo, re.S):
             personalizzazioni[tipo][uuid] = corpo.strip()
             # attributi="nome=valore;nome=valore": sostituiscono o aggiungono attributi del blocco di testo
             m = re.search(r'attributi="([^"]*)"', extra)
             if m:
-                personalizzazioni['attributi'][uuid] = dict(
-                    kv.split('=', 1) for kv in m.group(1).split(';') if kv.strip())
+                personalizzazioni['attributi'][uuid] = coppie(m.group(1))
 
 
 def pt(v):
@@ -338,11 +344,15 @@ def fo_statico(run, posizioni):
 # --- espressioni ---------------------------------------------------------------
 
 class Contesto:
-    def __init__(self, campi, param_xpath):
+    def __init__(self, campi, param_xpath, parametri=()):
         self.campi = campi
         self.param_xpath = param_xpath.rstrip('/')
+        # parametri del template XSLT: valori costanti passati dal report che lo richiama come sottoreport
+        self.parametri = set(parametri)
 
     def p(self, nome):
+        if nome in self.parametri:
+            return f'${nome}'
         return f'{self.param_xpath}/{nome}'
 
     def f(self, nome):
@@ -365,9 +375,26 @@ def xpath_semplice(espr, ctx):
     return None
 
 
+# Variabili e parametri dei template con valore noto: nei report principali (AvvisoPagamento*.jrxml)
+# totale_rate e totale_soglie sono campi count(//rata) e count(//rata/giorni) calcolati su tutto il
+# documento e passati ai sottoreport; totaleRate e soloSoglie ne derivano.
+NUMERI_NOTI = {'$V{totaleRate}': 'count(//rata)', '$P{totale_rate}': 'count(//rata)',
+               '$P{totale_soglie}': 'count(//rata/giorni)'}
+BOOLEANI_NOTI = {'$V{soloSoglie}': 'count(//rata/giorni) &gt; 0'}
+
+
 def condizione(espr, ctx):
     """Traduce le printWhenExpression piu' comuni in un test XPath."""
     e = re.sub(r'\s+', '', espr)
+    if '&&' in e and '(' not in e.replace('newBoolean(', '').replace('.equals(null)', '').replace(')', ''):
+        parti = [condizione(x, ctx) for x in e.split('&&')]
+        return None if None in parti else ' and '.join(f'({x})' for x in parti)
+    m = re.fullmatch(r'(\$V\{\w+\})==(true|false)', e)
+    if m and m.group(1) in BOOLEANI_NOTI:
+        t = BOOLEANI_NOTI[m.group(1)]
+        return t if m.group(2) == 'true' else f'not({t})'
+    if e in BOOLEANI_NOTI:
+        return BOOLEANI_NOTI[e]
     def nodo(t, n):
         return ctx.p(n) if t == 'P' else ctx.f(n)
     m = re.fullmatch(r'newBoolean\(\$([PF])\{(\w+)\}\.equals\(null\)\)', e)
@@ -376,9 +403,21 @@ def condizione(espr, ctx):
     m = re.fullmatch(r'newBoolean\(!\$([PF])\{(\w+)\}\.equals\(null\)\)', e)
     if m:
         return f'normalize-space({nodo(*m.groups())})'
+    m = re.fullmatch(r'newBoolean\(\$([PF])\{(\w+)\}\.equals\(null\)\)==true', e)
+    if m:
+        return f'not(normalize-space({nodo(*m.groups())}))'
     m = re.fullmatch(r'newBoolean\(\$([PF])\{(\w+)\}\.equals\(null\)\)==false', e)
     if m:
         return f'normalize-space({nodo(*m.groups())})'
+    # new Boolean($P{x}) == false / true: parametri booleani
+    m = re.fullmatch(r'newBoolean\(\$([PF])\{(\w+)\}\)==(true|false)', e)
+    if m:
+        t = f"{nodo(m.group(1), m.group(2))} = 'true'"
+        return t if m.group(3) == 'true' else f'not({t})'
+    # new Boolean($F{colonne}.toString() == '2')
+    m = re.fullmatch(r"newBoolean\(\$([PF])\{(\w+)\}\.toString\(\)=='([^']*)'\)", e)
+    if m:
+        return f"{nodo(m.group(1), m.group(2))} = '{m.group(3)}'"
     m = re.fullmatch(r'\$([PF])\{(\w+)\}==false', e)
     if m:
         return f"not({nodo(*m.groups())} = 'true')"
@@ -402,10 +441,73 @@ def svg_da_batik(espr):
 
 # --- elementi ------------------------------------------------------------------
 
+# --- righe rimosse (isRemoveLineWhenBlank) e posizione Float ----------------------------------------
+#
+# Jasper toglie un elemento vuoto con isRemoveLineWhenBlank (testo vuoto o printWhenExpression falsa)
+# insieme alla sua fascia verticale, se nessun altro elemento della banda la occupa; gli elementi Float
+# sotto di lui salgono della stessa altezza e la banda si accorcia. Qui lo spostamento diventa
+# un'espressione XPath: y - somma(altezza * number(vuoto)) degli elementi rimovibili sopra.
+# Le bande mantengono la loro altezza: le righe rimosse spostano solo gli elementi della stessa banda.
+
+SPOSTAMENTI = {}      # id(reportElement) -> espressione XPath dello spostamento verso l'alto, in punti
+RIMOVIBILI = {}       # id(reportElement) -> condizione XPath di elemento vuoto
+SPOSTAMENTO = None    # spostamento dell'elemento in conversione
+
+
+def condizione_vuoto(el, ctx):
+    """Condizione XPath in cui l'elemento e' vuoto e Jasper lo rimuove con la sua riga, None se non si sa."""
+    re_el = el.find(f'{J}reportElement')
+    if re_el.get('isRemoveLineWhenBlank') != 'true':
+        return None
+    uuid = re_el.get('uuid')
+    attr = personalizzazioni['attributi'].get(uuid, {})
+    if 'vuoto' in attr:
+        return attr['vuoto']
+    pw = re_el.findtext(f'{J}printWhenExpression')
+    if pw:
+        c = personalizzazioni['condizione'].get(uuid) or condizione(pw, ctx)
+        return f'not({c})' if c else None
+    if el.tag == f'{J}textField' and uuid not in personalizzazioni['elemento']:
+        xp = xpath_semplice(el.findtext(f'{J}textFieldExpression') or '', ctx)
+        if xp:
+            return f'not(normalize-space({xp}))'
+    return None
+
+
+def analizza_banda(banda, ctx, base):
+    """Calcola gli spostamenti degli elementi della banda; base e' lo spostamento della banda stessa (righe
+    rimosse nelle bande precedenti). Restituisce lo spostamento della banda successiva."""
+    figli = [(el, el.find(f'{J}reportElement')) for el in banda if el.find(f'{J}reportElement') is not None]
+    num = lambda e, k: float(e.get(k, 0))
+    rimovibili = []
+    for el, re_el in figli:
+        c = condizione_vuoto(el, ctx)
+        if not c:
+            continue
+        y, h = num(re_el, 'y'), num(re_el, 'height')
+        if any(o is not re_el and num(o, 'y') < y + h and num(o, 'y') + num(o, 'height') > y for _, o in figli):
+            continue  # fascia occupata anche da un altro elemento: Jasper non la rimuove
+        rimovibili.append((y, h, c, re_el))
+        RIMOVIBILI[id(re_el)] = c
+    for el, re_el in figli:
+        termini = [base] if base else []
+        if re_el.get('positionType') == 'Float':
+            termini += [f'{pt(h)[:-2]} * number({c})' for y, h, c, r in rimovibili if r is not re_el and y + h <= num(re_el, 'y')]
+        if termini:
+            SPOSTAMENTI[id(re_el)] = ' + '.join(termini)
+    termini = ([base] if base else []) + [f'{pt(h)[:-2]} * number({c})' for _, h, c, _ in rimovibili]
+    return ' + '.join(termini)
+
+
+def top(y):
+    """Attributo top: costante, oppure espressione se l'elemento si sposta per righe rimosse sopra di lui."""
+    return f'{{{y} - ({SPOSTAMENTO})}}pt' if SPOSTAMENTO else pt(y)
+
+
 def contenitore(re_el, ox, oy, extra=None):
     x = float(re_el.get('x', 0)) + ox
     y = float(re_el.get('y', 0)) + oy
-    a = {'absolute-position': 'absolute', 'left': pt(x), 'top': pt(y),
+    a = {'absolute-position': 'absolute', 'left': pt(x), 'top': top(y),
          'width': pt(re_el.get('width')), 'height': pt(re_el.get('height'))}
     if re_el.get('mode') == 'Opaque' and re_el.get('backcolor'):
         a['background-color'] = re_el.get('backcolor')
@@ -446,12 +548,51 @@ def testo(el, ox, oy, ctx, out, rientro):
     # numero di righe: per i testi fissi dagli a capo calcolati, per gli altri dall'indicazione
     # righe=N nelle personalizzazioni (default 1)
     extra = dict(personalizzazioni['attributi'].get(re_el.get('uuid'), {}))
+    righe_xpath = extra.pop('righe-xpath', None)
     righe = int(extra.pop('righe', 0))
+    extra.pop('vuoto', None)
+    # testo variabile: a capo calcolati a runtime come in Jasper (TestoJasper.righe). Con markup, solo se il
+    # valore non contiene tag: altrimenti resta il template markup, con gli a capo scelti da FOP
+    a_runtime = None
+    if el.tag == f'{J}textField' and re_el.get('uuid') not in personalizzazioni['elemento'] and not righe_xpath and not righe \
+            and markup in ('none', 'styled', 'html'):
+        xp = xpath_semplice(el.findtext(f'{J}textFieldExpression') or '', ctx)
+        ff = file_font(blocco, {})
+        if xp and ff:
+            a_runtime = (xp, ff)
+            righe_xpath = "1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"
     posizioni = a_capo.get(re_el.get('uuid')) if el.tag == f'{J}staticText' else None
     if not righe:
         righe = sum(len(v) + 1 for v in posizioni.values()) if posizioni else 1
     blocco.update(geometria_testo(el, blocco, righe, float(re_el.get('height'))))
     blocco.update(extra)
+    variabile = ''
+    if righe_xpath:
+        # numero di righe calcolato dal contenuto: interlinea e padding per ogni caso, scelti in XSLT
+        casi = {n: geometria_testo(el, blocco, n, float(re_el.get('height'))) for n in range(1, 6)}
+        blocco.pop('line-height', None); blocco.pop('padding-top', None)
+        for nome_attr in ('line-height', 'padding-top'):
+            scelte = ''.join(f'<xsl:when test="$righe = {n}">{g[nome_attr]}</xsl:when>' for n, g in casi.items() if n < 5)
+            variabile += f'<xsl:attribute name="{nome_attr}"><xsl:choose>{scelte}<xsl:otherwise>{casi[5][nome_attr]}</xsl:otherwise></xsl:choose></xsl:attribute>'
+        variabile = f'<xsl:variable name="righe" select="{righe_xpath}"/>' + variabile
+    if a_runtime:
+        xp, ff = a_runtime
+        larghezza = float(re_el.get('width')) - float(blocco.get('start-indent', '0pt')[:-2]) - float(blocco.get('end-indent', '0pt')[:-2])
+        massimo = righe_massime(el, blocco, float(re_el.get('height')))
+        proprieta = {p.get('name'): p.get('value') for p in re_el.findall(f'{J}property')}
+        tronca = 'true()' if proprieta.get('net.sf.jasperreports.text.truncate.at.char') == 'true' else 'false()'
+        # con xsltproc (solo per le verifiche) la funzione Java non c'e': il testo resta intero
+        chiamata = f"tj:righe(string({xp}), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
+        con_tag = f"contains({xp}, '&lt;')" if markup != 'none' else 'false()'
+        variabile = (f'<xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available(\'tj:righe\') and not({con_tag})">'
+                     f'<xsl:value-of select="{chiamata}"/></xsl:when><xsl:otherwise><xsl:value-of select="{xp}"/></xsl:otherwise></xsl:choose></xsl:variable>') + variabile
+        if markup == 'none':
+            corpo = '<xsl:value-of select="$testo-righe"/>'
+        else:
+            corpo = (f'<xsl:choose><xsl:when test="{con_tag}"><xsl:call-template name="markup"><xsl:with-param name="testo" select="{xp}"/></xsl:call-template></xsl:when>'
+                     f'<xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose>')
+        blocco['linefeed-treatment'] = 'preserve'
+        blocco['wrap-option'] = 'no-wrap'
     if re_el.get('uuid') in personalizzazioni['elemento']:
         corpo = personalizzazioni['elemento'][re_el.get('uuid')]
     elif el.tag == f'{J}staticText':
@@ -460,7 +601,7 @@ def testo(el, ox, oy, ctx, out, rientro):
             # a capo calcolati come in Jasper: FOP non deve spezzare di nuovo le righe
             blocco['wrap-option'] = 'no-wrap'
         corpo = fo_statico(run, posizioni)
-    else:
+    elif not a_runtime:
         espr = el.findtext(f'{J}textFieldExpression') or ''
         xp = xpath_semplice(espr, ctx)
         if xp and markup in ('html', 'styled'):
@@ -471,8 +612,27 @@ def testo(el, ox, oy, ctx, out, rientro):
             todo.append('espressione di testo')
             corpo = f'<!-- TODO espressione ({markup}): {commento(espr)} -->'
     out.append(f'{rientro}<fo:block-container{attrs(cont)}>')
-    out.append(f'{rientro}\t<fo:block{attrs(blocco)}>{corpo}</fo:block>')
+    out.append(f'{rientro}\t<fo:block{attrs(blocco)}>{variabile}{corpo}</fo:block>')
     out.append(f'{rientro}</fo:block-container>')
+
+
+def righe_massime(el, blocco, altezza):
+    """Righe che Jasper mostra in un riquadro che non si allunga: aggiunge righe finche' l'altezza della
+    prima, (A + D) x corpo, piu' l'interlinea delle successive (lineSpacingSize con Fixed) sta nel riquadro.
+    0 se il riquadro si allunga (isStretchWithOverflow)."""
+    if el.get('isStretchWithOverflow') == 'true' or el.get('textAdjust') == 'StretchHeight':
+        return 0
+    metriche = METRICHE_AWT.get(famiglia(blocco['font-family']))
+    corpo = float(blocco['font-size'][:-2])
+    if metriche is None:
+        return 0
+    prima = (metriche[0] + metriche[1]) * corpo
+    p = el.find(f'{J}textElement/{J}paragraph')
+    successive = float(p.get('lineSpacingSize')) if p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize') else prima
+    n = 1
+    while prima + n * successive <= altezza + 0.01:
+        n += 1
+    return n
 
 
 def immagine(el, ox, oy, ctx, out, rientro):
@@ -542,7 +702,7 @@ def immagine(el, ox, oy, ctx, out, rientro):
 
 
 def codice(re_el, campo_xpath, ox, oy, out, rientro):
-    """QR code o DataMatrix: SVG calcolato dal renderer (AvvisoFopRenderer) nell'elemento <campo>_svg,
+    """QR code o DataMatrix: SVG calcolato dal servizio (PreparazioneAvviso) nell'elemento <campo>_svg,
     disegnato su tutto il riquadro come fa Jasper."""
     w, h = pt(re_el.get('width')), pt(re_el.get('height'))
     cont = contenitore(re_el, ox, oy)
@@ -597,12 +757,86 @@ def bordi(el, ox, oy, out, rientro):
         if lh == 0:
             # FOP disegna il bordo superiore sotto il bordo del riquadro: posizionato sul bordo, la linea
             # cade dove Jasper la disegna centrata
-            a = {'absolute-position': 'absolute', 'left': pt(lx), 'top': pt(ly), 'width': pt(lw), 'height': '0pt',
+            a = {'absolute-position': 'absolute', 'left': pt(lx), 'top': top(ly), 'width': pt(lw), 'height': '0pt',
                  'border-top': f'{pt(spessore)} {stile} {colore}'}
         else:
-            a = {'absolute-position': 'absolute', 'left': pt(round(lx - spessore / 2, 3)), 'top': pt(ly), 'width': '0pt', 'height': pt(lh),
+            a = {'absolute-position': 'absolute', 'left': pt(round(lx - spessore / 2, 3)), 'top': top(ly), 'width': '0pt', 'height': pt(lh),
                  'border-left': f'{pt(spessore)} {stile} {colore}'}
         out.append(f'{rientro}<fo:block-container{attrs(a)}><fo:block/></fo:block-container>')
+
+
+def valore_costante(espr):
+    """Valore XPath di un'espressione Jasper costante (true, false, "testo", numero), None altrimenti."""
+    e = re.sub(r'\s+', '', espr or '')
+    m = re.fullmatch(r'(?:newBoolean\()?(true|false)\)?', e) or re.fullmatch(r'Boolean\.(TRUE|FALSE)', e)
+    if m:
+        return "'" + m.group(1).lower() + "'"
+    m = re.fullmatch(r'"([^"]*)"', e)
+    if m:
+        return "'" + m.group(1) + "'"
+    if re.fullmatch(r'-?\d+(\.\d+)?', e):
+        return e
+    return None
+
+
+def sottoreport(el, ox, oy, ctx, out, rientro):
+    """Sottoreport su una sorgente dati XML: un riquadro per record, disposto nelle colonne del sottoreport
+    (printOrder Horizontal: i record riempiono le righe da sinistra a destra), con dentro il template
+    generato dallo stesso sottoreport. I parametri passati come $P{x} non servono: il sottoreport legge
+    gli stessi valori dalla radice dell'XML. Quelli costanti diventano parametri del template."""
+    re_el = el.find(f'{J}reportElement')
+    m_nome = re.fullmatch(r'\s*\$P\{(\w+)\}\s*', el.findtext(f'{J}subreportExpression') or '')
+    m_ds = re.search(r'subDataSource\("([^"]+)"\)', el.findtext(f'{J}dataSourceExpression') or '')
+    if not m_nome or not m_ds:
+        todo.append('subreport')
+        out.append(f'{rientro}<!-- TODO sottoreport: {commento(el.findtext(f"{J}subreportExpression") or "")} -->')
+        return
+    nome = m_nome.group(1)
+    # subDataSource("/doppia/rata") parte dal record corrente, che ne e' la radice: dal contesto
+    # XSLT (l'elemento doppia) basta il resto del percorso
+    passi = m_ds.group(1).strip('/').split('/')
+    selezione = '/'.join(passi[1:]) or '.'
+    costanti = {}
+    for sp in el.findall(f'{J}subreportParameter'):
+        v = valore_costante(sp.findtext(f'{J}subreportParameterExpression'))
+        if v is not None:
+            costanti[sp.get('name')] = v
+    sub = ET.parse(os.path.join(DIR_JRXML, nome + '.jrxml')).getroot()
+    colonne = int(sub.get('columnCount', '1'))
+    larghezza = float(sub.get('columnWidth'))
+    # altezza di un record: bande di dettaglio stampate, con le condizioni sui parametri costanti
+    altezza = 0.0
+    for b in sub.findall(f'{J}detail/{J}band'):
+        pw = b.findtext(f'{J}printWhenExpression')
+        if pw and not valuta_condizione_costante(pw, sub, costanti):
+            continue
+        altezza += float(b.get('height', 0))
+    x = float(re_el.get('x', 0)) + ox
+    y = float(re_el.get('y', 0)) + oy
+    out.append(f'{rientro}<xsl:for-each select="{selezione}">')
+    out.append(f'{rientro}\t<fo:block-container absolute-position="absolute" left="{{{x} + ((position() - 1) mod {colonne}) * {larghezza}}}pt"'
+               f' top="{{{y} + floor((position() - 1) div {colonne}) * {altezza}}}pt" width="{pt(larghezza)}" height="{pt(altezza)}">')
+    out.append(f'{rientro}\t\t<xsl:call-template name="{nome}">')
+    for k, v in costanti.items():
+        out.append(f'{rientro}\t\t\t<xsl:with-param name="{k}" select="{v}"/>')
+    out.append(f'{rientro}\t\t</xsl:call-template>')
+    out.append(f'{rientro}\t</fo:block-container>')
+    out.append(f'{rientro}</xsl:for-each>')
+
+
+def valuta_condizione_costante(espr, sub, costanti):
+    """Valuta in Python una condizione su un parametro booleano del sottoreport (new Boolean($P{x}) == true/false),
+    con il valore passato dal report principale o il default del sottoreport."""
+    e = re.sub(r'\s+', '', espr)
+    m = re.fullmatch(r'newBoolean\(\$P\{(\w+)\}\)==(true|false)', e)
+    if not m:
+        todo.append('condizione di banda')
+        return True
+    v = costanti.get(m.group(1))
+    if v is None:
+        par = next((p for p in sub.findall(f'{J}parameter') if p.get('name') == m.group(1)), None)
+        v = valore_costante(par.findtext(f'{J}defaultValueExpression') if par is not None else 'false') or "'false'"
+    return (v == "'true'") == (m.group(2) == 'true')
 
 
 def commento(s):
@@ -610,12 +844,15 @@ def commento(s):
     return re.sub(r'\s+', ' ', s).replace('--', '- -').strip()
 
 
-def elementi(contenitore_xml, ox, oy, ctx, out, rientro):
+def elementi(contenitore_xml, ox, oy, ctx, out, rientro, ereditato=None):
+    global SPOSTAMENTO
     for el in contenitore_xml:
         tag = el.tag.replace(J, '')
         re_el = el.find(f'{J}reportElement')
         if re_el is None:
             continue
+        # gli elementi di un frame si spostano con il frame
+        SPOSTAMENTO = ereditato if ereditato is not None else SPOSTAMENTI.get(id(re_el))
         pw = re_el.findtext(f'{J}printWhenExpression')
         if pw:
             c = personalizzazioni['condizione'].get(re_el.get('uuid')) or condizione(pw, ctx)
@@ -623,6 +860,12 @@ def elementi(contenitore_xml, ox, oy, ctx, out, rientro):
                 todo.append('printWhenExpression')
                 out.append(f'{rientro}<!-- TODO condizione: {commento(pw)} -->')
                 c = 'true()'
+        elif id(re_el) in RIMOVIBILI:
+            # elemento vuoto rimosso con la sua riga: non va disegnato nemmeno lo sfondo
+            c = f'not({RIMOVIBILI[id(re_el)]})'
+        else:
+            c = None
+        if c:
             out.append(f'{rientro}<xsl:if test="{c}">')
             r2 = rientro + '\t'
         else:
@@ -642,14 +885,17 @@ def elementi(contenitore_xml, ox, oy, ctx, out, rientro):
             else:
                 todo.append('DataMatrix')
                 out.append(f'{r2}<!-- TODO DataMatrix con espressione non semplice -->')
+        elif tag == 'subreport':
+            sottoreport(el, ox, oy, ctx, out, r2)
         elif tag == 'frame':
             x = float(re_el.get('x', 0)) + ox
             y = float(re_el.get('y', 0)) + oy
-            elementi(el, x, y, ctx, out, r2)
+            elementi(el, x, y, ctx, out, r2, SPOSTAMENTO or '')
+            SPOSTAMENTO = None
         else:
             todo.append(tag)
             out.append(f'{r2}<!-- TODO elemento {tag} x={re_el.get("x")} y={re_el.get("y")} -->')
-        if pw:
+        if c:
             out.append(f'{rientro}</xsl:if>')
 
 
@@ -661,7 +907,10 @@ def main():
     ap.add_argument('--offset-y', type=float, default=0)
     ap.add_argument('--param-xpath', default='/AvvisoPagamentoInput')
     ap.add_argument('--personalizzazioni')
+    ap.add_argument('--parametri', help='parametri ricevuti come costanti dal report principale, separati da virgola')
     a = ap.parse_args()
+    global DIR_JRXML
+    DIR_JRXML = os.path.dirname(os.path.abspath(a.jrxml))
     if a.personalizzazioni:
         carica_personalizzazioni(a.personalizzazioni)
 
@@ -669,18 +918,38 @@ def main():
     nome = a.nome or r.get('name')
     campi = {f.get('name'): (f.findtext(f'{J}fieldDescription') or f.get('name')).strip()
              for f in r.findall(f'{J}field')}
-    ctx = Contesto(campi, a.param_xpath)
+    # parametri che il template riceve come costanti da chi lo richiama come sottoreport (per esempio
+    # Multipla): tutti gli altri si leggono dalla radice dell'XML
+    parametri = [x for x in (a.parametri or '').split(',') if x]
+    ctx = Contesto(campi, a.param_xpath, parametri)
 
     calcola_a_capo(r)
     ox = a.offset_x + float(r.get('leftMargin', 0))
     oy = a.offset_y + float(r.get('topMargin', 0))
     out = []
+    base = ''
     for banda in BANDE:
         for sezione in r.findall(f'{J}{banda}'):
             for b in sezione.iter(f'{J}band'):
                 out.append(f'\t\t<!-- banda {banda}, y={oy - a.offset_y - float(r.get("topMargin", 0))} -->')
-                elementi(b, ox, oy, ctx, out, '\t\t')
+                pw = b.findtext(f'{J}printWhenExpression')
+                c = condizione(pw, ctx) if pw else None
+                successiva = analizza_banda(b, ctx, base)
+                if pw and c is None:
+                    todo.append('printWhenExpression di banda')
+                    out.append(f'\t\t<!-- TODO condizione di banda: {commento(pw)} -->')
+                if c:
+                    # banda condizionata: solo l'ultima puo' mancare senza spostare le successive
+                    out.append(f'\t\t<xsl:if test="{c}">')
+                    elementi(b, ox, oy, ctx, out, '\t\t\t')
+                    out.append('\t\t</xsl:if>')
+                else:
+                    elementi(b, ox, oy, ctx, out, '\t\t')
                 oy += float(b.get('height', 0))
+                # le righe rimosse non spostano le bande successive: nei sottoreport a colonne (printOrder
+                # Horizontal) Jasper tiene l'altezza piena della banda, come si vede nei PDF di riferimento
+                # delle soglie
+                del successiva
 
     print('<?xml version="1.0" encoding="UTF-8"?>')
     sorgente = a.jrxml.split('/')[-1]
@@ -691,9 +960,13 @@ def main():
     print('\tRigenerare con script/fop/genera-xsl.sh.')
     print('-->')
     print('<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"')
-    print('\txmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg">')
+    print('\txmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"')
+    print('\txmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">')
     print()
     print(f'\t<xsl:template name="{nome}">')
+    for nome_par in parametri:
+        par = next(p for p in r.findall(f'{J}parameter') if p.get('name') == nome_par)
+        print(f'\t\t<xsl:param name="{nome_par}" select="{valore_costante(par.findtext(f"{J}defaultValueExpression")) or chr(39) + "false" + chr(39)}"/>')
     print('\n'.join(out))
     print('\t</xsl:template>')
     print()

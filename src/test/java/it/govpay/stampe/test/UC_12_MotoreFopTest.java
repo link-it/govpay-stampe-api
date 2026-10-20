@@ -29,9 +29,9 @@ import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Motore FOP configurato per avviso semplice e postale (issue #37): gli avvisi a rata unica sono
- * stampati con FOP, quelli con layout non ancora migrati restano su JasperReports. Il motore usato
- * si riconosce dal Producer del PDF.
+ * Motore FOP configurato per avviso semplice e postale (issue #37): l'avviso semplice e' stampato con
+ * FOP in tutti i suoi layout, quello postale solo a rata unica; i layout postali non ancora migrati
+ * restano su JasperReports. Il motore usato si riconosce dal Producer del PDF.
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -76,8 +76,18 @@ class UC_12_MotoreFopTest {
 	}
 
 	@Test
-	void UC_12_03_AvvisoSempliceDoppiaRataConJasper() throws Exception {
-		assertFalse(stampa(this.avvisiPagamentoFactory.creaPaymentNoticeDueRate()).contains(PRODUCER_FOP));
+	void UC_12_03_AvvisoSempliceDoppiaRataConFop() throws Exception {
+		assertTrue(stampa(this.avvisiPagamentoFactory.creaPaymentNoticeDueRate()).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_05_AvvisoSempliceRateMultipleConFop() throws Exception {
+		assertTrue(stampa(this.avvisiPagamentoFactory.creaPaymentNoticeConRate(13, true)).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_06_AvvisoSempliceSoglieConFop() throws Exception {
+		assertTrue(stampa(this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(3, true, false, false)).contains(PRODUCER_FOP));
 	}
 
 	@Test

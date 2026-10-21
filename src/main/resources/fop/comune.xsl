@@ -62,6 +62,34 @@
 		</xsl:choose>
 	</xsl:template>
 
+	<!-- entita' HTML nelle etichette, che Jasper interpreta nel markup styled: &#176; e' il simbolo di grado -->
+	<xsl:template name="entita">
+		<xsl:param name="testo"/>
+		<xsl:choose>
+			<xsl:when test="contains($testo, '&amp;#176;')">
+				<xsl:value-of select="substring-before($testo, '&amp;#176;')"/>
+				<xsl:text>°</xsl:text>
+				<xsl:call-template name="entita"><xsl:with-param name="testo" select="substring-after($testo, '&amp;#176;')"/></xsl:call-template>
+			</xsl:when>
+			<xsl:otherwise><xsl:value-of select="$testo"/></xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
+	<!-- parte N (1 o 2) di un'etichetta "*parte 1*parte 2", come split("\\*")[N] in Jasper -->
+	<xsl:template name="parte-etichetta">
+		<xsl:param name="etichetta"/>
+		<xsl:param name="n"/>
+		<xsl:variable name="dopo" select="substring-after($etichetta, '*')"/>
+		<xsl:call-template name="entita">
+			<xsl:with-param name="testo">
+				<xsl:choose>
+					<xsl:when test="$n = 1"><xsl:value-of select="substring-before($dopo, '*')"/></xsl:when>
+					<xsl:otherwise><xsl:value-of select="substring-after($dopo, '*')"/></xsl:otherwise>
+				</xsl:choose>
+			</xsl:with-param>
+		</xsl:call-template>
+	</xsl:template>
+
 	<!-- "1 giorno" / "N giorni", come nelle espressioni Jasper delle soglie -->
 	<xsl:template name="giorni">
 		<xsl:param name="giorni"/>

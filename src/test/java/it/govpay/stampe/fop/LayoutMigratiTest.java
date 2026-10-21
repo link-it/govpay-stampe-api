@@ -11,6 +11,7 @@ import it.govpay.stampe.model.v1.PaginaAvvisoMultipla;
 import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
 import it.govpay.stampe.model.v1.PaginaAvvisoTripla;
 import it.govpay.stampe.model.v1.PagineAvviso;
+import it.govpay.stampe.model.v1.RataAvviso;
 
 /** Scelta del motore per layout (issue #37): un avviso con pagine senza layout FOP resta su Jasper. */
 class LayoutMigratiTest {
@@ -29,6 +30,19 @@ class LayoutMigratiTest {
 		assertTrue(LayoutMigrati.avvisoSemplice(avviso(new PaginaAvvisoSingola())));
 		assertTrue(LayoutMigrati.avvisoSemplice(avviso(new PaginaAvvisoTripla(), new PaginaAvvisoMultipla())));
 		assertFalse(LayoutMigrati.avvisoSemplice(avviso()));
+	}
+
+	@Test
+	void violazioneCdsSoloConImportoRidottoEScontato() {
+		PaginaAvvisoSingola sanzione = new PaginaAvvisoSingola();
+		sanzione.setRata(new RataAvviso());
+		sanzione.getRata().setImportoRidotto(50.0);
+		sanzione.getRata().setImportoScontato(35.0);
+		assertTrue(LayoutMigrati.violazioneCds(avviso(sanzione)));
+		PaginaAvvisoSingola ridottoScontato = new PaginaAvvisoSingola();
+		ridottoScontato.setRata(new RataAvviso());
+		ridottoScontato.getRata().setImportoRidotto(50.0);
+		assertFalse(LayoutMigrati.violazioneCds(avviso(ridottoScontato)));
 	}
 
 	@Test

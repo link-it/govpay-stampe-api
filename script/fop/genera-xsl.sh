@@ -34,3 +34,5 @@ genera DoppioFormatoPostale
 genera TriploFormatoPostale
 genera BollettinoRataPostale
 genera BollettinoTriRataPostale
+# violazione del codice della strada: i parametri sono sotto la radice ViolazioneInput
+genera Sanzione --param-xpath /ViolazioneInput

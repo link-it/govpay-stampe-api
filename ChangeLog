@@ -9,6 +9,11 @@
 	Verificati 44 casi di riferimento Jasper, generati anche per i layout
 	multi-rata che la testsuite del core non produce.
 
+	* [Stampe] Violazione del codice della strada con FOP (#37).
+	Nuova proprieta' stampe.motore.violazione-cds (jasper di default): con fop
+	la violazione senza bollettino e' stampata con Apache FOP (layout Sanzione).
+	Verificati 4 casi di riferimento, piu' i 44 precedenti.
+
 2026-10-16  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Motore di stampa FOP nel servizio (#37).

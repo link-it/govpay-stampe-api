@@ -21,8 +21,9 @@ import it.govpay.stampe.model.v1.RataAvviso;
 /**
  * Completa l'avviso con i dati che XSLT non puo' calcolare, prima della stampa con FOP (issue #37):
  * <ul>
- * <li>{@code qr_code_svg} e {@code data_matrix_svg} di ogni rata, come URI data: SVG, dal
- * {@code qr_code} e dal {@code data_matrix} del bollettino postale. Il contenuto del DataMatrix e'
+ * <li>{@code qr_code_svg}, {@code qr_code_2_svg} e {@code data_matrix_svg} di ogni rata, come URI data:
+ * SVG, dal {@code qr_code}, dal {@code qr_code_2} della violazione del codice della strada e dal
+ * {@code data_matrix} del bollettino postale. Il contenuto del DataMatrix e'
  * usato cosi' com'e', spazi compresi: fanno parte del tracciato;</li>
  * <li>{@code logo_ente_px} e {@code logo_ente_secondario_px}: dimensioni in pixel dei loghi, per
  * esempio "500 572". Servono al layout per posizionare l'immagine come Jasper, che con scaleImage
@@ -42,6 +43,9 @@ public final class PreparazioneAvviso {
 			for (RataAvviso rata : rate(avviso)) {
 				if (rata.getQrCode() != null && !rata.getQrCode().isBlank()) {
 					rata.setQrCodeSvg(CodiciSvg.qrCodeDataUri(rata.getQrCode().trim()));
+				}
+				if (rata.getQrCode2() != null && !rata.getQrCode2().isBlank()) {
+					rata.setQrCode2Svg(CodiciSvg.qrCodeDataUri(rata.getQrCode2().trim()));
 				}
 				if (rata.getDataMatrix() != null && !rata.getDataMatrix().isBlank()) {
 					rata.setDataMatrixSvg(CodiciSvg.dataMatrixDataUri(rata.getDataMatrix()));

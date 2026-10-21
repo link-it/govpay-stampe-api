@@ -2,6 +2,7 @@ package it.govpay.stampe.fop;
 
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.model.v1.PaginaAvvisoMultipla;
+import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
 
 /**
  * Layout gia' migrati a XSL-FO (issue #37). Con il motore FOP configurato, un avviso che usa un
@@ -25,5 +26,15 @@ public final class LayoutMigrati {
 	public static boolean avvisoPostale(AvvisoPagamentoInput avviso) {
 		return avvisoSemplice(avviso)
 				&& avviso.getPagine().getSingolaOrDoppiaOrTripla().stream().noneMatch(PaginaAvvisoMultipla.class::isInstance);
+	}
+
+	/**
+	 * Violazione del codice della strada senza bollettino: migrato il layout Sanzione, per le pagine con
+	 * importo ridotto e scontato, l'unico che il mapper produce. RidottoScontato (un solo importo) no.
+	 */
+	public static boolean violazioneCds(AvvisoPagamentoInput avviso) {
+		return avvisoSemplice(avviso) && avviso.getPagine().getSingolaOrDoppiaOrTripla().stream()
+				.allMatch(p -> p instanceof PaginaAvvisoSingola s && s.getRata() != null
+						&& s.getRata().getImportoRidotto() != null && s.getRata().getImportoScontato() != null);
 	}
 }

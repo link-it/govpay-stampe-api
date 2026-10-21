@@ -27,13 +27,16 @@ import jakarta.xml.bind.JAXBElement;
 import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
+import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.mapper.AvvisoPagamentoMapper;
+import it.govpay.stampe.mapper.ViolazioneCdsMapper;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.service.AvvisoPostaleService;
 import it.govpay.stampe.service.AvvisoSempliceService;
+import it.govpay.stampe.service.ViolazioneCdsService;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
@@ -71,6 +74,12 @@ class GeneraRiferimentiJasperTest {
 	@Autowired
 	AvvisoPostaleService avvisoPostaleService;
 
+	@Autowired
+	ViolazioneCdsMapper violazioneCdsMapper;
+
+	@Autowired
+	ViolazioneCdsService violazioneCdsService;
+
 	@Test
 	void generaRiferimenti() throws Exception {
 		String uscita = System.getProperty("riferimenti.uscita");
@@ -81,20 +90,30 @@ class GeneraRiferimentiJasperTest {
 
 		Map<String, List<Map<String, String>>> famiglie = new LinkedHashMap<>();
 		int n = 0;
-		for (Map.Entry<String, Supplier<PaymentNotice>> caso : casi().entrySet()) {
-			PaymentNotice avviso = caso.getValue().get();
-			avviso.setSecondLanguage(null);
-			AvvisoPagamentoInput input = this.mapper.toPaymentNoticeAvvisoPagamentoInput(
-					LoggerFactory.getLogger(GeneraRiferimentiJasperTest.class), avviso, this.labelAvvisiProperties);
+		for (Map.Entry<String, Supplier<Object>> caso : casi().entrySet()) {
+			Object richiesta = caso.getValue().get();
+			// come il controller: la violazione CdS senza bollettino ha il suo servizio e la radice ViolazioneInput
+			AvvisoPagamentoInput input;
+			boolean cds = false;
+			if (richiesta instanceof CdsViolation violazione) {
+				input = this.violazioneCdsMapper.toViolazioneAvvisoPagamentoInput(violazione, this.labelAvvisiProperties);
+				cds = !Boolean.TRUE.equals(violazione.getPostal());
+			} else {
+				PaymentNotice avviso = (PaymentNotice) richiesta;
+				avviso.setSecondLanguage(null);
+				input = this.mapper.toPaymentNoticeAvvisoPagamentoInput(
+						LoggerFactory.getLogger(GeneraRiferimentiJasperTest.class), avviso, this.labelAvvisiProperties);
+			}
 			String xml = String.format("%05d.xml", ++n);
 			this.marshaller.createMarshaller().marshal(
-					new JAXBElement<>(new QName("", "AvvisoPagamentoInput"), AvvisoPagamentoInput.class, input),
+					new JAXBElement<>(new QName("", cds ? "ViolazioneInput" : "AvvisoPagamentoInput"), AvvisoPagamentoInput.class, input),
 					new StreamResult(dir.resolve("xml").resolve(xml).toFile()));
 			boolean postale = input.getDiPoste() != null;
-			byte[] pdf = postale ? this.avvisoPostaleService.creaAvviso(input) : this.avvisoSempliceService.creaAvviso(input);
+			byte[] pdf = cds ? this.violazioneCdsService.creaAvviso(input)
+					: postale ? this.avvisoPostaleService.creaAvviso(input) : this.avvisoSempliceService.creaAvviso(input);
 			String nomePdf = caso.getKey() + ".pdf";
 			Files.write(dir.resolve("pdf").resolve(nomePdf), pdf);
-			famiglie.computeIfAbsent(postale ? "postale" : "semplice", k -> new ArrayList<>())
+			famiglie.computeIfAbsent(cds ? "cds" : postale ? "postale" : "semplice", k -> new ArrayList<>())
 					.add(Map.of("caso", caso.getKey(), "xml", xml, "pdf", "pdf/" + nomePdf));
 			System.out.printf("riferimento Jasper: %s -> %s (%d byte)%n", caso.getKey(), xml, pdf.length);
 		}
@@ -103,8 +122,8 @@ class GeneraRiferimentiJasperTest {
 		}
 	}
 
-	private Map<String, Supplier<PaymentNotice>> casi() {
-		Map<String, Supplier<PaymentNotice>> casi = new LinkedHashMap<>();
+	private Map<String, Supplier<Object>> casi() {
+		Map<String, Supplier<Object>> casi = new LinkedHashMap<>();
 		// avviso semplice: pagina doppia e tripla, con e senza rata unica
 		casi.put("doppia-unica", () -> rate(2, true, false));
 		casi.put("doppia", () -> rate(2, false, false));
@@ -135,6 +154,25 @@ class GeneraRiferimentiJasperTest {
 			casi.put("postale-" + rate, () -> rate(rate, false, true));
 			casi.put("postale-" + rate + "-unica", () -> rate(rate, true, true));
 		}
+		// violazione del codice della strada: importo ridotto e scontato, con e senza bollettino
+		casi.put("cds", this.factory::creaCdsViolation);
+		casi.put("cds-senza-indirizzo", () -> {
+			CdsViolation v = this.factory.creaCdsViolation();
+			v.getDebtor().setAddressLine1(null);
+			v.getDebtor().setAddressLine2(null);
+			return v;
+		});
+		casi.put("cds-due-loghi-oggetto-lungo", () -> {
+			CdsViolation v = this.factory.creaCdsViolation();
+			v.setSecondLogo(new ByteArrayResource(v.getFirstLogo() instanceof ByteArrayResource b ? b.getByteArray() : new byte[0]));
+			v.setTitle("Verbale n. 12345/2026 per violazione dell'art. 142 comma 8 del Codice della Strada, eccesso di velocita' rilevato in via Roma");
+			return v;
+		});
+		casi.put("cds-postale", () -> {
+			CdsViolation v = this.factory.creaCdsViolation();
+			v.setPostal(true);
+			return v;
+		});
 		return casi;
 	}
 

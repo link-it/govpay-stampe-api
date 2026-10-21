@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Parti di Sanzione (violazione del codice della strada, importo ridotto e scontato) scritte a mano,
+	applicate da jrxml2fo.py (vedi personalizzazioni/RataUnica.xml per il formato).
+	Contesto dei percorsi relativi: l'elemento pagine/singola; i parametri sono sotto /ViolazioneInput.
+	Le etichette scadenza_ridotto e scadenza_scontato hanno la forma "*parte 1*parte 2".
+-->
+<personalizzazioni xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+
+	<!-- bollettino importo ridotto: "Se paghi <parte 1>" in grassetto + parte 2 -->
+	<elemento uuid="aa2c4221-4806-475a-8632-26e4fb89dfc8"><fo:inline font-family="TitilliumWeb-Bold">Se paghi <xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_ridotto"/><xsl:with-param name="n" select="1"/></xsl:call-template></fo:inline><xsl:text> </xsl:text><xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_ridotto"/><xsl:with-param name="n" select="2"/></xsl:call-template></elemento>
+	<!-- bollettino importo scontato -->
+	<elemento uuid="34ec2482-218e-4737-a295-465ca9bafb5f"><fo:inline font-family="TitilliumWeb-Bold">Se paghi <xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_scontato"/><xsl:with-param name="n" select="1"/></xsl:call-template></fo:inline><xsl:text> </xsl:text><xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_scontato"/><xsl:with-param name="n" select="2"/></xsl:call-template></elemento>
+
+	<!-- "Euro " + importo in RobotoMono grassetto: riga con due font, padding ridotto di 0,48 pt -->
+	<elemento uuid="8cf9f0a8-c394-49db-ab82-0dc86137c6ca" attributi="padding-top=1.026pt">Euro <fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo_ridotto"/></xsl:call-template></fo:inline></elemento>
+	<elemento uuid="0c3be388-53c8-4728-9a5f-9317155ba5f3" attributi="padding-top=1.026pt">Euro <fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo_scontato"/></xsl:call-template></fo:inline></elemento>
+
+	<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
+	<elemento uuid="f01f1a34-fe50-46ce-badb-769501f9c651" attributi="righe=2"><xsl:if test="normalize-space(/ViolazioneInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /ViolazioneInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</elemento>
+
+	<!-- importi in evidenza: importo formattato + " Euro" -->
+	<elemento uuid="544bc42f-6bd3-4176-9a83-3c4f4bb90556"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo_scontato"/></xsl:call-template> Euro</elemento>
+	<elemento uuid="735c675b-fc84-4000-bc0e-058b82cbaf21"><xsl:call-template name="importo"><xsl:with-param name="valore" select="rata/importo_ridotto"/></xsl:call-template> Euro</elemento>
+
+	<!-- scadenze sotto gli importi: parte 1 in grassetto, a capo, parte 2 -->
+	<elemento uuid="35daf1a3-d53a-4a34-b6b9-c1cca9bcdaa6" attributi="righe=2"><fo:inline font-family="TitilliumWeb-Bold"><xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_scontato"/><xsl:with-param name="n" select="1"/></xsl:call-template></fo:inline><fo:block/><xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_scontato"/><xsl:with-param name="n" select="2"/></xsl:call-template></elemento>
+	<elemento uuid="2f16cae7-efe6-468c-a091-7ab4d96cc7ff" attributi="righe=2"><fo:inline font-family="TitilliumWeb-Bold"><xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_ridotto"/><xsl:with-param name="n" select="1"/></xsl:call-template></fo:inline><fo:block/><xsl:call-template name="parte-etichetta"><xsl:with-param name="etichetta" select="/ViolazioneInput/scadenza_ridotto"/><xsl:with-param name="n" select="2"/></xsl:call-template></elemento>
+
+	<!-- informazioni dell'ente (sito, telefono, PEC): righe separate da <br/>, contate per l'interlinea fissa di Jasper -->
+	<elemento uuid="210260d2-1531-43a4-bd97-026a7ba406da" attributi="righe-xpath=1 + string-length(/ViolazioneInput/info_ente) - string-length(translate(/ViolazioneInput/info_ente, '&lt;', ''))"/>
+
+</personalizzazioni>

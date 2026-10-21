@@ -53,6 +53,7 @@ public class MotoreFop {
 	static final String SCHEMA_CLASSPATH = "classpath";
 	private static final String BASE_XSL = "fop/";
 	private static final String CONFIGURAZIONE = "fop/fop.xconf";
+	private static final String[] LIMITI_XPATH = { "jdk.xml.xpathExprGrpLimit", "jdk.xml.xpathExprOpLimit", "jdk.xml.xpathTotalOpLimit" };
 
 	private static final ErrorListener ERRORI_BLOCCANTI = new ErrorListener() {
 		@Override
@@ -88,6 +89,11 @@ public class MotoreFop {
 		// JasperReports, non risolve i template con nome dei fogli inclusi, e alla rimozione di Jasper il
 		// processore cambierebbe senza che nessuno lo scelga
 		this.transformerFactory = TransformerFactory.newDefaultInstance();
+		// i fogli sono generati da jrxml2fo.py, non arrivano dall'esterno: le posizioni con righe rimosse
+		// e sottoreport allungati sono espressioni XPath piu' lunghe dei limiti di default del JDK
+		for (String limite : LIMITI_XPATH) {
+			this.transformerFactory.setAttribute(limite, 0);
+		}
 		this.transformerFactory.setURIResolver(new ClasspathUriResolver());
 	}
 

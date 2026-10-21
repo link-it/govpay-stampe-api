@@ -280,19 +280,36 @@ def paragrafi(run):
 a_capo = {}
 
 
+def testo_costante(el):
+    """Testo di un elemento che non dipende dai dati: il testo di uno staticText, o l'espressione di un
+    textField fatta solo di stringhe letterali concatenate ("..." + "..."). None altrimenti."""
+    if el.tag == f'{J}staticText':
+        return el.findtext(f'{J}text') or ''
+    if el.tag != f'{J}textField':
+        return None
+    espr = (el.findtext(f'{J}textFieldExpression') or '').strip()
+    letterale = r'"((?:[^"\\]|\\.)*)"'
+    if not re.fullmatch(rf'{letterale}(?:\s*\+\s*{letterale})*', espr, re.S):
+        return None
+    unisci = ''.join(m.group(1) for m in re.finditer(letterale, espr))
+    return re.sub(r'\\(.)', lambda m: {'n': '\n', 't': '\t'}.get(m.group(1), m.group(1)), unisci)
+
+
 def calcola_a_capo(radice):
     """Raccoglie i testi fissi del template e ne calcola gli a capo con SpezzaRighe.java in un solo avvio."""
     import subprocess
     from pathlib import Path
     richieste = []
-    for el in radice.iter(f'{J}staticText'):
+    for el in radice.iter():
+        if testo_costante(el) is None:
+            continue
         re_el = el.find(f'{J}reportElement')
         te = el.find(f'{J}textElement')
         markup = (te.get('markup') if te is not None else None) or 'none'
         base = font_attrs(el)
         pad = padding_block(el, avvisa=False)
         larghezza = float(re_el.get('width')) - float(pad.get('start-indent', '0pt')[:-2]) - float(pad.get('end-indent', '0pt')[:-2])
-        for k, par in enumerate(paragrafi(run_statici((el.findtext(f'{J}text') or '').strip('\n'), markup))):
+        for k, par in enumerate(paragrafi(run_statici(testo_costante(el).strip('\n'), markup))):
             parti = []
             for _, t, a in par:
                 ff = file_font(base, a)
@@ -489,16 +506,32 @@ def analizza_banda(banda, ctx, base):
     rimosse nelle bande precedenti). Restituisce lo spostamento della banda successiva."""
     elementi_banda = [(el, el.find(f'{J}reportElement')) for el in figli(banda) if el.find(f'{J}reportElement') is not None]
     num = lambda e, k: float(e.get(k, 0))
+    # elementi che possono essere vuoti, raggruppati quando le loro fasce verticali si sovrappongono:
+    # Jasper toglie una fascia solo se tutti gli elementi che la occupano sono vuoti, quindi un gruppo si
+    # rimuove quando tutti i suoi elementi sono vuoti. Un elemento che non puo' essere vuoto e tocca il
+    # gruppo lo rende non rimovibile.
+    candidati = [(num(re_el, 'y'), num(re_el, 'y') + num(re_el, 'height'), c, re_el)
+                 for el, re_el in elementi_banda if (c := condizione_vuoto(el, ctx))]
+    gruppi = []
+    for cand in sorted(candidati, key=lambda t: t[0]):
+        if gruppi and cand[0] < max(t[1] for t in gruppi[-1]):
+            gruppi[-1].append(cand)
+        else:
+            gruppi.append([cand])
     rimovibili = []
-    for el, re_el in elementi_banda:
-        c = condizione_vuoto(el, ctx)
-        if not c:
+    for g in gruppi:
+        membri = {id(t[3]) for t in g}
+        inizio, fine = min(t[0] for t in g), max(t[1] for t in g)
+        if any(id(o) not in membri and num(o, 'y') < fine and num(o, 'y') + num(o, 'height') > inizio for _, o in elementi_banda):
             continue
-        y, h = num(re_el, 'y'), num(re_el, 'height')
-        if any(o is not re_el and num(o, 'y') < y + h and num(o, 'y') + num(o, 'height') > y for _, o in elementi_banda):
-            continue  # fascia occupata anche da un altro elemento: Jasper non la rimuove
-        rimovibili.append((y, h, c, re_el))
-        RIMOVIBILI[id(re_el)] = c
+        # Jasper toglie l'altezza dell'elemento piu' alto del gruppo, non l'unione delle fasce: nella
+        # violazione CdS senza indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt, sovrapposti di 1)
+        # spostano il resto di 25 pt
+        altezza = max(t[1] - t[0] for t in g)
+        c = ' and '.join(f'({t[2]})' for t in g) if len(g) > 1 else g[0][2]
+        rimovibili.append((inizio, altezza, c, fine))
+        for t in g:
+            RIMOVIBILI[id(t[3])] = c
     # sottoreport: Jasper li allunga fino al loro contenuto (righe di record per altezza del record), e gli
     # elementi Float sotto scendono di quanto l'altezza supera quella dichiarata
     allungati = []
@@ -512,11 +545,11 @@ def analizza_banda(banda, ctx, base):
     for el, re_el in elementi_banda:
         termini = [base] if base else []
         if re_el.get('positionType') == 'Float':
-            termini += [f'{pt(h)[:-2]} * number({c})' for y, h, c, r in rimovibili if r is not re_el and y + h <= num(re_el, 'y')]
+            termini += [f'{pt(round(h, 3))[:-2]} * number({c})' for y, h, c, fine in rimovibili if fine <= num(re_el, 'y')]
             termini += [f'-{a}' for fondo, a, r in allungati if r is not re_el and fondo <= num(re_el, 'y')]
         if termini:
             SPOSTAMENTI[id(re_el)] = ' + '.join(termini)
-    termini = ([base] if base else []) + [f'{pt(h)[:-2]} * number({c})' for _, h, c, _ in rimovibili]
+    termini = ([base] if base else []) + [f'{pt(round(h, 3))[:-2]} * number({c})' for _, h, c, _ in rimovibili]
     return ' + '.join(termini)
 
 
@@ -569,20 +602,21 @@ def testo(el, ox, oy, ctx, out, rientro):
     # numero di righe: per i testi fissi dagli a capo calcolati, per gli altri dall'indicazione
     # righe=N nelle personalizzazioni (default 1)
     extra = dict(personalizzazioni['attributi'].get(re_el.get('uuid'), {}))
+    costante = testo_costante(el)
     righe_xpath = extra.pop('righe-xpath', None)
     righe = int(extra.pop('righe', 0))
     extra.pop('vuoto', None)
     # testo variabile: a capo calcolati a runtime come in Jasper (TestoJasper.righe). Con markup, solo se il
     # valore non contiene tag: altrimenti resta il template markup, con gli a capo scelti da FOP
     a_runtime = None
-    if el.tag == f'{J}textField' and re_el.get('uuid') not in personalizzazioni['elemento'] and not righe_xpath and not righe \
+    if el.tag == f'{J}textField' and costante is None and re_el.get('uuid') not in personalizzazioni['elemento'] and not righe_xpath and not righe \
             and markup in ('none', 'styled', 'html'):
         xp = xpath_semplice(el.findtext(f'{J}textFieldExpression') or '', ctx)
         ff = file_font(blocco, {})
         if xp and ff:
             a_runtime = (xp, ff)
             righe_xpath = "1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"
-    posizioni = a_capo.get(re_el.get('uuid')) if el.tag == f'{J}staticText' else None
+    posizioni = a_capo.get(re_el.get('uuid')) if costante is not None else None
     if not righe:
         righe = sum(len(v) + 1 for v in posizioni.values()) if posizioni else 1
     blocco.update(geometria_testo(el, blocco, righe, float(re_el.get('height'))))
@@ -616,8 +650,8 @@ def testo(el, ox, oy, ctx, out, rientro):
         blocco['wrap-option'] = 'no-wrap'
     if re_el.get('uuid') in personalizzazioni['elemento']:
         corpo = personalizzazioni['elemento'][re_el.get('uuid')]
-    elif el.tag == f'{J}staticText':
-        run = run_statici((el.findtext(f'{J}text') or '').strip('\n'), markup)
+    elif costante is not None:
+        run = run_statici(costante.strip('\n'), markup)
         if posizioni is not None:
             # a capo calcolati come in Jasper: FOP non deve spezzare di nuovo le righe
             blocco['wrap-option'] = 'no-wrap'
@@ -638,8 +672,10 @@ def testo(el, ox, oy, ctx, out, rientro):
 
 
 def righe_massime(el, blocco, altezza):
-    """Righe che Jasper mostra in un riquadro che non si allunga: aggiunge righe finche' l'altezza della
-    prima, (A + D) x corpo, piu' l'interlinea delle successive (lineSpacingSize con Fixed) sta nel riquadro.
+    """Righe che Jasper mostra in un riquadro che non si allunga: aggiunge righe finche' la prima, alta
+    (A + D) x corpo, piu' le successive, alte lineSpacingSize + D x corpo con Fixed e (A + D) x corpo con
+    Single, stanno nel riquadro. Regola ricavata dai PDF di riferimento: titolo 16 pt Fixed 11 in 42 pt,
+    2 righe; titolo 14 pt Fixed 11 in 42 pt, 2 righe; oggetto 9 pt Fixed 7 in 24 pt, 1 riga.
     0 se il riquadro si allunga (isStretchWithOverflow)."""
     if el.get('isStretchWithOverflow') == 'true' or el.get('textAdjust') == 'StretchHeight':
         return 0
@@ -649,7 +685,8 @@ def righe_massime(el, blocco, altezza):
         return 0
     prima = (metriche[0] + metriche[1]) * corpo
     p = el.find(f'{J}textElement/{J}paragraph')
-    successive = float(p.get('lineSpacingSize')) if p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize') else prima
+    fissa = p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize')
+    successive = float(p.get('lineSpacingSize')) + metriche[1] * corpo if fissa else prima
     n = 1
     while prima + n * successive <= altezza + 0.01:
         n += 1

@@ -15,7 +15,8 @@ Apache FOP (`src/main/resources/fop/*.xsl`), issue [#37](https://github.com/link
    - sottoreport su sorgente XML (`subDataSource`): un riquadro per record, disposto nelle colonne del
      sottoreport, con il template generato dallo stesso sottoreport; i parametri costanti (per esempio
      `Multipla`) diventano `xsl:param` del template, da indicare con `--parametri`;
-   - `elementGroup`, trattati come contenuto della banda.
+   - `elementGroup`, trattati come contenuto della banda;
+   - textField con un testo costante (stringhe letterali concatenate), trattati come testi fissi.
 
    Le altre espressioni diventano commenti `TODO` con il testo Groovy originale.
 2. Le parti che il convertitore non traduce si scrivono in `personalizzazioni/<Template>.xml`, legate
@@ -76,19 +77,24 @@ avvia una sola JVM per template e richiede `java` nel PATH.
 **A capo dei testi variabili.** I testi variabili (oggetto, nomi, indirizzi) vanno a capo a runtime come
 in Jasper: il foglio XSLT chiama `TestoJasper.righe`, una funzione di estensione Java con lo stesso
 algoritmo di `SpezzaRighe.java`. Il numero di righe che ne risulta sceglie interlinea e padding.
-- **Riquadri che non si allungano:** restano solo le righe che Jasper mostra, cioè finché la prima riga,
-  (A + D) × corpo, più l'interlinea delle successive sta nell'altezza.
+- **Riquadri che non si allungano:** restano solo le righe che Jasper mostra. Ci stanno finché la prima
+  riga, alta (A + D) × corpo, più le successive, alte `lineSpacingSize` + D × corpo con `Fixed`, stanno
+  nell'altezza. La regola è ricavata dai PDF di riferimento: titolo 16 pt in 42 pt, 2 righe; oggetto del
+  bollettino 9 pt in 24 pt, 1 riga.
 - **Troncamento a carattere:** con `net.sf.jasperreports.text.truncate.at.char`, l'ultima riga visibile
   è riempita carattere per carattere.
 - **Testi con markup:** passano dalla stessa funzione se il valore non contiene tag; con i tag restano gli
   a capo di FOP.
 
-`MotoreFop` usa il processore XSLT del JDK (XSLTC), che accetta le funzioni di estensione. Con xsltproc,
+`MotoreFop` usa il processore XSLT del JDK (XSLTC), che accetta le funzioni di estensione, senza i limiti
+di lunghezza delle espressioni XPath: le posizioni calcolate li superano, e i fogli sono generati da qui. Con xsltproc,
 usato solo per ricavare il file FO delle verifiche, la funzione non c'è e il testo resta intero.
 
 **Righe rimosse e posizione Float.** Jasper toglie un elemento con `isRemoveLineWhenBlank` vuoto, o non
-stampato per la sua condizione, insieme alla sua fascia verticale, se nessun altro elemento la occupa.
-Gli elementi `Float` sotto di lui salgono della stessa altezza. Allo stesso modo un sottoreport si allunga
+stampato per la sua condizione, insieme alla sua fascia verticale, se tutti gli elementi che la occupano
+sono vuoti. Gli elementi rimovibili le cui fasce si sovrappongono formano un gruppo, che si toglie quando
+sono tutti vuoti. Gli elementi `Float` sotto salgono dell'altezza del più alto del gruppo: nella violazione
+CdS senza indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt) spostano il resto di 25 pt. Allo stesso modo un sottoreport si allunga
 fino al suo contenuto e sposta in basso gli elementi `Float` che lo seguono. Il convertitore traduce
 entrambi in un'espressione XPath sul `top` degli elementi. Le bande mantengono la loro altezza, come si vede
 nei PDF di riferimento dei sottoreport a colonne.

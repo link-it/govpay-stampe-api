@@ -22,20 +22,22 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.Application;
+import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Motore FOP configurato per avviso semplice e postale (issue #37): entrambi sono stampati con FOP in
- * tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
+ * Motore FOP configurato per avviso semplice, postale e violazione del codice della strada (issue #37):
+ * sono stampati con FOP in tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 @DisplayName("Test Motore FOP")
 @ActiveProfiles("test")
-@TestPropertySource(properties = { "stampe.motore.avviso-semplice=fop", "stampe.motore.avviso-postale=fop" })
+@TestPropertySource(properties = { "stampe.motore.avviso-semplice=fop", "stampe.motore.avviso-postale=fop",
+		"stampe.motore.violazione-cds=fop" })
 class UC_12_MotoreFopTest {
 
 	private static final String PRODUCER_FOP = "Apache FOP";
@@ -50,8 +52,12 @@ class UC_12_MotoreFopTest {
 
 	private String stampa(PaymentNotice avviso) throws Exception {
 		avviso.setSecondLanguage(null); // avviso monolingua
-		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
-				.content(this.mapper.writeValueAsString(avviso))
+		return stampa(Costanti.STANDARD_PATH, avviso);
+	}
+
+	private String stampa(String percorso, Object richiesta) throws Exception {
+		MvcResult result = this.mockMvc.perform(post(percorso)
+				.content(this.mapper.writeValueAsString(richiesta))
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isCreated())
 				.andReturn();
@@ -93,6 +99,18 @@ class UC_12_MotoreFopTest {
 		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeTreRate();
 		avviso.setPostal(true);
 		assertTrue(stampa(avviso).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_08_ViolazioneCdsConFop() throws Exception {
+		assertTrue(stampa(Costanti.CDS_VIOLATION_PATH, this.avvisiPagamentoFactory.creaCdsViolation()).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_09_ViolazioneCdsPostaleConFop() throws Exception {
+		CdsViolation violazione = this.avvisiPagamentoFactory.creaCdsViolation();
+		violazione.setPostal(true);
+		assertTrue(stampa(Costanti.CDS_VIOLATION_PATH, violazione).contains(PRODUCER_FOP));
 	}
 
 	@Test

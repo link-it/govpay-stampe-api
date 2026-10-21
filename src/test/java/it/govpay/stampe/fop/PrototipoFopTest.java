@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
 
 import org.junit.jupiter.api.Assumptions;
@@ -52,12 +51,13 @@ class PrototipoFopTest {
 		MotoreFop motore = new MotoreFop();
 		for (Map<String, Object> caso : elenco) {
 			String xml = (String) caso.get("xml");
-			AvvisoPagamentoInput avviso = contesto.createUnmarshaller()
-					.unmarshal(new StreamSource(dirRun.resolve("xml").resolve(xml).toFile()), AvvisoPagamentoInput.class).getValue();
+			// la radice resta quella dell'XML: AvvisoPagamentoInput, o ViolazioneInput per la violazione CdS
+			JAXBElement<AvvisoPagamentoInput> elemento = contesto.createUnmarshaller()
+					.unmarshal(new StreamSource(dirRun.resolve("xml").resolve(xml).toFile()), AvvisoPagamentoInput.class);
+			AvvisoPagamentoInput avviso = elemento.getValue();
 			long inizio = System.nanoTime();
 			PreparazioneAvviso.completa(avviso);
-			byte[] pdf = motore.genera(foglio, contesto,
-					new JAXBElement<>(new QName("", "AvvisoPagamentoInput"), AvvisoPagamentoInput.class, avviso));
+			byte[] pdf = motore.genera(foglio, contesto, elemento);
 			long ms = (System.nanoTime() - inizio) / 1_000_000;
 			Path file = uscita.resolve(xml.replace(".xml", ".pdf"));
 			Files.write(file, pdf);

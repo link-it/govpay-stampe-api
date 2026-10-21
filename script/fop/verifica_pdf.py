@@ -156,9 +156,19 @@ def verifica_pagina(a, pagina, zone, escluse, tmp):
         cand = testi_f.get(testo)
         if not cand:
             continue
-        # area della riga di Jasper, allargata: comprende anche l'inchiostro di FOP se spostato
-        bj = bordo_inchiostro(ij, k, x0 - 1, y0 - 1.5, x1 - x0 + 2, y1 - y0 + 3)
-        bf = bordo_inchiostro(if_, k, x0 - 1, y0 - 1.5, x1 - x0 + 2, y1 - y0 + 3)
+        # area della riga di Jasper, allargata di 1,5 pt per comprendere anche l'inchiostro di FOP se
+        # spostato, ma non oltre meta' strada dalle righe sopra e sotto che la sovrappongono in orizzontale:
+        # con l'interlinea stretta l'area toccherebbe le ascendenti della riga sotto, e uno scarto di un
+        # pixel di quella riga cambierebbe la misura di questa
+        alto, basso = y0 - 1.5, y1 + 1.5
+        for _, a0, b0, a1, b1 in rj:
+            if a0 < x1 and a1 > x0 and (b0, b1) != (y0, y1):
+                if y0 < b0 < basso:
+                    basso = min(basso, (y1 + b0) / 2 + 0.5)
+                if alto < b1 < y1 and b0 < y0:
+                    alto = max(alto, (b1 + y0) / 2 - 0.5)
+        bj = bordo_inchiostro(ij, k, x0 - 1, alto, x1 - x0 + 2, basso - alto)
+        bf = bordo_inchiostro(if_, k, x0 - 1, alto, x1 - x0 + 2, basso - alto)
         if bj and bf:
             scarto = max(abs(p - q) for p, q in zip(bj, bf))
             peggiori.append((scarto, testo, tuple(round(q - p, 2) for p, q in zip(bj, bf))))

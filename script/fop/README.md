@@ -10,14 +10,21 @@ Apache FOP (`src/main/resources/fop/*.xsl`), issue [#37](https://github.com/link
    - posizioni e dimensioni degli elementi;
    - sfondi, padding, font e allineamenti;
    - testi fissi con markup, grafica SVG e loghi;
-   - espressioni semplici (`$P{x}`, `$F{y}`, controllo di null) e condizioni comuni.
+   - espressioni semplici (`$P{x}`, `$F{y}`, controllo di null) e condizioni comuni, anche composte
+     con `&&`, e le variabili `totaleRate` e `soloSoglie`;
+   - sottoreport su sorgente XML (`subDataSource`): un riquadro per record, disposto nelle colonne del
+     sottoreport, con il template generato dallo stesso sottoreport; i parametri costanti (per esempio
+     `Multipla`) diventano `xsl:param` del template, da indicare con `--parametri`;
+   - `elementGroup`, trattati come contenuto della banda.
 
    Le altre espressioni diventano commenti `TODO` con il testo Groovy originale.
 2. Le parti che il convertitore non traduce si scrivono in `personalizzazioni/<Template>.xml`, legate
    all'`uuid` dell'elemento nel `.jrxml`. Ogni voce è di uno di tre tipi:
    - `<elemento>`: sostituisce il contenuto di un testo o di un'immagine;
    - `<condizione>`: sostituisce la `printWhenExpression`;
-   - `attributi="nome=valore;…"`: cambia gli attributi del blocco.
+   - `attributi="nome=valore;…"`: cambia gli attributi del blocco. Tre nomi non sono attributi FO:
+     `righe=N` (righe di un testo variabile, per l'interlinea fissa), `righe-xpath=XPATH` (le stesse,
+     calcolate dal contenuto) e `vuoto=XPATH` (quando il testo è vuoto, per le righe rimosse).
 3. `genera-xsl.sh` rigenera tutti i layout migrati. I file in `src/main/resources/fop/` generati
    da qui non vanno modificati a mano.
 
@@ -66,10 +73,29 @@ Jasper con `SpezzaRighe.java`: `LineBreakMeasurer`, gli stessi file di font e la
 riquadro. Le righe vengono poi scritte esplicitamente con `wrap-option="no-wrap"`. Il convertitore
 avvia una sola JVM per template e richiede `java` nel PATH.
 
+**A capo dei testi variabili.** I testi variabili (oggetto, nomi, indirizzi) vanno a capo a runtime come
+in Jasper: il foglio XSLT chiama `TestoJasper.righe`, una funzione di estensione Java con lo stesso
+algoritmo di `SpezzaRighe.java`. Il numero di righe che ne risulta sceglie interlinea e padding.
+- **Riquadri che non si allungano:** restano solo le righe che Jasper mostra, cioè finché la prima riga,
+  (A + D) × corpo, più l'interlinea delle successive sta nell'altezza.
+- **Troncamento a carattere:** con `net.sf.jasperreports.text.truncate.at.char`, l'ultima riga visibile
+  è riempita carattere per carattere.
+- **Testi con markup:** passano dalla stessa funzione se il valore non contiene tag; con i tag restano gli
+  a capo di FOP.
+
+`MotoreFop` usa il processore XSLT del JDK (XSLTC), che accetta le funzioni di estensione. Con xsltproc,
+usato solo per ricavare il file FO delle verifiche, la funzione non c'è e il testo resta intero.
+
+**Righe rimosse e posizione Float.** Jasper toglie un elemento con `isRemoveLineWhenBlank` vuoto, o non
+stampato per la sua condizione, insieme alla sua fascia verticale, se nessun altro elemento la occupa.
+Gli elementi `Float` sotto di lui salgono della stessa altezza. Allo stesso modo un sottoreport si allunga
+fino al suo contenuto e sposta in basso gli elementi `Float` che lo seguono. Il convertitore traduce
+entrambi in un'espressione XPath sul `top` degli elementi. Le bande mantengono la loro altezza, come si vede
+nei PDF di riferimento dei sottoreport a colonne.
+
 Differenze note:
-- Testi variabili (oggetto, nomi, indirizzi): gli a capo li sceglie FOP, quindi su testi lunghi una
-  parola può andare a capo in un punto diverso da Jasper. Se il numero di righe non è quello indicato
-  con `righe=N`, l'interlinea fissa differisce di qualche decimo di punto.
+- Testi variabili con markup e tag (per esempio `<b>`) e testi in riquadri che si allungano
+  (`isStretchWithOverflow`): gli a capo li sceglie FOP, e un riquadro allungato non sposta gli elementi sotto.
 - Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
   Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
   ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`
@@ -85,8 +111,9 @@ Un layout migrato è accettato quando `verifica_pdf.py` passa su tutti i suoi ca
 | Inchiostro per riga | bordi superiore, inferiore, sinistro e destro entro 0,25 pt (misura a 600 dpi) |
 | Raster | a 200 dpi con tolleranza di 1 pixel (circa 0,36 pt), al massimo 5 pixel fuori tolleranza, escluse le immagini e le differenze accettate indicate con `--escludi` |
 | Immagini | riquadro dell'inchiostro entro 1 pt |
-| QR code | letto dal PDF FOP, con il contenuto del `qr_code` dell'XML |
-| DataMatrix (bollettino postale) | letto dal PDF FOP, con il contenuto del `data_matrix` dell'XML |
+| Pagine | stesso numero di pagine; gli altri criteri si applicano pagina per pagina |
+| QR code | tutti i `qr_code` dell'XML letti dal PDF FOP |
+| DataMatrix (bollettino postale) | tutti i `data_matrix` dell'XML letti dal PDF FOP |
 
 Differenze accettate in `RataUnica` e `RataUnicaPostale`: il grassetto simulato di "pagopa.gov.it" (`--escludi 480,250,100,22`).
 
@@ -122,6 +149,16 @@ Il motore si sceglie per tipo di avviso con `stampe.motore.avviso-semplice` e `s
 Test:
 - `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
 - `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine.
+
+## Casi di riferimento
+
+I PDF Jasper dei layout a pagina singola vengono dalla testsuite del core (`pdf-riferimento/run-*`). Quelli
+multi-rata, che il core non produce, si generano con `GeneraRiferimentiJasperTest`. Il test costruisce
+38 varianti (rate, soglie, pagine multiple, postale) come il controller e salva XML e PDF Jasper:
+
+```bash
+mvn test -Dtest=GeneraRiferimentiJasperTest -Driferimenti.uscita=$PWD/pdf-riferimento/jasper-multirata
+```
 
 ## Verifica
 

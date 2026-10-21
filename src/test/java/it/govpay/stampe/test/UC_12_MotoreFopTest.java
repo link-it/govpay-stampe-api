@@ -1,7 +1,6 @@
 package it.govpay.stampe.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,9 +28,8 @@ import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Motore FOP configurato per avviso semplice e postale (issue #37): l'avviso semplice e' stampato con
- * FOP in tutti i suoi layout, quello postale solo a rata unica; i layout postali non ancora migrati
- * restano su JasperReports. Il motore usato si riconosce dal Producer del PDF.
+ * Motore FOP configurato per avviso semplice e postale (issue #37): entrambi sono stampati con FOP in
+ * tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -91,9 +89,16 @@ class UC_12_MotoreFopTest {
 	}
 
 	@Test
-	void UC_12_04_AvvisoPostaleTriplaRataConJasper() throws Exception {
+	void UC_12_04_AvvisoPostaleTriplaRataConFop() throws Exception {
 		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeTreRate();
 		avviso.setPostal(true);
-		assertFalse(stampa(avviso).contains(PRODUCER_FOP));
+		assertTrue(stampa(avviso).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_07_AvvisoPostaleRateConUnicaConFop() throws Exception {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConRate(7, true);
+		avviso.setPostal(true);
+		assertTrue(stampa(avviso).contains(PRODUCER_FOP));
 	}
 }

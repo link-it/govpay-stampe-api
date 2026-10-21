@@ -1,3 +1,14 @@
+2026-10-21  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso semplice e postale con FOP in tutti i layout (#37).
+	Migrati i layout con piu' rate, soglie e pagine multiple, con e senza
+	bollettino postale: con stampe.motore.avviso-semplice=fop e
+	stampe.motore.avviso-postale=fop tutti questi avvisi sono stampati con
+	Apache FOP. I testi variabili vanno a capo come in Jasper, con le sole
+	righe che stanno nel riquadro. Il motore usa il processore XSLT del JDK.
+	Verificati 44 casi di riferimento Jasper, generati anche per i layout
+	multi-rata che la testsuite del core non produce.
+
 2026-10-16  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Motore di stampa FOP nel servizio (#37).

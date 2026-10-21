@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Parti di DoppioFormatoPostale scritte a mano, applicate da jrxml2fo.py (vedi personalizzazioni/RataUnica.xml
+	per il formato). Sottoreport di una rata: contesto dei percorsi relativi, l'elemento rata.
+	Testi su due righe con corpi diversi (etichetta a 8 pt, valore in RobotoMono 12 pt): due blocchi, con il
+	riquadro del testo di ciascuno dove Jasper mette la riga; la prima riga di Jasper e' alta quanto
+	l'ascendente del suo corpo piu' la discendente del font del paragrafo (12 pt).
+-->
+<personalizzazioni xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+
+	<!-- intestazione "Rata N", vuota senza numero_rata: Jasper la rimuove (isRemoveLineWhenBlank) e il resto della rata sale -->
+	<elemento uuid="d5ac7d8c-e2aa-474b-bb3b-2c35f76533e0" attributi="vuoto=not(normalize-space(numero_rata))"><xsl:if test="normalize-space(numero_rata)">Rata <xsl:value-of select="numero_rata"/></xsl:if></elemento>
+
+	<!-- "Euro" (8 pt) e importo in RobotoMono grassetto -->
+	<elemento uuid="f2d0fad8-2851-498a-868b-6ed1310dab8f" attributi="padding-top=2.023pt"><fo:block font-size="8pt" line-height="10.13pt">Euro</fo:block><fo:block space-before="2.479pt" font-family="RobotoMono" font-weight="bold" line-height="15.828pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="importo"/></xsl:call-template></fo:block></elemento>
+
+	<!-- "Entro il" + data oppure tipo + giorni della soglia, come sopra -->
+	<elemento uuid="8b4bb1c0-f4ff-4dc2-a03e-a1d8edff9390" attributi="padding-top=2.023pt"><xsl:choose><xsl:when test="normalize-space(giorni)"><fo:block font-size="8pt" line-height="10.13pt"><xsl:value-of select="tipo"/></fo:block><fo:block space-before="2.479pt" font-family="RobotoMono" font-weight="bold" line-height="15.828pt"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="giorni"/></xsl:call-template></fo:block></xsl:when><xsl:when test="normalize-space(data)"><fo:block font-size="8pt" line-height="10.13pt">Entro il</fo:block><fo:block space-before="2.479pt" font-family="RobotoMono" font-weight="bold" line-height="15.828pt"><xsl:value-of select="data"/></fo:block></xsl:when></xsl:choose></elemento>
+
+</personalizzazioni>

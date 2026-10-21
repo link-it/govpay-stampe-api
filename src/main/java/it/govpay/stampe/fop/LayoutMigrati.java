@@ -1,7 +1,7 @@
 package it.govpay.stampe.fop;
 
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
-import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
+import it.govpay.stampe.model.v1.PaginaAvvisoMultipla;
 
 /**
  * Layout gia' migrati a XSL-FO (issue #37). Con il motore FOP configurato, un avviso che usa un
@@ -18,9 +18,12 @@ public final class LayoutMigrati {
 		return avviso.getPagine() != null && !avviso.getPagine().getSingolaOrDoppiaOrTripla().isEmpty();
 	}
 
-	/** Avviso con bollettino postale v1: migrata la sola pagina singola (rata unica). */
+	/**
+	 * Avviso con bollettino postale v1: migrate le pagine singola, doppia e tripla, le sole che il mapper
+	 * produce per il postale. Le pagine multiple non hanno un layout postale.
+	 */
 	public static boolean avvisoPostale(AvvisoPagamentoInput avviso) {
 		return avvisoSemplice(avviso)
-				&& avviso.getPagine().getSingolaOrDoppiaOrTripla().stream().allMatch(PaginaAvvisoSingola.class::isInstance);
+				&& avviso.getPagine().getSingolaOrDoppiaOrTripla().stream().noneMatch(PaginaAvvisoMultipla.class::isInstance);
 	}
 }

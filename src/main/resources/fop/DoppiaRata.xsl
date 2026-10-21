@@ -102,12 +102,12 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="14pt" start-indent="8pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(false())"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/nome_cognome_destinatario), 'TitilliumWeb-Bold.ttf', 14.0, 269.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/nome_cognome_destinatario"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">21.294pt</xsl:when><xsl:when test="$righe = 2">16.863pt</xsl:when><xsl:when test="$righe = 3">15.386pt</xsl:when><xsl:when test="$righe = 4">14.648pt</xsl:when><xsl:otherwise>14.204pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.757pt</xsl:when><xsl:when test="$righe = 2">3.973pt</xsl:when><xsl:when test="$righe = 3">4.711pt</xsl:when><xsl:when test="$righe = 4">5.08pt</xsl:when><xsl:otherwise>5.302pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:value-of select="$testo-righe"/></fo:block>
 		</fo:block-container>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="522pt" width="62pt" height="14pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{522.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="62pt" height="14pt">
 				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. CBILL</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="20pt" top="522pt" width="136pt" height="26pt">
+			<fo:block-container absolute-position="absolute" left="20pt" top="{522.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="136pt" height="26pt">
 				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="10.636pt" padding-top="1.77pt" wrap-option="no-wrap">Inquadra il <fo:inline font-weight="bold">codice QR</fo:inline> con la tua app di <fo:block/>pagamento o usa i dati accanto.</fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -125,7 +125,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="440pt" width="255pt" height="13pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{440.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="255pt" height="13pt">
 				<fo:block font-family="TitilliumWeb-Bold" font-size="8pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(contains(/AvvisoPagamentoInput/nome_cognome_destinatario, '&lt;'))"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/nome_cognome_destinatario), 'TitilliumWeb-Bold.ttf', 8.0, 255.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/nome_cognome_destinatario"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">12.168pt</xsl:when><xsl:when test="$righe = 2">11.136pt</xsl:when><xsl:when test="$righe = 3">10.792pt</xsl:when><xsl:when test="$righe = 4">10.62pt</xsl:when><xsl:otherwise>10.517pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.004pt</xsl:when><xsl:when test="$righe = 2">1.52pt</xsl:when><xsl:when test="$righe = 3">1.692pt</xsl:when><xsl:when test="$righe = 4">1.778pt</xsl:when><xsl:otherwise>1.83pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:choose><xsl:when test="contains(/AvvisoPagamentoInput/nome_cognome_destinatario, '&lt;')"><xsl:call-template name="markup"><xsl:with-param name="testo" select="/AvvisoPagamentoInput/nome_cognome_destinatario"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose></fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -133,7 +133,7 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="8pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">PAGA CON L'APP IO</fo:block>
 		</fo:block-container>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="401pt" top="536pt" width="174pt" height="16pt">
+			<fo:block-container absolute-position="absolute" left="401pt" top="{536.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="174pt" height="16pt">
 				<fo:block font-family="RobotoMono" font-size="10pt" font-weight="bold" text-align="end" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(contains(/AvvisoPagamentoInput/cf_ente, '&lt;'))"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/cf_ente), 'RobotoMono-Bold.ttf', 10.0, 174.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/cf_ente"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">13.19pt</xsl:when><xsl:when test="$righe = 2">13.19pt</xsl:when><xsl:when test="$righe = 3">13.19pt</xsl:when><xsl:when test="$righe = 4">13.19pt</xsl:when><xsl:otherwise>13.19pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.16pt</xsl:when><xsl:when test="$righe = 2">1.16pt</xsl:when><xsl:when test="$righe = 3">1.16pt</xsl:when><xsl:when test="$righe = 4">1.16pt</xsl:when><xsl:otherwise>1.16pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:choose><xsl:when test="contains(/AvvisoPagamentoInput/cf_ente, '&lt;')"><xsl:call-template name="markup"><xsl:with-param name="testo" select="/AvvisoPagamentoInput/cf_ente"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose></fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -143,7 +143,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="457pt" width="255pt" height="13pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{457.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="255pt" height="13pt">
 				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.836pt" wrap-option="no-wrap">Ente Creditore</fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -153,7 +153,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="252pt" top="536pt" width="149pt" height="16pt">
+			<fo:block-container absolute-position="absolute" left="252pt" top="{536.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="149pt" height="16pt">
 				<fo:block font-family="RobotoMono" font-size="10pt" font-weight="bold" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(contains(unica/codice_avviso, '&lt;'))"><xsl:value-of select="tj:righe(string(unica/codice_avviso), 'RobotoMono-Bold.ttf', 10.0, 149.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="unica/codice_avviso"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">13.19pt</xsl:when><xsl:when test="$righe = 2">13.19pt</xsl:when><xsl:when test="$righe = 3">13.19pt</xsl:when><xsl:when test="$righe = 4">13.19pt</xsl:when><xsl:otherwise>13.19pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.16pt</xsl:when><xsl:when test="$righe = 2">1.16pt</xsl:when><xsl:when test="$righe = 3">1.16pt</xsl:when><xsl:when test="$righe = 4">1.16pt</xsl:when><xsl:otherwise>1.16pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:choose><xsl:when test="contains(unica/codice_avviso, '&lt;')"><xsl:call-template name="markup"><xsl:with-param name="testo" select="unica/codice_avviso"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose></fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -164,7 +164,7 @@
 			<fo:block font-size="0pt" line-height="0pt"><fo:instream-foreign-object content-width="35pt" content-height="35pt" scaling="non-uniform"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 33.14 33.45'><title>canali-fisici</title><g id='Layer_2' data-name='Layer 2'><g id='Layer_1-2' data-name='Layer 1'><path d='M24,6.47a12.68,12.68,0,0,1,1.06.88.67.67,0,0,0,.91-1,12.26,12.26,0,0,0-1.18-1A.67.67,0,1,0,24,6.47Z'/><path d='M5.73,14.34a3.52,3.52,0,1,0,3.51,3.52,3.52,3.52,0,0,0-3.51-3.52Zm0,5.7a2.18,2.18,0,1,1,2.18-2.18A2.19,2.19,0,0,1,5.73,20Z'/><path d='M20.1,5.73a3.51,3.51,0,1,0-3.51,3.51A3.51,3.51,0,0,0,20.1,5.73Zm-5.69,0a2.18,2.18,0,1,1,2.18,2.18,2.19,2.19,0,0,1-2.18-2.18Z'/><path d='M30.3,18.43a13.48,13.48,0,0,0,.13-1.9,13.75,13.75,0,0,0-2.83-8.4A.67.67,0,0,0,26.66,8a.66.66,0,0,0-.12.93,12.48,12.48,0,0,1,2.56,7.6c0,.45,0,.9-.07,1.35a5.82,5.82,0,0,0-1.62-.23,5.74,5.74,0,0,0-5.73,5.73A9.3,9.3,0,0,0,23,27.27a12.55,12.55,0,0,1-15.2-1.78c.32-.46.66-1,1-1.52,1.75-2.77,2.63-4.83,2.63-6.11a5.74,5.74,0,0,0-5.73-5.74,5.62,5.62,0,0,0-.92.08,12.58,12.58,0,0,1,6.06-6.83c0,.12,0,.24,0,.36,0,1.29.89,3.34,2.63,6.11,1.27,2,2.52,3.64,2.57,3.71a.67.67,0,0,0,1.06,0c.05-.07,1.3-1.7,2.57-3.71C21.43,9.07,22.32,7,22.32,5.73a5.73,5.73,0,0,0-11.1-2,13.93,13.93,0,0,0-8,9A5.74,5.74,0,0,0,0,17.86C0,19.14.89,21.2,2.64,24c1.26,2,2.51,3.63,2.56,3.7a.67.67,0,0,0,1.06,0s.33-.44.79-1.07A13.69,13.69,0,0,0,11,29.22a13.86,13.86,0,0,0,12.68-.79c.2.34.41.69.64,1.06,1.27,2,2.52,3.63,2.57,3.7a.67.67,0,0,0,1.06,0c0-.07,1.3-1.7,2.56-3.7,1.75-2.77,2.64-4.83,2.64-6.11a5.73,5.73,0,0,0-2.84-4.95ZM16.59,1.33A4.41,4.41,0,0,1,21,5.73c0,1.87-2.81,6.12-4.4,8.3-1.59-2.18-4.4-6.43-4.4-8.3a4.41,4.41,0,0,1,4.4-4.4ZM5.73,26.15c-1.59-2.18-4.4-6.42-4.4-8.29a4.4,4.4,0,0,1,8.8,0c0,1.87-2.81,6.11-4.4,8.29Zm21.68,5.52C25.82,29.5,23,25.25,23,23.38a4.4,4.4,0,0,1,8.8,0c0,1.87-2.81,6.12-4.4,8.29Z'/><path d='M27.41,19.86a3.52,3.52,0,1,0,3.51,3.52,3.52,3.52,0,0,0-3.51-3.52Zm0,5.7a2.18,2.18,0,1,1,2.18-2.18,2.19,2.19,0,0,1-2.18,2.18Z'/></g></g></svg></fo:instream-foreign-object></fo:block>
 		</fo:block-container>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="470pt" width="255pt" height="13pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{470.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="255pt" height="13pt">
 				<fo:block font-family="TitilliumWeb-Bold" font-size="8pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(contains(/AvvisoPagamentoInput/ente_creditore, '&lt;'))"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/ente_creditore), 'TitilliumWeb-Bold.ttf', 8.0, 255.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/ente_creditore"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">12.168pt</xsl:when><xsl:when test="$righe = 2">11.136pt</xsl:when><xsl:when test="$righe = 3">10.792pt</xsl:when><xsl:when test="$righe = 4">10.62pt</xsl:when><xsl:otherwise>10.517pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.004pt</xsl:when><xsl:when test="$righe = 2">1.52pt</xsl:when><xsl:when test="$righe = 3">1.692pt</xsl:when><xsl:when test="$righe = 4">1.778pt</xsl:when><xsl:otherwise>1.83pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:choose><xsl:when test="contains(/AvvisoPagamentoInput/ente_creditore, '&lt;')"><xsl:call-template name="markup"><xsl:with-param name="testo" select="/AvvisoPagamentoInput/ente_creditore"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose></fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -172,22 +172,22 @@
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">presso Banche e Sportelli ATM, negli Uffici Postali e Punti <fo:block/>Postali, nei Bar, Edicole, Ricevitorie, Supermercati, <fo:block/>Tabaccherie e altri Esercenti Convenzionati.</fo:block>
 		</fo:block-container>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="252pt" top="522pt" width="149pt" height="14pt">
+			<fo:block-container absolute-position="absolute" left="252pt" top="{522.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="149pt" height="14pt">
 				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. Avviso</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="487pt" width="255pt" height="13pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{487.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="255pt" height="13pt">
 				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.836pt" wrap-option="no-wrap">Oggetto del pagamento</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="401pt" top="522pt" width="174pt" height="14pt">
+			<fo:block-container absolute-position="absolute" left="401pt" top="{522.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="174pt" height="14pt">
 				<fo:block font-family="TitilliumWeb" font-size="8pt" text-align="end" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. Fiscale Ente</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="500pt" width="255pt" height="13pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{500.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="255pt" height="13pt">
 				<fo:block font-family="TitilliumWeb-Bold" font-size="8pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(contains(/AvvisoPagamentoInput/oggetto_del_pagamento, '&lt;'))"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/oggetto_del_pagamento), 'TitilliumWeb-Bold.ttf', 8.0, 255.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/oggetto_del_pagamento"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">12.168pt</xsl:when><xsl:when test="$righe = 2">11.136pt</xsl:when><xsl:when test="$righe = 3">10.792pt</xsl:when><xsl:when test="$righe = 4">10.62pt</xsl:when><xsl:otherwise>10.517pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.004pt</xsl:when><xsl:when test="$righe = 2">1.52pt</xsl:when><xsl:when test="$righe = 3">1.692pt</xsl:when><xsl:when test="$righe = 4">1.778pt</xsl:when><xsl:otherwise>1.83pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:choose><xsl:when test="contains(/AvvisoPagamentoInput/oggetto_del_pagamento, '&lt;')"><xsl:call-template name="markup"><xsl:with-param name="testo" select="/AvvisoPagamentoInput/oggetto_del_pagamento"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose></fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -210,7 +210,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
-			<fo:block-container absolute-position="absolute" left="190pt" top="536pt" width="62pt" height="16pt">
+			<fo:block-container absolute-position="absolute" left="190pt" top="{536.0 - (-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo))))}pt" width="62pt" height="16pt">
 				<fo:block font-family="RobotoMono" font-size="10pt" font-weight="bold" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(contains(/AvvisoPagamentoInput/cbill, '&lt;'))"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/cbill), 'RobotoMono-Bold.ttf', 10.0, 62.0, 1, false())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/cbill"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">13.19pt</xsl:when><xsl:when test="$righe = 2">13.19pt</xsl:when><xsl:when test="$righe = 3">13.19pt</xsl:when><xsl:when test="$righe = 4">13.19pt</xsl:when><xsl:otherwise>13.19pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.16pt</xsl:when><xsl:when test="$righe = 2">1.16pt</xsl:when><xsl:when test="$righe = 3">1.16pt</xsl:when><xsl:when test="$righe = 4">1.16pt</xsl:when><xsl:otherwise>1.16pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:choose><xsl:when test="contains(/AvvisoPagamentoInput/cbill, '&lt;')"><xsl:call-template name="markup"><xsl:with-param name="testo" select="/AvvisoPagamentoInput/cbill"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose></fo:block>
 			</fo:block-container>
 		</xsl:if>
@@ -233,8 +233,9 @@
 			<fo:block font-family="TitilliumWeb" font-size="10pt" text-align="end" start-indent="0pt" line-height="15.21pt" padding-top="3.65pt" wrap-option="no-wrap">Vai su <fo:inline font-weight="bold">pagopa.gov.it</fo:inline></fo:block>
 		</fo:block-container>
 		<xsl:if test="normalize-space(unica/importo)">
+			<xsl:variable name="spostamento-9af746ce" select="-(ceiling(count(rata) div 2) * 257.0 - 10) * number(not(normalize-space(unica/importo)))"/>
 			<xsl:for-each select="rata">
-				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 2) * 297.0}pt" top="{560.0 + floor((position() - 1) div 2) * 257.0}pt" width="297pt" height="257pt">
+				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 2) * 297.0}pt" top="{560.0 - $spostamento-9af746ce + floor((position() - 1) div 2) * 257.0}pt" width="297pt" height="257pt">
 					<xsl:call-template name="DoppioFormato">
 					</xsl:call-template>
 				</fo:block-container>

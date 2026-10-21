@@ -28,3 +28,9 @@ genera RataMultipla --nome RataMultipla
 # sottoreport di una rata, a 2 e 3 colonne: Multipla nasconde la seconda banda nelle pagine multiple
 genera DoppioFormato --parametri Multipla
 genera TriploFormato --parametri Multipla
+genera DoppiaRataPostale
+genera TriplaRataPostale
+genera DoppioFormatoPostale
+genera TriploFormatoPostale
+genera BollettinoRataPostale
+genera BollettinoTriRataPostale

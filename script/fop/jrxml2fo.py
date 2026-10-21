@@ -474,25 +474,46 @@ def condizione_vuoto(el, ctx):
     return None
 
 
+def figli(contenitore_xml):
+    """Elementi di una banda o di un frame: il contenuto degli elementGroup (gruppi senza posizione propria,
+    con le coordinate della banda) e' trattato come contenuto diretto."""
+    for el in contenitore_xml:
+        if el.tag == f'{J}elementGroup':
+            yield from figli(el)
+        else:
+            yield el
+
+
 def analizza_banda(banda, ctx, base):
     """Calcola gli spostamenti degli elementi della banda; base e' lo spostamento della banda stessa (righe
     rimosse nelle bande precedenti). Restituisce lo spostamento della banda successiva."""
-    figli = [(el, el.find(f'{J}reportElement')) for el in banda if el.find(f'{J}reportElement') is not None]
+    elementi_banda = [(el, el.find(f'{J}reportElement')) for el in figli(banda) if el.find(f'{J}reportElement') is not None]
     num = lambda e, k: float(e.get(k, 0))
     rimovibili = []
-    for el, re_el in figli:
+    for el, re_el in elementi_banda:
         c = condizione_vuoto(el, ctx)
         if not c:
             continue
         y, h = num(re_el, 'y'), num(re_el, 'height')
-        if any(o is not re_el and num(o, 'y') < y + h and num(o, 'y') + num(o, 'height') > y for _, o in figli):
+        if any(o is not re_el and num(o, 'y') < y + h and num(o, 'y') + num(o, 'height') > y for _, o in elementi_banda):
             continue  # fascia occupata anche da un altro elemento: Jasper non la rimuove
         rimovibili.append((y, h, c, re_el))
         RIMOVIBILI[id(re_el)] = c
-    for el, re_el in figli:
+    # sottoreport: Jasper li allunga fino al loro contenuto (righe di record per altezza del record), e gli
+    # elementi Float sotto scendono di quanto l'altezza supera quella dichiarata
+    allungati = []
+    for el, re_el in elementi_banda:
+        if el.tag == f'{J}subreport' and (dati := dati_sottoreport(el)) is not None:
+            _, selezione, colonne, _, altezza, _ = dati
+            pw = re_el.findtext(f'{J}printWhenExpression')
+            c = (personalizzazioni['condizione'].get(re_el.get('uuid')) or condizione(pw, ctx)) if pw else None
+            allungamento = f'(ceiling(count({selezione}) div {colonne}) * {altezza} - {pt(num(re_el, "height"))[:-2]})'
+            allungati.append((num(re_el, 'y') + num(re_el, 'height'), f'{allungamento} * number({c})' if c else allungamento, re_el))
+    for el, re_el in elementi_banda:
         termini = [base] if base else []
         if re_el.get('positionType') == 'Float':
             termini += [f'{pt(h)[:-2]} * number({c})' for y, h, c, r in rimovibili if r is not re_el and y + h <= num(re_el, 'y')]
+            termini += [f'-{a}' for fondo, a, r in allungati if r is not re_el and fondo <= num(re_el, 'y')]
         if termini:
             SPOSTAMENTI[id(re_el)] = ' + '.join(termini)
     termini = ([base] if base else []) + [f'{pt(h)[:-2]} * number({c})' for _, h, c, _ in rimovibili]
@@ -785,12 +806,38 @@ def sottoreport(el, ox, oy, ctx, out, rientro):
     generato dallo stesso sottoreport. I parametri passati come $P{x} non servono: il sottoreport legge
     gli stessi valori dalla radice dell'XML. Quelli costanti diventano parametri del template."""
     re_el = el.find(f'{J}reportElement')
-    m_nome = re.fullmatch(r'\s*\$P\{(\w+)\}\s*', el.findtext(f'{J}subreportExpression') or '')
-    m_ds = re.search(r'subDataSource\("([^"]+)"\)', el.findtext(f'{J}dataSourceExpression') or '')
-    if not m_nome or not m_ds:
+    dati = dati_sottoreport(el)
+    if dati is None:
         todo.append('subreport')
         out.append(f'{rientro}<!-- TODO sottoreport: {commento(el.findtext(f"{J}subreportExpression") or "")} -->')
         return
+    nome, selezione, colonne, larghezza, altezza, costanti = dati
+    x = float(re_el.get('x', 0)) + ox
+    y = float(re_el.get('y', 0)) + oy
+    sopra = ''
+    if SPOSTAMENTO:
+        # lo spostamento si calcola nel contesto del report, prima di entrare nei record
+        variabile = 'spostamento-' + re_el.get('uuid', 'sottoreport')[:8]
+        out.append(f'{rientro}<xsl:variable name="{variabile}" select="{SPOSTAMENTO}"/>')
+        sopra = f' - ${variabile}'
+    out.append(f'{rientro}<xsl:for-each select="{selezione}">')
+    out.append(f'{rientro}\t<fo:block-container absolute-position="absolute" left="{{{x} + ((position() - 1) mod {colonne}) * {larghezza}}}pt"'
+               f' top="{{{y}{sopra} + floor((position() - 1) div {colonne}) * {altezza}}}pt" width="{pt(larghezza)}" height="{pt(altezza)}">')
+    out.append(f'{rientro}\t\t<xsl:call-template name="{nome}">')
+    for k, v in costanti.items():
+        out.append(f'{rientro}\t\t\t<xsl:with-param name="{k}" select="{v}"/>')
+    out.append(f'{rientro}\t\t</xsl:call-template>')
+    out.append(f'{rientro}\t</fo:block-container>')
+    out.append(f'{rientro}</xsl:for-each>')
+
+
+def dati_sottoreport(el):
+    """(nome, selezione XSLT dei record, colonne, larghezza colonna, altezza record, parametri costanti) di un
+    sottoreport su sorgente XML, None se non e' di questo tipo."""
+    m_nome = re.fullmatch(r'\s*\$P\{(\w+)\}\s*', el.findtext(f'{J}subreportExpression') or '')
+    m_ds = re.search(r'subDataSource\("([^"]+)"\)', el.findtext(f'{J}dataSourceExpression') or '')
+    if not m_nome or not m_ds:
+        return None
     nome = m_nome.group(1)
     # subDataSource("/doppia/rata") parte dal record corrente, che ne e' la radice: dal contesto
     # XSLT (l'elemento doppia) basta il resto del percorso
@@ -811,17 +858,7 @@ def sottoreport(el, ox, oy, ctx, out, rientro):
         if pw and not valuta_condizione_costante(pw, sub, costanti):
             continue
         altezza += float(b.get('height', 0))
-    x = float(re_el.get('x', 0)) + ox
-    y = float(re_el.get('y', 0)) + oy
-    out.append(f'{rientro}<xsl:for-each select="{selezione}">')
-    out.append(f'{rientro}\t<fo:block-container absolute-position="absolute" left="{{{x} + ((position() - 1) mod {colonne}) * {larghezza}}}pt"'
-               f' top="{{{y} + floor((position() - 1) div {colonne}) * {altezza}}}pt" width="{pt(larghezza)}" height="{pt(altezza)}">')
-    out.append(f'{rientro}\t\t<xsl:call-template name="{nome}">')
-    for k, v in costanti.items():
-        out.append(f'{rientro}\t\t\t<xsl:with-param name="{k}" select="{v}"/>')
-    out.append(f'{rientro}\t\t</xsl:call-template>')
-    out.append(f'{rientro}\t</fo:block-container>')
-    out.append(f'{rientro}</xsl:for-each>')
+    return nome, selezione, colonne, larghezza, altezza, costanti
 
 
 def valuta_condizione_costante(espr, sub, costanti):
@@ -846,7 +883,7 @@ def commento(s):
 
 def elementi(contenitore_xml, ox, oy, ctx, out, rientro, ereditato=None):
     global SPOSTAMENTO
-    for el in contenitore_xml:
+    for el in figli(contenitore_xml):
         tag = el.tag.replace(J, '')
         re_el = el.find(f'{J}reportElement')
         if re_el is None:

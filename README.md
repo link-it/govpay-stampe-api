@@ -61,9 +61,9 @@ stampe.motore.avviso-postale=[Motore per l'avviso con bollettino postale]
 
 ```
 
-Il motore Apache FOP sostituisce JasperReports un layout alla volta (issue #37). Con `fop`, gli avvisi
-il cui layout e' gia' migrato (oggi la rata unica, con e senza bollettino postale) sono stampati con FOP;
-gli altri restano su JasperReports. Gli altri tipi di stampa (bilingue, violazione CdS, ricevuta)
+Il motore Apache FOP sostituisce JasperReports un tipo di avviso alla volta (issue #37). Con `fop`,
+l'avviso semplice e quello con bollettino postale sono stampati con FOP in tutti i loro layout (rata
+unica, rate, soglie e pagine multiple). Gli altri tipi di stampa (bilingue, violazione CdS, ricevuta)
 usano JasperReports.
 
 L'applicazione e' configurata per loggare su standardOutput e' possibile sovrascrivere la configurazione di default utilizzando il meccanismo di override delle properties di spring.

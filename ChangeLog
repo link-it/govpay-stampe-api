@@ -1,3 +1,13 @@
+2026-10-22  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Ricevuta telematica con FOP (#37).
+	Nuova proprieta' stampe.motore.ricevuta (jasper di default): con fop la
+	ricevuta e' stampata con Apache FOP, anche su piu' pagine quando le voci
+	non stanno in una. Come in Jasper, i testi che si allungano (oggetto,
+	ente, voci) spostano in basso gli elementi sotto di loro, anche negli
+	avvisi gia' migrati. Verificati 8 casi di riferimento, piu' i 48
+	precedenti.
+
 2026-10-21  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Avviso semplice e postale con FOP in tutti i layout (#37).

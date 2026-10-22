@@ -24,20 +24,22 @@ import tools.jackson.databind.ObjectMapper;
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.ReceiptStatus;
+import it.govpay.stampe.beans.ReceiptVersion;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Motore FOP configurato per avviso semplice, postale e violazione del codice della strada (issue #37):
- * sono stampati con FOP in tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
+ * Motore FOP configurato per avviso semplice, postale, violazione del codice della strada e ricevuta
+ * (issue #37): sono stampati con FOP in tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 @DisplayName("Test Motore FOP")
 @ActiveProfiles("test")
 @TestPropertySource(properties = { "stampe.motore.avviso-semplice=fop", "stampe.motore.avviso-postale=fop",
-		"stampe.motore.violazione-cds=fop" })
+		"stampe.motore.violazione-cds=fop", "stampe.motore.ricevuta=fop" })
 class UC_12_MotoreFopTest {
 
 	private static final String PRODUCER_FOP = "Apache FOP";
@@ -118,5 +120,18 @@ class UC_12_MotoreFopTest {
 		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConRate(7, true);
 		avviso.setPostal(true);
 		assertTrue(stampa(avviso).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_10_RicevutaConFop() throws Exception {
+		assertTrue(stampa(Costanti.RECEIPT_PATH, this.avvisiPagamentoFactory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 2, false)).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_11_RicevutaSuPiuPagineConFop() throws Exception {
+		String pdf = stampa(Costanti.RECEIPT_PATH, this.avvisiPagamentoFactory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 30, true));
+		// come il caso di riferimento Jasper ricevuta-230-molte-voci-testi-lunghi: le voci vanno su tre pagine
+		assertTrue(pdf.contains(PRODUCER_FOP));
+		assertTrue(pdf.contains("/Count 3"));
 	}
 }

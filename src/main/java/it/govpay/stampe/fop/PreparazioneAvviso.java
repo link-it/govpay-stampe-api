@@ -17,6 +17,7 @@ import it.govpay.stampe.model.v1.PaginaAvvisoMultipla;
 import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
 import it.govpay.stampe.model.v1.PaginaAvvisoTripla;
 import it.govpay.stampe.model.v1.RataAvviso;
+import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
 
 /**
  * Completa l'avviso con i dati che XSLT non puo' calcolare, prima della stampa con FOP (issue #37):
@@ -28,7 +29,8 @@ import it.govpay.stampe.model.v1.RataAvviso;
  * <li>{@code logo_ente_px} e {@code logo_ente_secondario_px}: dimensioni in pixel dei loghi, per
  * esempio "500 572". Servono al layout per posizionare l'immagine come Jasper, che con scaleImage
  * RetainShape tronca a un numero intero di punti lo spazio libero nel riquadro. Un logo non
- * decodificabile resta senza dimensioni: il layout lo scala nel riquadro senza troncamenti.</li>
+ * decodificabile resta senza dimensioni: il layout lo scala nel riquadro senza troncamenti.
+ * Per la ricevuta, allo stesso modo, {@code logo_ente_px} e {@code logo_pagopa_px}.</li>
  * </ul>
  */
 public final class PreparazioneAvviso {
@@ -54,6 +56,11 @@ public final class PreparazioneAvviso {
 		} catch (WriterException e) {
 			throw new IllegalStateException("Generazione del QR code non riuscita", e);
 		}
+	}
+
+	public static void completa(RicevutaTelematicaInput ricevuta) {
+		ricevuta.setLogoEntePx(dimensioni(ricevuta.getLogoEnte()));
+		ricevuta.setLogoPagopaPx(dimensioni(ricevuta.getLogoPagopa()));
 	}
 
 	/** Tutte le rate dell'avviso, compresa la rata unica delle pagine doppia e tripla. */

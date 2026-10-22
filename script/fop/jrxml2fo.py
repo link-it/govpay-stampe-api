@@ -389,6 +389,19 @@ def xpath_semplice(espr, ctx):
     m = re.fullmatch(r'\(?\$([PF])\{(\w+)\}\.equals\(null\)\)?\?"":\$\1\{\2\}', e)
     if m:
         return ctx.p(m.group(2)) if m.group(1) == 'P' else ctx.f(m.group(2))
+    # importo: new DecimalFormat("#,###,##0.00[ suffisso]", Locale.ITALY).format(Double.valueOf($F{x}))
+    m = re.fullmatch(r'\(*newjava\.text\.DecimalFormat\("#,###,##0\.00[^"]*",newDecimalFormatSymbols\(Locale\.ITALY\)\)'
+                     r'\.format\(Double\.valueOf\(\$([PF])\{(\w+)\}\)\)\)*(?:\.toString\(\))?', e)
+    if m:
+        suffisso = re.search(r'DecimalFormat\(\s*"#,###,##0\.00([^"]*)"', espr).group(1)
+        nodo = ctx.p(m.group(2)) if m.group(1) == 'P' else ctx.f(m.group(2))
+        numero = f"format-number(number({nodo}), '#.##0,00', 'it')"
+        return f"concat({numero}, '{suffisso}')" if suffisso else numero
+    # "testo" + $F{x}
+    m = re.fullmatch(r'"([^"\\]*)"\+\$([PF])\{(\w+)\}', e)
+    if m:
+        testo = re.search(r'"([^"\\]*)"', espr).group(1)
+        return f"concat('{testo}', {ctx.p(m.group(3)) if m.group(2) == 'P' else ctx.f(m.group(3))})"
     return None
 
 
@@ -435,6 +448,11 @@ def condizione(espr, ctx):
     m = re.fullmatch(r"newBoolean\(\$([PF])\{(\w+)\}\.toString\(\)=='([^']*)'\)", e)
     if m:
         return f"{nodo(m.group(1), m.group(2))} = '{m.group(3)}'"
+    # $F{x}.equals("V") / !$F{x}.equals("V")
+    m = re.fullmatch(r'(!?)\$([PF])\{(\w+)\}\.equals\("([^"\']*)"\)', e)
+    if m:
+        t = f"{nodo(m.group(2), m.group(3))} = '{m.group(4)}'"
+        return f'not({t})' if m.group(1) else t
     m = re.fullmatch(r'\$([PF])\{(\w+)\}==false', e)
     if m:
         return f"not({nodo(*m.groups())} = 'true')"
@@ -469,6 +487,10 @@ def svg_da_batik(espr):
 SPOSTAMENTI = {}      # id(reportElement) -> espressione XPath dello spostamento verso l'alto, in punti
 RIMOVIBILI = {}       # id(reportElement) -> condizione XPath di elemento vuoto
 SPOSTAMENTO = None    # spostamento dell'elemento in conversione
+DICHIARAZIONI = []    # variabili XSLT degli allungamenti della banda in conversione, da dichiarare in testa
+ALLUNGAMENTO = ''     # espressione XPath dei punti di cui si allunga la banda in conversione
+FLUSSO = False        # report in flusso (--flusso): i sottoreport vanno in pagina con i salti di pagina di FOP
+ALTEZZA_BANDA = 0.0   # altezza dichiarata della banda in conversione
 
 
 def condizione_vuoto(el, ctx):
@@ -542,6 +564,33 @@ def analizza_banda(banda, ctx, base):
             c = (personalizzazioni['condizione'].get(re_el.get('uuid')) or condizione(pw, ctx)) if pw else None
             allungamento = f'(ceiling(count({selezione}) div {colonne}) * {altezza} - {pt(num(re_el, "height"))[:-2]})'
             allungati.append((num(re_el, 'y') + num(re_el, 'height'), f'{allungamento} * number({c})' if c else allungamento, re_el))
+    # testi che si allungano: raggruppati quando le loro fasce verticali si sovrappongono, perche' per gli
+    # elementi affiancati conta il piu' alto; i gruppi uno sotto l'altro si sommano
+    global ALLUNGAMENTO
+    testi = []
+    for el, re_el in elementi_banda:
+        pw = re_el.findtext(f'{J}printWhenExpression')
+        c = (personalizzazioni['condizione'].get(re_el.get('uuid')) or condizione(pw, ctx)) if pw else None
+        if (v := allungamento_testo(el, ctx, c)) is not None:
+            DICHIARAZIONI.append(v[1])
+            testi.append((num(re_el, 'y'), num(re_el, 'y') + num(re_el, 'height'), f'number(${v[0]})', re_el))
+    gruppi_testi = []
+    for t in sorted(testi, key=lambda t: t[0]):
+        if gruppi_testi and t[0] < max(u[1] for u in gruppi_testi[-1]):
+            gruppi_testi[-1].append(t)
+        else:
+            gruppi_testi.append([t])
+    for g in gruppi_testi:
+        espr = g[0][2]
+        for t in g[1:]:
+            # massimo in XPath 1.0
+            espr = f'(number({espr} &gt; {t[2]}) * {espr} + number(not({espr} &gt; {t[2]})) * {t[2]})'
+        if len(g) > 1:
+            nome = 'allungamento-' + g[0][3].get('uuid')[:8] + '-gruppo'
+            DICHIARAZIONI.append(f'<xsl:variable name="{nome}" select="{espr}"/>')
+            espr = f'${nome}'
+        allungati.append((max(t[1] for t in g), espr, None))
+    ALLUNGAMENTO = ' + '.join(espr for _, espr, r in allungati if r is None)
     for el, re_el in elementi_banda:
         termini = [base] if base else []
         if re_el.get('positionType') == 'Float':
@@ -596,8 +645,11 @@ def testo(el, ox, oy, ctx, out, rientro):
         blocco['color'] = re_el.get('forecolor')
     if te is not None and te.get('textAlignment'):
         blocco['text-align'] = ALLINEAMENTO.get(te.get('textAlignment'), 'start')
-    blocco.update(padding_block(el))
+    blocco.update(padding_block(el, avvisa=False))
     cont = contenitore(re_el, ox, oy)
+    # padding verticale del riquadro: Jasper sposta il testo in basso e riduce l'altezza utile
+    sopra, sotto = padding_verticale(el)
+    altezza = float(re_el.get('height')) - sopra - sotto
 
     # numero di righe: per i testi fissi dagli a capo calcolati, per gli altri dall'indicazione
     # righe=N nelle personalizzazioni (default 1)
@@ -609,38 +661,32 @@ def testo(el, ox, oy, ctx, out, rientro):
     # testo variabile: a capo calcolati a runtime come in Jasper (TestoJasper.righe). Con markup, solo se il
     # valore non contiene tag: altrimenti resta il template markup, con gli a capo scelti da FOP
     a_runtime = None
-    if el.tag == f'{J}textField' and costante is None and re_el.get('uuid') not in personalizzazioni['elemento'] and not righe_xpath and not righe \
-            and markup in ('none', 'styled', 'html'):
-        xp = xpath_semplice(el.findtext(f'{J}textFieldExpression') or '', ctx)
-        ff = file_font(blocco, {})
-        if xp and ff:
-            a_runtime = (xp, ff)
+    if not righe_xpath and not righe:
+        a_runtime = testo_a_runtime(el, ctx)
+        if a_runtime:
             righe_xpath = "1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"
     posizioni = a_capo.get(re_el.get('uuid')) if costante is not None else None
     if not righe:
         righe = sum(len(v) + 1 for v in posizioni.values()) if posizioni else 1
-    blocco.update(geometria_testo(el, blocco, righe, float(re_el.get('height'))))
+    blocco.update(geometria_testo(el, blocco, righe, altezza))
+    if sopra and 'padding-top' in blocco and 'padding-top' not in extra:
+        blocco['padding-top'] = pt(round(float(blocco['padding-top'][:-2]) + sopra, 3))
     blocco.update(extra)
     variabile = ''
     if righe_xpath:
         # numero di righe calcolato dal contenuto: interlinea e padding per ogni caso, scelti in XSLT
-        casi = {n: geometria_testo(el, blocco, n, float(re_el.get('height'))) for n in range(1, 6)}
+        casi = {n: geometria_testo(el, blocco, n, altezza) for n in range(1, 6)}
+        if sopra:
+            for g in casi.values():
+                g['padding-top'] = pt(round(float(g['padding-top'][:-2]) + sopra, 3))
         blocco.pop('line-height', None); blocco.pop('padding-top', None)
         for nome_attr in ('line-height', 'padding-top'):
             scelte = ''.join(f'<xsl:when test="$righe = {n}">{g[nome_attr]}</xsl:when>' for n, g in casi.items() if n < 5)
             variabile += f'<xsl:attribute name="{nome_attr}"><xsl:choose>{scelte}<xsl:otherwise>{casi[5][nome_attr]}</xsl:otherwise></xsl:choose></xsl:attribute>'
         variabile = f'<xsl:variable name="righe" select="{righe_xpath}"/>' + variabile
     if a_runtime:
-        xp, ff = a_runtime
-        larghezza = float(re_el.get('width')) - float(blocco.get('start-indent', '0pt')[:-2]) - float(blocco.get('end-indent', '0pt')[:-2])
-        massimo = righe_massime(el, blocco, float(re_el.get('height')))
-        proprieta = {p.get('name'): p.get('value') for p in re_el.findall(f'{J}property')}
-        tronca = 'true()' if proprieta.get('net.sf.jasperreports.text.truncate.at.char') == 'true' else 'false()'
-        # con xsltproc (solo per le verifiche) la funzione Java non c'e': il testo resta intero
-        chiamata = f"tj:righe(string({xp}), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
-        con_tag = f"contains({xp}, '&lt;')" if markup != 'none' else 'false()'
-        variabile = (f'<xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available(\'tj:righe\') and not({con_tag})">'
-                     f'<xsl:value-of select="{chiamata}"/></xsl:when><xsl:otherwise><xsl:value-of select="{xp}"/></xsl:otherwise></xsl:choose></xsl:variable>') + variabile
+        xp, con_tag, scelta = a_runtime
+        variabile = f'<xsl:variable name="testo-righe">{scelta}</xsl:variable>' + variabile
         if markup == 'none':
             corpo = '<xsl:value-of select="$testo-righe"/>'
         else:
@@ -669,6 +715,73 @@ def testo(el, ox, oy, ctx, out, rientro):
     out.append(f'{rientro}<fo:block-container{attrs(cont)}>')
     out.append(f'{rientro}\t<fo:block{attrs(blocco)}>{variabile}{corpo}</fo:block>')
     out.append(f'{rientro}</fo:block-container>')
+
+
+def testo_a_runtime(el, ctx):
+    """Per un testo variabile con gli a capo calcolati a runtime come in Jasper (TestoJasper.righe):
+    (XPath del valore, condizione XPath di valore con tag, xsl:choose che produce il testo con gli a capo).
+    None se il testo non e' di questo tipo. Con markup, solo se il valore non contiene tag: altrimenti resta
+    il template markup, con gli a capo scelti da FOP."""
+    re_el = el.find(f'{J}reportElement')
+    te = el.find(f'{J}textElement')
+    markup = (te.get('markup') if te is not None else None) or 'none'
+    attr = personalizzazioni['attributi'].get(re_el.get('uuid'), {})
+    if el.tag != f'{J}textField' or testo_costante(el) is not None or re_el.get('uuid') in personalizzazioni['elemento'] \
+            or 'righe-xpath' in attr or 'righe' in attr or markup not in ('none', 'styled', 'html'):
+        return None
+    blocco = font_attrs(el)
+    blocco.update(padding_block(el, avvisa=False))
+    xp = xpath_semplice(el.findtext(f'{J}textFieldExpression') or '', ctx)
+    ff = file_font(blocco, {})
+    if not xp or not ff:
+        return None
+    sopra, sotto = padding_verticale(el)
+    larghezza = float(re_el.get('width')) - float(blocco.get('start-indent', '0pt')[:-2]) - float(blocco.get('end-indent', '0pt')[:-2])
+    massimo = righe_massime(el, blocco, float(re_el.get('height')) - sopra - sotto)
+    proprieta = {p.get('name'): p.get('value') for p in re_el.findall(f'{J}property')}
+    tronca = 'true()' if proprieta.get('net.sf.jasperreports.text.truncate.at.char') == 'true' else 'false()'
+    # con xsltproc (solo per le verifiche) la funzione Java non c'e': il testo resta intero
+    chiamata = f"tj:righe(string({xp}), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
+    con_tag = f"contains({xp}, '&lt;')" if markup != 'none' else 'false()'
+    scelta = (f'<xsl:choose><xsl:when test="function-available(\'tj:righe\') and not({con_tag})">'
+              f'<xsl:value-of select="{chiamata}"/></xsl:when><xsl:otherwise><xsl:value-of select="{xp}"/></xsl:otherwise></xsl:choose>')
+    return xp, con_tag, scelta
+
+
+def padding_verticale(el):
+    box = el.find(f'{J}box')
+    sopra = float((box.get('topPadding') or box.get('padding') or 0)) if box is not None else 0.0
+    sotto = float((box.get('bottomPadding') or box.get('padding') or 0)) if box is not None else 0.0
+    return sopra, sotto
+
+
+def allungamento_testo(el, ctx, cond):
+    """Testo che si allunga (isStretchWithOverflow) con gli a capo calcolati a runtime: (nome, dichiarazione)
+    della variabile XSLT con i punti di cui Jasper allunga il riquadro, None se il testo non e' di questo tipo.
+    Jasper alza il riquadro fino all'altezza del testo, arrotondata per eccesso, piu' i padding verticali:
+    (A + D) x corpo per la prima riga e, per le successive, lineSpacingSize + D x corpo con Fixed e
+    (A + D) x corpo con Single. Misurato sui PDF della ricevuta: oggetto 14 pt Fixed 12 su 2 righe, 39 pt
+    (+17); voce 12 pt Fixed 8 su 2 righe, 31 pt (+11). cond e' la condizione di stampa dell'elemento."""
+    re_el = el.find(f'{J}reportElement')
+    if el.get('isStretchWithOverflow') != 'true' and el.get('textAdjust') != 'StretchHeight':
+        return None
+    runtime = testo_a_runtime(el, ctx)
+    metriche = METRICHE_AWT.get(famiglia(font_attrs(el)['font-family']))
+    if runtime is None or metriche is None:
+        return None
+    corpo = float(font_attrs(el)['font-size'][:-2])
+    prima = (metriche[0] + metriche[1]) * corpo
+    p = el.find(f'{J}textElement/{J}paragraph')
+    fissa = p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize')
+    successive = float(p.get('lineSpacingSize')) + metriche[1] * corpo if fissa else prima
+    sopra, sotto = padding_verticale(el)
+    nome = 'allungamento-' + re_el.get('uuid')[:8]
+    righe = "(string-length($t) - string-length(translate($t, '&#10;', '')))"
+    fattore = f' * number({cond})' if cond else ''
+    dich = (f'<xsl:variable name="{nome}"><xsl:variable name="t">{runtime[2]}</xsl:variable>'
+            f'<xsl:variable name="d" select="ceiling({round(prima, 4)} + {righe} * {round(successive, 4)}) + {sopra + sotto:g} - {float(re_el.get("height")):g}"/>'
+            f'<xsl:value-of select="$d * number($d &gt; 0){fattore}"/></xsl:variable>')
+    return nome, dich
 
 
 def righe_massime(el, blocco, altezza):
@@ -703,7 +816,7 @@ def immagine(el, ox, oy, ctx, out, rientro):
     w, h = pt(re_el.get('width')), pt(re_el.get('height'))
     cont = contenitore(re_el, ox, oy)
     svg = svg_da_batik(espr)
-    m_logo = re.search(r'decodeBase64\(\(\(\$P\{(\w+)\}\.contains', espr)
+    m_logo = re.search(r'decodeBase64\(\(\(\$([PF])\{(\w+)\}\.contains', espr)
     # font-size 0: senza, FOP allinea l'immagine alla linea di base del testo e la alza di qualche punto
     blocco = {'font-size': '0pt', 'line-height': '0pt'}
     out.append(f'{rientro}<fo:block-container{attrs(cont)}>')
@@ -732,7 +845,7 @@ def immagine(el, ox, oy, ctx, out, rientro):
             grafica = {'content-width': w, 'content-height': h, 'scaling': 'non-uniform'}
             out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
     elif m_logo:
-        xp = ctx.p(m_logo.group(1))
+        xp = ctx.p(m_logo.group(2)) if m_logo.group(1) == 'P' else ctx.f(m_logo.group(2))
         lw, lh = float(re_el.get('width')), float(re_el.get('height'))
         # Immagine raster come Jasper (scaleImage RetainShape): scalata per stare nel riquadro, poi
         # spostata secondo hAlign/vAlign di uno spazio libero TRONCATO a punti interi. Le dimensioni in
@@ -857,6 +970,32 @@ def sottoreport(el, ox, oy, ctx, out, rientro):
         variabile = 'spostamento-' + re_el.get('uuid', 'sottoreport')[:8]
         out.append(f'{rientro}<xsl:variable name="{variabile}" select="{SPOSTAMENTO}"/>')
         sopra = f' - ${variabile}'
+    if FLUSSO:
+        # report in flusso: il sottoreport parte dopo uno spazio alto quanto la sua posizione, e i record
+        # seguono nel flusso, uno per riga. Come in Jasper, un record va nella pagina se ci sta la sua altezza
+        # dichiarata, altrimenti passa alla successiva; l'allungamento calcolato dal template <nome>-altezza
+        # del sottoreport (generato con --altezza-record) e' uno spazio dopo il record, che a fine pagina si
+        # scarta: nei PDF di riferimento la voce allungata che finisce il testo sul margine inferiore chiude
+        # la pagina e la successiva riparte dal margine. Lo spazio della banda sotto il sottoreport resta
+        # invece un blocco: con le voci che riempiono la pagina fino al margine, Jasper aggiunge una pagina.
+        if colonne != 1:
+            todo.append('sottoreport a piu\' colonne in flusso')
+        out.append(f'{rientro}<fo:block-container height="{{{y}{sopra}}}pt"><fo:block/></fo:block-container>')
+        out.append(f'{rientro}<xsl:for-each select="{selezione}">')
+        out.append(f'{rientro}\t<xsl:variable name="altezza-record"><xsl:call-template name="{nome}-altezza"/></xsl:variable>')
+        out.append(f'{rientro}\t<fo:block-container height="{pt(altezza)}" space-after="{{$altezza-record - {altezza:g}}}pt" keep-together.within-page="always">')
+        out.append(f'{rientro}\t\t<fo:block-container absolute-position="absolute" left="{pt(x)}" top="0pt" width="{pt(larghezza)}" height="{{$altezza-record}}pt">')
+        out.append(f'{rientro}\t\t\t<xsl:call-template name="{nome}">')
+        for k, v in costanti.items():
+            out.append(f'{rientro}\t\t\t\t<xsl:with-param name="{k}" select="{v}"/>')
+        out.append(f'{rientro}\t\t\t</xsl:call-template>')
+        out.append(f'{rientro}\t\t</fo:block-container>')
+        out.append(f'{rientro}\t</fo:block-container>')
+        out.append(f'{rientro}</xsl:for-each>')
+        coda = ALTEZZA_BANDA - float(re_el.get('y', 0)) - float(re_el.get('height', 0))
+        if coda > 0:
+            out.append(f'{rientro}<fo:block-container height="{pt(coda)}"><fo:block/></fo:block-container>')
+        return
     out.append(f'{rientro}<xsl:for-each select="{selezione}">')
     out.append(f'{rientro}\t<fo:block-container absolute-position="absolute" left="{{{x} + ((position() - 1) mod {colonne}) * {larghezza}}}pt"'
                f' top="{{{y}{sopra} + floor((position() - 1) div {colonne}) * {altezza}}}pt" width="{pt(larghezza)}" height="{pt(altezza)}">')
@@ -871,11 +1010,11 @@ def sottoreport(el, ox, oy, ctx, out, rientro):
 def dati_sottoreport(el):
     """(nome, selezione XSLT dei record, colonne, larghezza colonna, altezza record, parametri costanti) di un
     sottoreport su sorgente XML, None se non e' di questo tipo."""
-    m_nome = re.fullmatch(r'\s*\$P\{(\w+)\}\s*', el.findtext(f'{J}subreportExpression') or '')
+    m_nome = re.fullmatch(r'\s*(?:\$P\{(\w+)\}|"(\w+)\.jasper")\s*', el.findtext(f'{J}subreportExpression') or '')
     m_ds = re.search(r'subDataSource\("([^"]+)"\)', el.findtext(f'{J}dataSourceExpression') or '')
     if not m_nome or not m_ds:
         return None
-    nome = m_nome.group(1)
+    nome = m_nome.group(1) or m_nome.group(2)
     # subDataSource("/doppia/rata") parte dal record corrente, che ne e' la radice: dal contesto
     # XSLT (l'elemento doppia) basta il resto del percorso
     passi = m_ds.group(1).strip('/').split('/')
@@ -920,7 +1059,9 @@ def commento(s):
 
 def elementi(contenitore_xml, ox, oy, ctx, out, rientro, ereditato=None):
     global SPOSTAMENTO
-    for el in figli(contenitore_xml):
+    # in flusso i sottoreport vanno per ultimi: gli elementi assoluti si ancorano al punto del flusso in cui
+    # sono scritti, e dopo i record finirebbero nell'ultima pagina
+    for el in sorted(figli(contenitore_xml), key=lambda e: FLUSSO and e.tag == f'{J}subreport'):
         tag = el.tag.replace(J, '')
         re_el = el.find(f'{J}reportElement')
         if re_el is None:
@@ -982,8 +1123,14 @@ def main():
     ap.add_argument('--param-xpath', default='/AvvisoPagamentoInput')
     ap.add_argument('--personalizzazioni')
     ap.add_argument('--parametri', help='parametri ricevuti come costanti dal report principale, separati da virgola')
+    ap.add_argument('--flusso', action='store_true',
+                    help='report che va su piu\' pagine: posizioni relative alla region-body, che ha i margini '
+                         'del report, e sottoreport nel flusso di FOP')
+    ap.add_argument('--altezza-record', action='store_true',
+                    help='genera anche il template <nome>-altezza, con l\'altezza di un record allungato dai suoi testi')
     a = ap.parse_args()
-    global DIR_JRXML
+    global DIR_JRXML, FLUSSO, ALTEZZA_BANDA
+    FLUSSO = a.flusso
     DIR_JRXML = os.path.dirname(os.path.abspath(a.jrxml))
     if a.personalizzazioni:
         carica_personalizzazioni(a.personalizzazioni)
@@ -999,16 +1146,24 @@ def main():
 
     calcola_a_capo(r)
     ox = a.offset_x + float(r.get('leftMargin', 0))
-    oy = a.offset_y + float(r.get('topMargin', 0))
+    # in flusso la region-body ha i margini superiore e inferiore del report: le posizioni partono da li'
+    oy = a.offset_y + (0 if a.flusso else float(r.get('topMargin', 0)))
     out = []
     base = ''
+    altezza_record = []
     for banda in BANDE:
         for sezione in r.findall(f'{J}{banda}'):
             for b in sezione.iter(f'{J}band'):
-                out.append(f'\t\t<!-- banda {banda}, y={oy - a.offset_y - float(r.get("topMargin", 0))} -->')
+                out.append(f'\t\t<!-- banda {banda}, y={oy - a.offset_y - (0 if a.flusso else float(r.get("topMargin", 0)))} -->')
                 pw = b.findtext(f'{J}printWhenExpression')
                 c = condizione(pw, ctx) if pw else None
+                DICHIARAZIONI.clear()
+                ALTEZZA_BANDA = float(b.get('height', 0))
                 successiva = analizza_banda(b, ctx, base)
+                out.extend(f'\t\t{d}' for d in DICHIARAZIONI)
+                if banda == 'detail':
+                    altezza_record.extend(DICHIARAZIONI)
+                    altezza_record.append(f'{float(b.get("height", 0)):g}' + (f' + {ALLUNGAMENTO}' if ALLUNGAMENTO else ''))
                 if pw and c is None:
                     todo.append('printWhenExpression di banda')
                     out.append(f'\t\t<!-- TODO condizione di banda: {commento(pw)} -->')
@@ -1043,6 +1198,15 @@ def main():
         print(f'\t\t<xsl:param name="{nome_par}" select="{valore_costante(par.findtext(f"{J}defaultValueExpression")) or chr(39) + "false" + chr(39)}"/>')
     print('\n'.join(out))
     print('\t</xsl:template>')
+    if a.altezza_record:
+        # altezza di un record: bande di dettaglio, ciascuna allungata dai suoi testi
+        print()
+        print(f'\t<xsl:template name="{nome}-altezza">')
+        for d in altezza_record:
+            if d.startswith('<'):
+                print(f'\t\t{d}')
+        print(f'\t\t<xsl:value-of select="{" + ".join(d for d in altezza_record if not d.startswith("<"))}"/>')
+        print('\t</xsl:template>')
     print()
     print('</xsl:stylesheet>')
 

@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneRicevutaException;
+import it.govpay.stampe.fop.Motore;
+import it.govpay.stampe.fop.MotoreFop;
+import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
@@ -51,17 +54,35 @@ public class RicevutaService {
 
 	private Resource templateRicevuta = null;
 
+	private static final String PROPRIETA_MOTORE = "stampe.motore.ricevuta";
+	private static final String FOGLIO_FOP = "ricevuta.xsl";
+
+	@Value("${" + PROPRIETA_MOTORE + ":jasper}")
+	private String motoreConfigurato;
+
+	private Motore motore;
+
+	private final MotoreFop motoreFop;
+
 	@Autowired
-	public RicevutaService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento) {
+	public RicevutaService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento, MotoreFop motoreFop) {
 		this.jaxb2Marshaller = jaxb2MarshallerAvvisoPagamento;
+		this.motoreFop = motoreFop;
 	}
 
 	@jakarta.annotation.PostConstruct
 	public void loadResources(){
 		templateRicevuta = new ClassPathResource(Costanti.RICEVUTA_TELEMATICA_TEMPLATE_JASPER);
+		this.motore = Motore.da(PROPRIETA_MOTORE, this.motoreConfigurato);
+		if (this.motore == Motore.FOP) {
+			this.motoreFop.prepara(FOGLIO_FOP);
+		}
 	}
 
 	public byte[] creaRicevuta(RicevutaTelematicaInput input) {
+		if (this.motore == Motore.FOP) {
+			return creaRicevutaConFop(input);
+		}
 		Map<String, Object> parameters = new HashMap<>();
 
 		JRGzipVirtualizer virtualizer = new JRGzipVirtualizer(50);
@@ -87,6 +108,22 @@ public class RicevutaService {
 
 			return exportToPdf(parameters, templateIS, defaultJasperReportsContext, byteArray);
 		}catch (JAXBException | IOException e) {
+			throw new GenerazioneRicevutaException(e);
+		}
+	}
+
+	private byte[] creaRicevutaConFop(RicevutaTelematicaInput input) {
+		try {
+			PreparazioneAvviso.completa(input);
+			JAXBElement<RicevutaTelematicaInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), RicevutaTelematicaInput.class, null, input);
+			if(Boolean.TRUE.equals(this.debugInputJasper)) {
+				try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+					jaxb2Marshaller.createMarshaller().marshal(jaxbElement, baos);
+					logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(java.nio.charset.StandardCharsets.UTF_8));
+				}
+			}
+			return this.motoreFop.genera(FOGLIO_FOP, jaxb2Marshaller.getJaxbContext(), jaxbElement);
+		} catch (JAXBException | IOException | IllegalStateException e) {
 			throw new GenerazioneRicevutaException(e);
 		}
 	}

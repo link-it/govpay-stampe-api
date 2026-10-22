@@ -36,3 +36,6 @@ genera BollettinoRataPostale
 genera BollettinoTriRataPostale
 # violazione del codice della strada: i parametri sono sotto la radice ViolazioneInput
 genera Sanzione --param-xpath /ViolazioneInput
+# ricevuta telematica: i parametri sono sotto la radice root
+genera RicevutaMae --param-xpath /root --flusso
+genera RicevutaMae_elenco_voci --param-xpath /root --altezza-record

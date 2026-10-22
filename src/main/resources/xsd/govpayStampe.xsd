@@ -126,6 +126,9 @@
 					</xsd:sequence>
 				</xsd:complexType>
 			</xsd:element> 
+			<!-- Calcolati dal servizio per la stampa con FOP (issue #37): dimensioni in pixel dei loghi, "larghezza altezza" -->
+			<xsd:element name="logo_ente_px" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="logo_pagopa_px" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	

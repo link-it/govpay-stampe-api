@@ -16,7 +16,9 @@ Apache FOP (`src/main/resources/fop/*.xsl`), issue [#37](https://github.com/link
      sottoreport, con il template generato dallo stesso sottoreport; i parametri costanti (per esempio
      `Multipla`) diventano `xsl:param` del template, da indicare con `--parametri`;
    - `elementGroup`, trattati come contenuto della banda;
-   - textField con un testo costante (stringhe letterali concatenate), trattati come testi fissi.
+   - textField con un testo costante (stringhe letterali concatenate), trattati come testi fissi;
+   - importi formattati con `DecimalFormat("#,###,##0.00")` (anche con un suffisso, per esempio " Euro"),
+     testi costanti concatenati a un campo e condizioni `$F{x}.equals("V")`.
 
    Le altre espressioni diventano commenti `TODO` con il testo Groovy originale.
 2. Le parti che il convertitore non traduce si scrivono in `personalizzazioni/<Template>.xml`, legate
@@ -99,9 +101,33 @@ fino al suo contenuto e sposta in basso gli elementi `Float` che lo seguono. Il 
 entrambi in un'espressione XPath sul `top` degli elementi. Le bande mantengono la loro altezza, come si vede
 nei PDF di riferimento dei sottoreport a colonne.
 
+**Testi che si allungano.** Un testo variabile con `isStretchWithOverflow`, che va a capo a runtime, alza il
+riquadro fino al testo e sposta in basso gli elementi `Float` sotto di lui, come in Jasper.
+- **Altezza:** arrotondata per eccesso, più i padding verticali. La prima riga è alta (A + D) × corpo, le
+  successive `lineSpacingSize` + D × corpo con `Fixed` e (A + D) × corpo con `Single`. Misurata sui PDF
+  della ricevuta: l'oggetto a 14 pt su 2 righe passa da 22 a 39 pt, una voce a 12 pt su 2 righe da 20 a 31 pt.
+- **Testi affiancati:** i testi le cui fasce si sovrappongono formano un gruppo che si allunga quanto il
+  più alto. I gruppi uno sotto l'altro si sommano.
+- **Nel foglio:** l'allungamento di ogni testo è una variabile XSLT dichiarata in testa alla banda e
+  usata nel `top` degli elementi sotto.
+
+**Report in flusso (`--flusso`).** Un report che va su più pagine, come la ricevuta con molte voci, si
+genera con le posizioni relative alla region-body, che ha i margini superiore e inferiore del report. I
+sottoreport entrano nel flusso di FOP, dopo uno spazio alto quanto la loro posizione e dopo tutti gli
+elementi assoluti della banda, che altrimenti si ancorerebbero all'ultima pagina. Ogni record:
+- **Altezza:** quella dichiarata; ci va un record solo se c'è posto per questa altezza, altrimenti passa
+  alla pagina successiva, che riparte dal margine superiore.
+- **Allungamento:** viene dal template `<nome>-altezza` del sottoreport (generato con `--altezza-record`) ed
+  è uno spazio dopo il record, scartato a fine pagina. Nei PDF di riferimento una voce allungata che finisce
+  il testo sul margine inferiore chiude la pagina senza spostare la successiva.
+- **Spazio sotto il sottoreport:** quello della banda resta un blocco. Con le voci che riempiono la pagina
+  fino al margine, Jasper aggiunge una pagina vuota, e FOP fa lo stesso.
+
 Differenze note:
-- Testi variabili con markup e tag (per esempio `<b>`) e testi in riquadri che si allungano
-  (`isStretchWithOverflow`): gli a capo li sceglie FOP, e un riquadro allungato non sposta gli elementi sotto.
+- Testi variabili con markup e tag (per esempio `<b>`): gli a capo li sceglie FOP.
+- Record in flusso il cui testo allungato non sta nello spazio rimasto in fondo alla pagina: Jasper divide
+  il testo tra le due pagine, FOP lo lascia sporgere nel margine inferiore. Non succede con i casi di
+  riferimento.
 - Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
   Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
   ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`
@@ -133,7 +159,7 @@ python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input
 ```
 
 Il file FO (`layout.fo`) si ottiene dall'XML con `xsltproc src/main/resources/fop/avviso-semplice.xsl input.xml`
-(`avviso-postale.xsl` per gli avvisi con bollettino postale).
+(`avviso-postale.xsl` per gli avvisi con bollettino postale, `ricevuta.xsl` per la ricevuta).
 
 **Bordi dei riquadri.** Jasper disegna la linea centrata sul bordo del riquadro. FOP disegna il bordo
 superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo stesso.

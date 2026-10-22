@@ -17,7 +17,14 @@ import it.govpay.stampe.beans.Iban;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.beans.NoticeMetadataSecondLanguage;
+import it.govpay.stampe.beans.Payer;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.Receipt;
+import it.govpay.stampe.beans.ReceiptItem;
+import it.govpay.stampe.beans.ReceiptItemStatus;
+import it.govpay.stampe.beans.ReceiptOrganization;
+import it.govpay.stampe.beans.ReceiptStatus;
+import it.govpay.stampe.beans.ReceiptVersion;
 import it.govpay.stampe.beans.ThresholdPayment;
 import it.govpay.stampe.beans.ThresholdType;
 import it.govpay.stampe.test.costanti.Costanti;
@@ -268,4 +275,48 @@ public class AvvisiPagamentoFactory {
 
         return stringBuilder.toString();
     }
+
+	/**
+	 * Ricevuta con N voci, come in UC_10_RicevutaPdfTest; con testi lunghi oggetto, denominazione dell'ente e
+	 * descrizioni vanno a capo, entro le lunghezze massime dell'API.
+	 */
+	public Receipt creaReceipt(ReceiptVersion versione, ReceiptStatus stato, int voci, boolean testiLunghi) {
+		Receipt r = new Receipt();
+		r.setCreditorLogo(this.logoEnte);
+		r.setPagopaLogo(this.logoEnte);
+		ReceiptOrganization ente = new ReceiptOrganization();
+		ente.setFiscalCode("01234567890");
+		ente.setBusinessName(testiLunghi ? "UNIONE DEI COMUNI DELLA VALLE DEL FIUME E DELLE COLLINE CIRCOSTANTI" : "Comune di Test");
+		ente.setAddress("Via Roma, 1");
+		ente.setLocation("00100 Roma (RM)");
+		r.setOrganization(ente);
+		Payer pagatore = new Payer();
+		pagatore.setFiscalCode("RSSMRA80A01H501U");
+		pagatore.setFullName(testiLunghi ? "Maria Giovanna Rossi Bianchi Verdi in rappresentanza della ditta" : "Mario Rossi");
+		pagatore.setAddress("Viale dei Giardini, 00");
+		pagatore.setLocation("00000 Roma (RM)");
+		r.setPayer(pagatore);
+		r.setPaymentSubject(testiLunghi ? "Pagamento TARI 2024 saldo e acconto per l'immobile di via Roma 1, foglio 12, particella 345, subalterno 6" : "Pagamento TARI 2024");
+		r.setPsp("Banca di Test S.p.A.");
+		double totale = 0;
+		List<ReceiptItem> elenco = new ArrayList<>();
+		for (int i = 0; i < voci; i++) {
+			ReceiptItem voce = new ReceiptItem();
+			voce.setDescription((testiLunghi ? "Tributo comunale sui rifiuti e sui servizi indivisibili, quota " : "TARI 2024 - quota ") + (i + 1));
+			voce.setIur("RF0123456789012345678901234" + i);
+			voce.setAmount(Double.valueOf(25.5 * (i + 1)));
+			voce.setStatus(stato == ReceiptStatus.EXECUTED ? ReceiptItemStatus.EXECUTED : ReceiptItemStatus.NOT_EXECUTED);
+			totale += 25.5 * (i + 1);
+			elenco.add(voce);
+		}
+		r.setItems(elenco);
+		r.setAmount(totale);
+		r.setOperationDate("15/01/2024 10:30:00");
+		r.setApplicationDate("15/01/2024");
+		r.setStatus(stato);
+		r.setCreditorReferenceId("01234567890123456");
+		r.setReceiptId("0123456789012345678901234567890");
+		r.setObjectVersion(versione);
+		return r;
+	}
 }

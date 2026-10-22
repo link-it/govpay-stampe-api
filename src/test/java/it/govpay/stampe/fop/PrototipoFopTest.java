@@ -18,6 +18,7 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
+import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
 
 /**
  * Prototipo FOP (issue #37): genera con FOP i PDF dei casi di riferimento, a partire dallo stesso
@@ -30,6 +31,7 @@ import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
  * del run e l'elenco dei casi, per esempio
  * {@code -Dprototipo.run=pdf-riferimento/run-20261012 -Dprototipo.casi=casi-prototipo-RataUnica.json}
  * e, se il layout non e' quello dell'avviso semplice, il foglio: {@code -Dprototipo.foglio=avviso-postale.xsl}.
+ * Con {@code ricevuta.xsl} l'XML e' letto nel modello della ricevuta.
  * I PDF generati vanno in {@code target/prototipo-fop/}.
  */
 class PrototipoFopTest {
@@ -47,16 +49,24 @@ class PrototipoFopTest {
 		Files.createDirectories(uscita);
 
 		String foglio = System.getProperty("prototipo.foglio", "avviso-semplice.xsl");
-		JAXBContext contesto = JAXBContext.newInstance(AvvisoPagamentoInput.class);
+		boolean ricevuta = "ricevuta.xsl".equals(foglio);
+		JAXBContext contesto = JAXBContext.newInstance(AvvisoPagamentoInput.class, RicevutaTelematicaInput.class);
 		MotoreFop motore = new MotoreFop();
 		for (Map<String, Object> caso : elenco) {
 			String xml = (String) caso.get("xml");
-			// la radice resta quella dell'XML: AvvisoPagamentoInput, o ViolazioneInput per la violazione CdS
-			JAXBElement<AvvisoPagamentoInput> elemento = contesto.createUnmarshaller()
-					.unmarshal(new StreamSource(dirRun.resolve("xml").resolve(xml).toFile()), AvvisoPagamentoInput.class);
-			AvvisoPagamentoInput avviso = elemento.getValue();
+			// la radice resta quella dell'XML: AvvisoPagamentoInput, ViolazioneInput per la violazione CdS, root per la ricevuta
+			StreamSource sorgente = new StreamSource(dirRun.resolve("xml").resolve(xml).toFile());
 			long inizio = System.nanoTime();
-			PreparazioneAvviso.completa(avviso);
+			JAXBElement<?> elemento;
+			if (ricevuta) {
+				JAXBElement<RicevutaTelematicaInput> rt = contesto.createUnmarshaller().unmarshal(sorgente, RicevutaTelematicaInput.class);
+				PreparazioneAvviso.completa(rt.getValue());
+				elemento = rt;
+			} else {
+				JAXBElement<AvvisoPagamentoInput> avviso = contesto.createUnmarshaller().unmarshal(sorgente, AvvisoPagamentoInput.class);
+				PreparazioneAvviso.completa(avviso.getValue());
+				elemento = avviso;
+			}
 			byte[] pdf = motore.genera(foglio, contesto, elemento);
 			long ms = (System.nanoTime() - inizio) / 1_000_000;
 			Path file = uscita.resolve(xml.replace(".xml", ".pdf"));

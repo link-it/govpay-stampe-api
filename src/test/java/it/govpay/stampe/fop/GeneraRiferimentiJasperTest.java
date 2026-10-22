@@ -30,12 +30,18 @@ import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.Receipt;
+import it.govpay.stampe.beans.ReceiptStatus;
+import it.govpay.stampe.beans.ReceiptVersion;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.mapper.AvvisoPagamentoMapper;
+import it.govpay.stampe.mapper.RicevutaMapper;
 import it.govpay.stampe.mapper.ViolazioneCdsMapper;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
+import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
 import it.govpay.stampe.service.AvvisoPostaleService;
 import it.govpay.stampe.service.AvvisoSempliceService;
+import it.govpay.stampe.service.RicevutaService;
 import it.govpay.stampe.service.ViolazioneCdsService;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
@@ -80,6 +86,12 @@ class GeneraRiferimentiJasperTest {
 	@Autowired
 	ViolazioneCdsService violazioneCdsService;
 
+	@Autowired
+	RicevutaMapper ricevutaMapper;
+
+	@Autowired
+	RicevutaService ricevutaService;
+
 	@Test
 	void generaRiferimenti() throws Exception {
 		String uscita = System.getProperty("riferimenti.uscita");
@@ -92,6 +104,20 @@ class GeneraRiferimentiJasperTest {
 		int n = 0;
 		for (Map.Entry<String, Supplier<Object>> caso : casi().entrySet()) {
 			Object richiesta = caso.getValue().get();
+			if (richiesta instanceof Receipt ricevuta) {
+				// ricevuta: modello RicevutaTelematicaInput, radice "root" come nel servizio
+				RicevutaTelematicaInput rt = this.ricevutaMapper.toRicevutaTelematicaInput(ricevuta);
+				String xml = String.format("%05d.xml", ++n);
+				this.marshaller.createMarshaller().marshal(
+						new JAXBElement<>(new QName("", "root"), RicevutaTelematicaInput.class, rt),
+						new StreamResult(dir.resolve("xml").resolve(xml).toFile()));
+				byte[] pdf = this.ricevutaService.creaRicevuta(rt);
+				Files.write(dir.resolve("pdf").resolve(caso.getKey() + ".pdf"), pdf);
+				famiglie.computeIfAbsent("ricevuta", k -> new ArrayList<>())
+						.add(Map.of("caso", caso.getKey(), "xml", xml, "pdf", "pdf/" + caso.getKey() + ".pdf"));
+				System.out.printf("riferimento Jasper: %s -> %s (%d byte)%n", caso.getKey(), xml, pdf.length);
+				continue;
+			}
 			// come il controller: la violazione CdS senza bollettino ha il suo servizio e la radice ViolazioneInput
 			AvvisoPagamentoInput input;
 			boolean cds = false;
@@ -167,6 +193,20 @@ class GeneraRiferimentiJasperTest {
 			v.setSecondLogo(new ByteArrayResource(v.getFirstLogo() instanceof ByteArrayResource b ? b.getByteArray() : new byte[0]));
 			v.setTitle("Verbale n. 12345/2026 per violazione dell'art. 142 comma 8 del Codice della Strada, eccesso di velocita' rilevato in via Roma");
 			return v;
+		});
+		// ricevuta: versioni SANP (la 2.3.0 ha colonne diverse), stati, molte voci e testi lunghi
+		casi.put("ricevuta-230", () -> this.factory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 2, false));
+		casi.put("ricevuta-240", () -> this.factory.creaReceipt(ReceiptVersion._240, ReceiptStatus.EXECUTED, 2, false));
+		casi.put("ricevuta-240-v2-non-eseguita", () -> this.factory.creaReceipt(ReceiptVersion._240_V2, ReceiptStatus.NOT_EXECUTED, 1, false));
+		casi.put("ricevuta-240-molte-voci", () -> this.factory.creaReceipt(ReceiptVersion._240, ReceiptStatus.PARTIALLY_EXECUTED, 8, false));
+		casi.put("ricevuta-230-testi-lunghi", () -> this.factory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 3, true));
+		// la sesta voce finisce sul margine inferiore; con testi lunghi le voci vanno su tre pagine
+		casi.put("ricevuta-240-sei-voci", () -> this.factory.creaReceipt(ReceiptVersion._240, ReceiptStatus.EXECUTED, 6, false));
+		casi.put("ricevuta-230-molte-voci-testi-lunghi", () -> this.factory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 30, true));
+		casi.put("ricevuta-240-senza-luogo-ente", () -> {
+			Receipt r = this.factory.creaReceipt(ReceiptVersion._240, ReceiptStatus.EXECUTED, 2, true);
+			r.getOrganization().setLocation(null);
+			return r;
 		});
 		casi.put("cds-postale", () -> {
 			CdsViolation v = this.factory.creaCdsViolation();

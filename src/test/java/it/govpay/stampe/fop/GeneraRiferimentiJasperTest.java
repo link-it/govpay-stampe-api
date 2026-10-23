@@ -29,16 +29,19 @@ import tools.jackson.databind.ObjectMapper;
 import it.govpay.stampe.Application;
 import it.govpay.stampe.beans.CdsViolation;
 import it.govpay.stampe.beans.Instalment;
+import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.beans.PaymentNotice;
 import it.govpay.stampe.beans.Receipt;
 import it.govpay.stampe.beans.ReceiptStatus;
 import it.govpay.stampe.beans.ReceiptVersion;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
+import it.govpay.stampe.mapper.AvvisoPagamentoBilingueMapper;
 import it.govpay.stampe.mapper.AvvisoPagamentoMapper;
 import it.govpay.stampe.mapper.RicevutaMapper;
 import it.govpay.stampe.mapper.ViolazioneCdsMapper;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
+import it.govpay.stampe.service.AvvisoBilingueService;
 import it.govpay.stampe.service.AvvisoPostaleService;
 import it.govpay.stampe.service.AvvisoSempliceService;
 import it.govpay.stampe.service.RicevutaService;
@@ -92,6 +95,20 @@ class GeneraRiferimentiJasperTest {
 	@Autowired
 	RicevutaService ricevutaService;
 
+	@Autowired
+	AvvisoPagamentoBilingueMapper bilingueMapper;
+
+	@Autowired
+	@Qualifier("jaxb2MarshallerAvvisoPagamentoBilingue")
+	Jaxb2Marshaller marshallerBilingue;
+
+	@Autowired
+	AvvisoBilingueService avvisoBilingueService;
+
+	/** Avviso bilingue: resta con la seconda lingua e passa dal mapper e dal servizio V2, come nel controller. */
+	private record Bilingue(PaymentNotice avviso) {
+	}
+
 	@Test
 	void generaRiferimenti() throws Exception {
 		String uscita = System.getProperty("riferimenti.uscita");
@@ -114,6 +131,20 @@ class GeneraRiferimentiJasperTest {
 				byte[] pdf = this.ricevutaService.creaRicevuta(rt);
 				Files.write(dir.resolve("pdf").resolve(caso.getKey() + ".pdf"), pdf);
 				famiglie.computeIfAbsent("ricevuta", k -> new ArrayList<>())
+						.add(Map.of("caso", caso.getKey(), "xml", xml, "pdf", "pdf/" + caso.getKey() + ".pdf"));
+				System.out.printf("riferimento Jasper: %s -> %s (%d byte)%n", caso.getKey(), xml, pdf.length);
+				continue;
+			}
+			if (richiesta instanceof Bilingue bilingue) {
+				it.govpay.stampe.model.v2.AvvisoPagamentoInput v2 = this.bilingueMapper.toPaymentNoticeAvvisoPagamentoInput(
+						LoggerFactory.getLogger(GeneraRiferimentiJasperTest.class), bilingue.avviso(), this.labelAvvisiProperties);
+				String xml = String.format("%05d.xml", ++n);
+				this.marshallerBilingue.createMarshaller().marshal(
+						new JAXBElement<>(new QName("", "AvvisoPagamentoInput"), it.govpay.stampe.model.v2.AvvisoPagamentoInput.class, v2),
+						new StreamResult(dir.resolve("xml").resolve(xml).toFile()));
+				byte[] pdf = this.avvisoBilingueService.creaAvviso(v2);
+				Files.write(dir.resolve("pdf").resolve(caso.getKey() + ".pdf"), pdf);
+				famiglie.computeIfAbsent("bilingue", k -> new ArrayList<>())
 						.add(Map.of("caso", caso.getKey(), "xml", xml, "pdf", "pdf/" + caso.getKey() + ".pdf"));
 				System.out.printf("riferimento Jasper: %s -> %s (%d byte)%n", caso.getKey(), xml, pdf.length);
 				continue;
@@ -213,7 +244,45 @@ class GeneraRiferimentiJasperTest {
 			v.setPostal(true);
 			return v;
 		});
+		// avviso bilingue: le seconde lingue con etichette (tedesco e sloveno), rata unica, rate pari e dispari, soglie, con e senza bollettino
+		for (Languages lingua : new Languages[] { Languages.DE, Languages.SL }) {
+			casi.put("bilingue-unica-" + lingua, () -> bilingue(rate(0, true, false), lingua));
+		}
+		casi.put("bilingue-doppia-unica-DE", () -> bilingue(rate(2, true, false), Languages.DE));
+		casi.put("bilingue-doppia-SL", () -> bilingue(rate(2, false, false), Languages.SL));
+		casi.put("bilingue-3-rate-DE", () -> bilingue(rate(3, false, false), Languages.DE));
+		casi.put("bilingue-5-rate-unica-SL", () -> bilingue(rate(5, true, false), Languages.SL));
+		casi.put("bilingue-soglie-2-unica-DE", () -> bilingue(this.factory.creaPaymentNoticeConSoglie(2, true, false, true), Languages.DE));
+		casi.put("bilingue-postale-unica-DE", () -> bilingue(rate(0, true, true), Languages.DE));
+		casi.put("bilingue-postale-unica-SL", () -> bilingue(rate(0, true, true), Languages.SL));
+		casi.put("bilingue-postale-2-DE", () -> bilingue(rate(2, false, true), Languages.DE));
+		casi.put("bilingue-postale-3-unica-SL", () -> bilingue(rate(3, true, true), Languages.SL));
+		casi.put("bilingue-postale-4-DE", () -> bilingue(rate(4, false, true), Languages.DE));
+		// soglie con bollettino senza rata unica: solo pagine doppie (MonoBandV2), e Jasper sovrappone la
+		// seconda pagina alla prima; FOP stampa le due pagine
+		casi.put("bilingue-postale-soglie-3-SL", () -> bilingue(this.factory.creaPaymentNoticeConSoglie(3, false, true, true), Languages.SL));
+		casi.put("bilingue-due-loghi-oggetto-lungo-DE", () -> {
+			PaymentNotice p = rate(2, true, false);
+			p.setSecondLogo(new ByteArrayResource(p.getFirstLogo() instanceof ByteArrayResource b ? b.getByteArray() : new byte[0]));
+			p.setTitle("Tassa sui rifiuti (TARI) anno 2026, saldo e acconto per l'immobile di via Roma 1, foglio 12, particella 345, subalterno 6");
+			Bilingue b = bilingue(p, Languages.DE);
+			b.avviso().getSecondLanguage().setTitle("Abfallgebuehr (TARI) Jahr 2026, Saldo und Vorauszahlung fuer die Immobilie in der Via Roma 1, Blatt 12, Parzelle 345");
+			return b;
+		});
+		casi.put("bilingue-senza-indirizzo-SL", () -> {
+			PaymentNotice p = rate(2, true, false);
+			p.getDebtor().setAddressLine1(null);
+			p.getDebtor().setAddressLine2(null);
+			return bilingue(p, Languages.SL);
+		});
 		return casi;
+	}
+
+	/** Avviso con la seconda lingua indicata, titolo compreso. */
+	private Bilingue bilingue(PaymentNotice p, Languages lingua) {
+		p.getSecondLanguage().setLanguage(lingua);
+		p.getSecondLanguage().setTitle(p.getTitle() + " (" + lingua + ")");
+		return new Bilingue(p);
 	}
 
 	/** Avviso con N rate di importi e scadenze diversi, con o senza rata unica. */
@@ -229,7 +298,8 @@ class GeneraRiferimentiJasperTest {
 		}
 		if (p.getFull() != null) {
 			p.getFull().setDueDate(inizio);
-			p.getFull().setAmount(Double.valueOf(37.5 * numero + 12.25 * numero * (numero - 1) / 2));
+			// senza rate (solo rata unica) un importo qualsiasi, diverso da zero
+			p.getFull().setAmount(numero == 0 ? Double.valueOf(122.5) : Double.valueOf(37.5 * numero + 12.25 * numero * (numero - 1) / 2));
 		}
 		return p;
 	}

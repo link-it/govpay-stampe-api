@@ -34,9 +34,10 @@
 				<fo:block font-family="TitilliumWeb-Bold" font-size="14pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:choose><xsl:when test="function-available('tj:righe') and not(false())"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/oggetto_del_pagamento), 'TitilliumWeb-Bold.ttf', 14.0, 458.0, 2, true())"/></xsl:when><xsl:otherwise><xsl:value-of select="/AvvisoPagamentoInput/oggetto_del_pagamento"/></xsl:otherwise></xsl:choose></xsl:variable><xsl:variable name="righe" select="1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"/><xsl:attribute name="line-height"><xsl:choose><xsl:when test="$righe = 1">21.294pt</xsl:when><xsl:when test="$righe = 2">18.363pt</xsl:when><xsl:when test="$righe = 3">17.386pt</xsl:when><xsl:when test="$righe = 4">16.898pt</xsl:when><xsl:otherwise>16.604pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:attribute name="padding-top"><xsl:choose><xsl:when test="$righe = 1">1.757pt</xsl:when><xsl:when test="$righe = 2">3.223pt</xsl:when><xsl:when test="$righe = 3">3.711pt</xsl:when><xsl:when test="$righe = 4">3.955pt</xsl:when><xsl:otherwise>4.102pt</xsl:otherwise></xsl:choose></xsl:attribute><xsl:value-of select="$testo-righe"/></fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<xsl:variable name="spostamento-58703e2b" select="-(ceiling(count(rata) div 3) * 242.0 - 10)"/>
+		<xsl:variable name="spostamento-58703e2b" select="-(((ceiling(count(rata) div 3) * 242.0 - 10) + number(translate(string((ceiling(count(rata) div 3) * 242.0 - 10)), '-', ''))) div 2)"/>
 		<xsl:for-each select="rata">
 			<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 1) * 595.0}pt" top="{104.0 - $spostamento-58703e2b + floor((position() - 1) div 1) * 160.0}pt" width="595pt" height="160pt">
+				<fo:block/>
 				<xsl:call-template name="BollettinoTriRataPostale">
 				</xsl:call-template>
 			</fo:block-container>
@@ -62,6 +63,7 @@
 		</xsl:if>
 		<xsl:for-each select="rata">
 			<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 3) * 198.0}pt" top="{94.0 + floor((position() - 1) div 3) * 242.0}pt" width="198pt" height="242pt">
+				<fo:block/>
 				<xsl:call-template name="TriploFormatoPostale">
 				</xsl:call-template>
 			</fo:block-container>

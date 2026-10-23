@@ -140,6 +140,22 @@ public class MotoreFop {
 		}
 	}
 
+	/**
+	 * Per le verifiche: il documento XSL-FO prodotto dal foglio, con le funzioni di estensione Java che
+	 * xsltproc non ha (per esempio gli a capo di {@link TestoJasper}).
+	 */
+	String fo(String foglio, JAXBContext contesto, Object avviso) {
+		try {
+			java.io.StringWriter fo = new java.io.StringWriter();
+			Transformer t = templates(foglio).newTransformer();
+			t.setErrorListener(ERRORI_BLOCCANTI);
+			t.transform(new JAXBSource(contesto, avviso), new javax.xml.transform.stream.StreamResult(fo));
+			return fo.toString();
+		} catch (TransformerException | JAXBException e) {
+			throw new IllegalStateException("Trasformazione XSLT non riuscita (" + foglio + ")", e);
+		}
+	}
+
 	private Templates templates(String foglio) {
 		return this.fogli.computeIfAbsent(foglio, f -> {
 			try {

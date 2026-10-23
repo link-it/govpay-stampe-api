@@ -36,13 +36,15 @@
 		</xsl:if>
 		<xsl:for-each select="rata">
 			<fo:block-container absolute-position="absolute" left="{1.0 + ((position() - 1) mod 2) * 297.0}pt" top="{110.0 + floor((position() - 1) div 2) * 247.0}pt" width="297pt" height="247pt">
+				<fo:block/>
 				<xsl:call-template name="DoppioFormatoPostale">
 				</xsl:call-template>
 			</fo:block-container>
 		</xsl:for-each>
-		<xsl:variable name="spostamento-5cb760ca" select="-(ceiling(count(rata) div 2) * 247.0 - 20)"/>
+		<xsl:variable name="spostamento-5cb760ca" select="-(((ceiling(count(rata) div 2) * 247.0 - 20) + number(translate(string((ceiling(count(rata) div 2) * 247.0 - 20)), '-', ''))) div 2)"/>
 		<xsl:for-each select="rata">
 			<fo:block-container absolute-position="absolute" left="{1.0 + ((position() - 1) mod 1) * 595.0}pt" top="{134.0 - $spostamento-5cb760ca + floor((position() - 1) div 1) * 223.0}pt" width="595pt" height="223pt">
+				<fo:block/>
 				<xsl:call-template name="BollettinoRataPostale">
 				</xsl:call-template>
 			</fo:block-container>

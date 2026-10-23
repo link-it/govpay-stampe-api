@@ -9,7 +9,8 @@ Criteri di accettazione (ogni criterio deve passare, su ogni pagina):
                 sinistro, destro) differisce al massimo di 0,25 pt; misurata a 600 dpi
   3. raster     a 200 dpi, con tolleranza di 1 pixel (circa 0,36 pt), al massimo 5 pixel scuri di
                 uno dei due PDF senza corrispondente nell'altro (rumore di rasterizzazione), escluse
-                le zone delle immagini
+                le zone delle immagini; scuri sono i pixel sotto 204, a meta' tra il grigio #999999
+                e il bianco
   4. immagini   per ogni immagine il riquadro dell'inchiostro differisce al massimo di 1 pt
   5. codici     tutti i qr_code e data_matrix dell'XML si leggono, in qualche pagina, nel PDF FOP
                 (opzionale, con --xml e --classpath)
@@ -43,18 +44,44 @@ from PIL import Image, ImageChops, ImageFilter
 SOGLIA_INCHIOSTRO = 0.25   # pt
 SOGLIA_IMMAGINI = 1.0      # pt
 SOGLIA_RASTER = 5          # pixel isolati a 200 dpi
+# pixel scuri per il criterio raster: a meta' tra il grigio delle traduzioni negli avvisi bilingue (#999999,
+# 153) e il bianco. Con 160 il grigio stava appena sotto la soglia, e minime differenze di antialiasing sui
+# bordi dei glifi facevano entrare o uscire interi tratti: centinaia di pixel con parole nelle stesse posizioni
+GRIGIO_RASTER = 204
 DPI_INCHIOSTRO = 600
 DPI_RASTER = 200
 
+# Lettura di QR code e DataMatrix con zxing. Se la prima lettura non riesce, riprova con un margine bianco
+# intorno al ritaglio (la zona di quiete), a scale minori e con PURE_BARCODE: con alcuni contenuti zxing non
+# legge il QR code a 600 dpi, ne' da Jasper ne' da FOP, e lo legge a 150 o 75 dpi (multipla-7-unica).
 LEGGI_CODICI = """
-import java.io.File; import java.util.Map; import javax.imageio.ImageIO; import com.google.zxing.*;
+import java.io.File; import java.util.Map; import javax.imageio.ImageIO; import java.awt.image.BufferedImage; import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource; import com.google.zxing.common.HybridBinarizer;
-public class LeggiCodici { public static void main(String[] a) throws Exception {
+public class LeggiCodici {
+  static String leggi(BufferedImage im, boolean puro) {
+    java.util.Map<DecodeHintType, Object> h = new java.util.HashMap<>(Map.of(DecodeHintType.TRY_HARDER, true,
+        DecodeHintType.POSSIBLE_FORMATS, java.util.List.of(BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX)));
+    if (puro) h.put(DecodeHintType.PURE_BARCODE, true);
+    try { return new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(im))), h).getText(); }
+    catch (NotFoundException e) { return ""; }
+  }
+  static BufferedImage conMargine(BufferedImage im, double scala) {
+    int w = (int) (im.getWidth() * scala), hh = (int) (im.getHeight() * scala), m = Math.max(w, hh) / 4;
+    BufferedImage b = new BufferedImage(w + 2 * m, hh + 2 * m, BufferedImage.TYPE_INT_RGB);
+    java.awt.Graphics2D g = b.createGraphics(); g.setColor(java.awt.Color.WHITE); g.fillRect(0, 0, b.getWidth(), b.getHeight());
+    g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    g.drawImage(im, m, m, w, hh, null); g.dispose();
+    return b;
+  }
+  public static void main(String[] a) throws Exception {
   for (String f : a) {
-    String letto = "";
-    try { letto = new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(ImageIO.read(new File(f))))),
-        Map.of(DecodeHintType.TRY_HARDER, true, DecodeHintType.POSSIBLE_FORMATS, java.util.List.of(BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX))).getText();
-    } catch (NotFoundException e) { }
+    BufferedImage im = ImageIO.read(new File(f));
+    String letto = leggi(im, false);
+    for (double scala : new double[] { 1, 0.5, 0.25, 0.125 }) {
+      for (boolean puro : new boolean[] { false, true }) {
+        if (letto.isEmpty()) letto = leggi(conMargine(im, scala), puro);
+      }
+    }
     System.out.print(java.util.Base64.getEncoder().encodeToString(letto.getBytes(java.nio.charset.StandardCharsets.UTF_8)) + "\\n"); } } }
 """
 
@@ -179,8 +206,8 @@ def verifica_pagina(a, pagina, zone, escluse, tmp):
 
     # 3. raster con tolleranza, fuori dalle immagini
     k2 = DPI_RASTER / 72
-    rj2 = raster(a.jasper, DPI_RASTER, tmp, 'j2', pagina).point(lambda v: 255 if v < 160 else 0)
-    rf2 = raster(a.fop, DPI_RASTER, tmp, 'f2', pagina).point(lambda v: 255 if v < 160 else 0)
+    rj2 = raster(a.jasper, DPI_RASTER, tmp, 'j2', pagina).point(lambda v: 255 if v < GRIGIO_RASTER else 0)
+    rf2 = raster(a.fop, DPI_RASTER, tmp, 'f2', pagina).point(lambda v: 255 if v < GRIGIO_RASTER else 0)
     diff = ImageChops.lighter(ImageChops.subtract(rj2, rf2.filter(ImageFilter.MaxFilter(3))),
                               ImageChops.subtract(rf2, rj2.filter(ImageFilter.MaxFilter(3))))
     for x, y, w, h in zone + escluse:
@@ -212,11 +239,18 @@ def verifica_pagina(a, pagina, zone, escluse, tmp):
     esiti['immagini'] = (massimo <= SOGLIA_IMMAGINI, f'{len(scarti)} immagini, scarto massimo {massimo:.2f} pt' +
                          ''.join(f'\n      {s:.2f} pt immagine in ({p[0]:.0f}, {p[1]:.0f})' for s, p in scarti if s > SOGLIA_IMMAGINI))
 
-    # riquadri quadrati (QR code e DataMatrix) ritagliati dalla pagina FOP, letti tutti insieme alla fine
+    # riquadri quadrati (QR code e DataMatrix) ritagliati dalla pagina FOP a 600 dpi, letti tutti insieme alla
+    # fine. Il ritaglio e' il riquadro esatto, e il lettore aggiunge il margine bianco: con 5 pt di margine il
+    # ritaglio prendeva la fascia grigia sopra il QR code e il testo sotto, e zxing non lo leggeva, ne' da Jasper
+    # ne' da FOP (multipla-7-unica)
     png = []
-    for i, (x, y, w, h_) in enumerate(z for z in zone if abs(z[2] - z[3]) < 0.5 and z[2] >= 40):
-        f = Path(tmp) / f'codice{pagina}-{i}.png'
-        if3.crop((int((x - 5) * k3), int((y - 5) * k3), int((x + w + 5) * k3), int((y + h_ + 5) * k3))).save(f); png.append(str(f))
+    quadrati = [z for z in zone if abs(z[2] - z[3]) < 0.5 and z[2] >= 40]
+    if quadrati:
+        k6 = 600 / 72
+        if6 = raster(a.fop, 600, tmp, 'f6', pagina)
+        for i, (x, y, w, h_) in enumerate(quadrati):
+            f = Path(tmp) / f'codice{pagina}-{i}.png'
+            if6.crop((int(x * k6), int(y * k6), int((x + w) * k6), int((y + h_) * k6))).save(f); png.append(str(f))
     misure = {'inchiostro': peggiori[0][0] if peggiori else 0, 'raster': fuori, 'immagini': max((s for s, _ in scarti), default=0), 'codici': png}
     return esiti, misure
 

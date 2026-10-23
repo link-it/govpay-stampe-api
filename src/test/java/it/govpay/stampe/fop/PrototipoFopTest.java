@@ -31,8 +31,9 @@ import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
  * del run e l'elenco dei casi, per esempio
  * {@code -Dprototipo.run=pdf-riferimento/run-20261012 -Dprototipo.casi=casi-prototipo-RataUnica.json}
  * e, se il layout non e' quello dell'avviso semplice, il foglio: {@code -Dprototipo.foglio=avviso-postale.xsl}.
- * Con {@code ricevuta.xsl} l'XML e' letto nel modello della ricevuta.
- * I PDF generati vanno in {@code target/prototipo-fop/}.
+ * Con {@code ricevuta.xsl} l'XML e' letto nel modello della ricevuta, con {@code avviso-bilingue.xsl} nel
+ * modello v2.
+ * I PDF generati vanno in {@code target/prototipo-fop/}, con il documento XSL-FO di ciascuno.
  */
 class PrototipoFopTest {
 
@@ -50,7 +51,9 @@ class PrototipoFopTest {
 
 		String foglio = System.getProperty("prototipo.foglio", "avviso-semplice.xsl");
 		boolean ricevuta = "ricevuta.xsl".equals(foglio);
-		JAXBContext contesto = JAXBContext.newInstance(AvvisoPagamentoInput.class, RicevutaTelematicaInput.class);
+		boolean bilingue = "avviso-bilingue.xsl".equals(foglio);
+		JAXBContext contesto = bilingue ? JAXBContext.newInstance(it.govpay.stampe.model.v2.AvvisoPagamentoInput.class)
+				: JAXBContext.newInstance(AvvisoPagamentoInput.class, RicevutaTelematicaInput.class);
 		MotoreFop motore = new MotoreFop();
 		for (Map<String, Object> caso : elenco) {
 			String xml = (String) caso.get("xml");
@@ -58,7 +61,12 @@ class PrototipoFopTest {
 			StreamSource sorgente = new StreamSource(dirRun.resolve("xml").resolve(xml).toFile());
 			long inizio = System.nanoTime();
 			JAXBElement<?> elemento;
-			if (ricevuta) {
+			if (bilingue) {
+				JAXBElement<it.govpay.stampe.model.v2.AvvisoPagamentoInput> v2 = contesto.createUnmarshaller()
+						.unmarshal(sorgente, it.govpay.stampe.model.v2.AvvisoPagamentoInput.class);
+				PreparazioneAvviso.completa(v2.getValue());
+				elemento = v2;
+			} else if (ricevuta) {
 				JAXBElement<RicevutaTelematicaInput> rt = contesto.createUnmarshaller().unmarshal(sorgente, RicevutaTelematicaInput.class);
 				PreparazioneAvviso.completa(rt.getValue());
 				elemento = rt;
@@ -71,6 +79,8 @@ class PrototipoFopTest {
 			long ms = (System.nanoTime() - inizio) / 1_000_000;
 			Path file = uscita.resolve(xml.replace(".xml", ".pdf"));
 			Files.write(file, pdf);
+			// il documento XSL-FO, con le funzioni Java: per le verifiche e per il confronto delle posizioni
+			Files.writeString(uscita.resolve(xml.replace(".xml", ".fo")), motore.fo(foglio, contesto, elemento));
 			System.out.printf("prototipo FOP: %s -> %s (%d byte, %d ms)%n", xml, file, pdf.length, ms);
 			assertTrue(pdf.length > 0);
 		}

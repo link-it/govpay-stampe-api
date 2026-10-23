@@ -27,6 +27,9 @@
 			<xsd:element name="intestatario_conto_corrente_postale" type="xsd:string"/>
 			<xsd:element name="poste" type="xsd:boolean" minOccurs="0"/>
 			<xsd:element name="pagine" type="PagineAvviso" />
+			<!-- Calcolati dal servizio per la stampa con FOP (issue #37): dimensioni in pixel dei loghi, "larghezza altezza" -->
+			<xsd:element name="logo_ente_px" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="logo_ente_secondario_px" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	
@@ -99,6 +102,9 @@
 			<xsd:element name="autorizzazione" type="xsd:string" minOccurs="0"/>
 			<xsd:element name="scadenza_unica" type="xsd:string" minOccurs="0"/>
 			<xsd:element name="scadenza_unica_tra" type="xsd:string" minOccurs="0"/>
+			<!-- Calcolati dal servizio per la stampa con FOP (issue #37): QR code e DataMatrix come URI data: SVG -->
+			<xsd:element name="qr_code_svg" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="data_matrix_svg" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
 	</xsd:complexType>    
 </xsd:schema>

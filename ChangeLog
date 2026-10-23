@@ -1,3 +1,20 @@
+2026-10-23  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso bilingue con FOP (#37).
+	Nuova proprieta' stampe.motore.avviso-bilingue (jasper di default): con fop
+	l'avviso bilingue, con e senza bollettino postale, e' stampato con Apache
+	FOP. I testi con italiano e traduzione in stili diversi vanno a capo come
+	in Jasper. Con soglie e bollettino e senza rata unica Jasper sovrappone la
+	seconda pagina alla prima; FOP stampa le pagine correttamente.
+	Accettati 12 casi di riferimento su 15, in tedesco e sloveno: due hanno
+	6 pixel di differenza nei bordi del testo grigio grande, a posizioni
+	identiche, e uno ha il riferimento Jasper sbagliato. Restano accettati i
+	56 precedenti.
+
+	* [Stampe] Etichetta tedesca del pagamento presso le poste (#37).
+	In de.paga_territorio_poste "Postämtern" era scritto con un carattere a
+	uso privato al posto della "ä", stampato da Jasper e da FOP.
+
 2026-10-22  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Ricevuta telematica con FOP (#37).

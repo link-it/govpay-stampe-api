@@ -31,15 +31,15 @@ import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Motore FOP configurato per avviso semplice, postale, violazione del codice della strada e ricevuta
- * (issue #37): sono stampati con FOP in tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
+ * Motore FOP configurato per avviso semplice, postale, bilingue, violazione del codice della strada e
+ * ricevuta (issue #37): sono stampati con FOP in tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 @DisplayName("Test Motore FOP")
 @ActiveProfiles("test")
 @TestPropertySource(properties = { "stampe.motore.avviso-semplice=fop", "stampe.motore.avviso-postale=fop",
-		"stampe.motore.violazione-cds=fop", "stampe.motore.ricevuta=fop" })
+		"stampe.motore.violazione-cds=fop", "stampe.motore.ricevuta=fop", "stampe.motore.avviso-bilingue=fop" })
 class UC_12_MotoreFopTest {
 
 	private static final String PRODUCER_FOP = "Apache FOP";
@@ -133,5 +133,19 @@ class UC_12_MotoreFopTest {
 		// come il caso di riferimento Jasper ricevuta-230-molte-voci-testi-lunghi: le voci vanno su tre pagine
 		assertTrue(pdf.contains(PRODUCER_FOP));
 		assertTrue(pdf.contains("/Count 3"));
+	}
+
+	@Test
+	void UC_12_12_AvvisoBilingueConFop() throws Exception {
+		// la factory imposta lo sloveno come seconda lingua: pagina singola e pagina doppia
+		assertTrue(stampa(Costanti.STANDARD_PATH, this.avvisiPagamentoFactory.creaPaymentNoticeConRate(2, true)).contains(PRODUCER_FOP));
+	}
+
+	@Test
+	void UC_12_13_AvvisoBilinguePostaleSoglieConFop() throws Exception {
+		// soglie con bollettino e senza rata unica: solo pagine doppie, che Jasper sovrappone
+		String pdf = stampa(Costanti.STANDARD_PATH, this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(3, false, true, true));
+		assertTrue(pdf.contains(PRODUCER_FOP));
+		assertTrue(pdf.contains("/Count 2"));
 	}
 }

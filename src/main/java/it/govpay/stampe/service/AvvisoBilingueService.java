@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneAvvisoException;
+import it.govpay.stampe.fop.Motore;
+import it.govpay.stampe.fop.MotoreFop;
+import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v2.AvvisoPagamentoInput;
 import net.sf.jasperreports.engine.JRException;
 
@@ -37,9 +40,20 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 	
 	private String xmlRootName = Costanti.AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME;
 
+	private static final String PROPRIETA_MOTORE = "stampe.motore.avviso-bilingue";
+	private static final String FOGLIO_FOP = "avviso-bilingue.xsl";
+
+	@Value("${" + PROPRIETA_MOTORE + ":jasper}")
+	private String motoreConfigurato;
+
+	private Motore motore;
+
+	private final MotoreFop motoreFop;
+
     @Autowired
-    public AvvisoBilingueService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamentoBilingue) {
+    public AvvisoBilingueService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamentoBilingue, MotoreFop motoreFop) {
     	super(jaxb2MarshallerAvvisoPagamentoBilingue);
+    	this.motoreFop = motoreFop;
     }
 	
 	@PostConstruct
@@ -51,9 +65,16 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 		this.templateDoppioFormatoV2 = new ClassPathResource(Costanti.DOPPIOFORMATO_TEMPLATE_JASPER_V2);
 		this.templateBollettinoRataV2 = new ClassPathResource(Costanti.BOLLETTINORATA_TEMPLATE_JASPER_V2);
 		this.templateDualBandV2 = new ClassPathResource(Costanti.DUALBAND_TEMPLATE_JASPER_V2);
+		this.motore = Motore.da(PROPRIETA_MOTORE, this.motoreConfigurato);
+		if (this.motore == Motore.FOP) {
+			this.motoreFop.prepara(FOGLIO_FOP);
+		}
 	}
 	
 	public byte[] creaAvviso(AvvisoPagamentoInput input) {
+		if (this.motore == Motore.FOP) {
+			return creaAvvisoConFop(input);
+		}
 		try {
 			Map<String, Object> parameters = new HashMap<>();
 			
@@ -72,6 +93,17 @@ public class AvvisoBilingueService extends AvvisoPagamentoService {
 		}
 	}
 	
+	/** Tutti i layout bilingue (pagine singole e doppie, con e senza bollettino) sono migrati a XSL-FO. */
+	private byte[] creaAvvisoConFop(AvvisoPagamentoInput input) {
+		try {
+			PreparazioneAvviso.completa(input);
+			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
+			return creaAvvisoFop(this.motoreFop, FOGLIO_FOP, jaxbElement, this.debugInputJasper);
+		} catch (JAXBException | IllegalStateException e) {
+			throw new GenerazioneAvvisoException(e);
+		}
+	}
+
 	@Override
 	protected String getXmlRootName() {
 		return this.xmlRootName;

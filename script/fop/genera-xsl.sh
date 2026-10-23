@@ -39,3 +39,9 @@ genera Sanzione --param-xpath /ViolazioneInput
 # ricevuta telematica: i parametri sono sotto la radice root
 genera RicevutaMae --param-xpath /root --flusso
 genera RicevutaMae_elenco_voci --param-xpath /root --altezza-record
+# avviso bilingue (modello v2): i parametri sono i campi di AvvisoPagamentoV2, passati invariati ai sottoreport;
+# i report hanno lo stesso nome interno dei v1, quindi il template prende il nome del file
+genera RataUnicaV2 --nome RataUnicaV2 --param-campi src/main/jasper/AvvisoPagamentoV2.jrxml
+genera DoppiaRataV2 --nome DoppiaRataV2 --param-campi src/main/jasper/AvvisoPagamentoV2.jrxml
+genera DoppioFormatoV2 --nome DoppioFormatoV2 --param-campi src/main/jasper/AvvisoPagamentoV2.jrxml
+genera BollettinoRataV2 --nome BollettinoRataV2 --param-campi src/main/jasper/AvvisoPagamentoV2.jrxml

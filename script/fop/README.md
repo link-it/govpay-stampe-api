@@ -18,9 +18,20 @@ Apache FOP (`src/main/resources/fop/*.xsl`), issue [#37](https://github.com/link
    - `elementGroup`, trattati come contenuto della banda;
    - textField con un testo costante (stringhe letterali concatenate), trattati come testi fissi;
    - importi formattati con `DecimalFormat("#,###,##0.00")` (anche con un suffisso, per esempio " Euro"),
-     testi costanti concatenati a un campo e condizioni `$F{x}.equals("V")`.
+     testi costanti concatenati a un campo e condizioni `$F{x}.equals("V")`;
+   - espressioni Java composte, come le etichette bilingue: un sottoinsieme di Java (stringhe, `+`,
+     ternari, `equals(null)`, `!`, `&&`, `||`, `toUpperCase()`, `DecimalFormat`) diventa un frammento
+     XSLT che produce la stessa stringa di Jasper, markup compreso. Come in Java, un valore assente
+     concatenato a una stringa diventa "null", che Jasper stampa.
 
    Le altre espressioni diventano commenti `TODO` con il testo Groovy originale.
+
+   Opzioni per i sottoreport:
+   - `--param-campi JRXML`: i parametri sono i campi omonimi del report indicato, passati invariati lungo
+     i sottoreport. Per i layout bilingue `$P{codice_avviso_ita}` diventa
+     `/AvvisoPagamentoInput/etichette/italiano/codice_avviso`, come in `AvvisoPagamentoV2.jrxml`.
+   - `--nome`: nome del template XSLT. I report V2 hanno lo stesso nome interno dei v1 (`RataUnica`),
+     quindi il template prende il nome del file.
 2. Le parti che il convertitore non traduce si scrivono in `personalizzazioni/<Template>.xml`, legate
    all'`uuid` dell'elemento nel `.jrxml`. Ogni voce è di uno di tre tipi:
    - `<elemento>`: sostituisce il contenuto di un testo o di un'immagine;
@@ -85,8 +96,19 @@ algoritmo di `SpezzaRighe.java`. Il numero di righe che ne risulta sceglie inter
   bollettino 9 pt in 24 pt, 1 riga.
 - **Troncamento a carattere:** con `net.sf.jasperreports.text.truncate.at.char`, l'ultima riga visibile
   è riempita carattere per carattere.
-- **Testi con markup:** passano dalla stessa funzione se il valore non contiene tag; con i tag restano gli
-  a capo di FOP.
+- **Testi con markup:** passano da `TestoJasper.stile`. La funzione interpreta i tag `style`, `font`, `b`,
+  `i`, `span` e `br` come Jasper, spezza le righe con `LineBreakMeasurer` usando i font di ogni tratto
+  (come il `ComplexTextLineWrapper` di Jasper) e restituisce le righe come nodi XSL-FO: testo e
+  `fo:inline` per i tratti con uno stile diverso.
+- **Interlinea e padding:** dipendono dal numero di righe; il foglio ha un caso per ogni numero possibile,
+  almeno 5, fino alle righe che stanno nel riquadro (10 per i riquadri che si allungano).
+
+**Righe con stili diversi.** FOP allarga una riga quando un `fo:inline` usa un file di font con `capHeight`
+maggiore di quella del blocco: TitilliumWeb-Regular 692, TitilliumWeb-Bold 680. Ascendente e discendente
+sono gli stessi, e il `line-height` dell'inline non conta. La traduzione grigia in TitilliumWeb dentro un
+titolo TitilliumWeb-Bold abbassava la riga di 0,24 pt e la successiva di 0,48 pt. Per i testi che passano
+da `TestoJasper.stile` il blocco è quindi in TitilliumWeb normale, il Titillium con la `capHeight` maggiore,
+e i tratti nel font del riquadro sono `fo:inline`: la posizione è la stessa del blocco nel font del riquadro.
 
 `MotoreFop` usa il processore XSLT del JDK (XSLTC), che accetta le funzioni di estensione, senza i limiti
 di lunghezza delle espressioni XPath: le posizioni calcolate li superano, e i fogli sono generati da qui. Con xsltproc,
@@ -96,8 +118,12 @@ usato solo per ricavare il file FO delle verifiche, la funzione non c'è e il te
 stampato per la sua condizione, insieme alla sua fascia verticale, se tutti gli elementi che la occupano
 sono vuoti. Gli elementi rimovibili le cui fasce si sovrappongono formano un gruppo, che si toglie quando
 sono tutti vuoti. Gli elementi `Float` sotto salgono dell'altezza del più alto del gruppo: nella violazione
-CdS senza indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt) spostano il resto di 25 pt. Allo stesso modo un sottoreport si allunga
-fino al suo contenuto e sposta in basso gli elementi `Float` che lo seguono. Il convertitore traduce
+CdS senza indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt) spostano il resto di 25 pt. Una
+sovrapposizione di 1 pt non conta: nell'avviso bilingue senza indirizzo del destinatario Jasper toglie la
+fascia degli indirizzi (136-167 pt) anche se le informazioni dell'ente, stampate, partono da 166 pt, e le
+sposta in su con il resto. Allo stesso modo un sottoreport si allunga fino al suo contenuto e sposta in
+basso gli elementi `Float` che lo seguono, ma non si accorcia sotto l'altezza dichiarata: `DoppioFormatoV2`,
+alto 211 pt in un riquadro di 212, non sposta in su gli elementi sotto. Il convertitore traduce
 entrambi in un'espressione XPath sul `top` degli elementi. Le bande mantengono la loro altezza, come si vede
 nei PDF di riferimento dei sottoreport a colonne.
 
@@ -124,7 +150,6 @@ elementi assoluti della banda, che altrimenti si ancorerebbero all'ultima pagina
   fino al margine, Jasper aggiunge una pagina vuota, e FOP fa lo stesso.
 
 Differenze note:
-- Testi variabili con markup e tag (per esempio `<b>`): gli a capo li sceglie FOP.
 - Record in flusso il cui testo allungato non sta nello spazio rimasto in fondo alla pagina: Jasper divide
   il testo tra le due pagine, FOP lo lascia sporgere nel margine inferiore. Non succede con i casi di
   riferimento.
@@ -132,6 +157,12 @@ Differenze note:
   Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
   ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`
   è stato provato e scartato perché troppo marcato.
+- Avviso bilingue con soglie e bollettino postale, senza rata unica: ci sono solo pagine doppie
+  (`MonoBandV2`) e Jasper sovrappone la seconda pagina alla prima. FOP stampa le due pagine
+  (`bilingue-postale-soglie-3-SL`, non accettato perché il riferimento è sbagliato).
+- Testo grigio grande, come la traduzione nel titolo a 16 pt: Jasper e FOP incorporano il font in modo
+  diverso e i bordi dei glifi risultano lievemente diversi nel raster, con le posizioni identiche entro
+  0,005 pt. Su "(de)" sono 6 pixel, oltre la soglia di 5 (`bilingue-unica-de`, `bilingue-postale-unica-DE`).
 
 ## Criteri di accettazione
 
@@ -141,10 +172,10 @@ Un layout migrato è accettato quando `verifica_pdf.py` passa su tutti i suoi ca
 | --- | --- |
 | Testo | stesse righe con le stesse parole, quindi stessi a capo |
 | Inchiostro per riga | bordi superiore, inferiore, sinistro e destro entro 0,25 pt (misura a 600 dpi) |
-| Raster | a 200 dpi con tolleranza di 1 pixel (circa 0,36 pt), al massimo 5 pixel fuori tolleranza, escluse le immagini e le differenze accettate indicate con `--escludi` |
+| Raster | a 200 dpi con tolleranza di 1 pixel (circa 0,36 pt), al massimo 5 pixel fuori tolleranza, escluse le immagini e le differenze accettate indicate con `--escludi`; sono scuri i pixel sotto 204, a metà tra il grigio delle traduzioni (#999999) e il bianco |
 | Immagini | riquadro dell'inchiostro entro 1 pt |
 | Pagine | stesso numero di pagine; gli altri criteri si applicano pagina per pagina |
-| QR code | tutti i `qr_code` dell'XML letti dal PDF FOP |
+| QR code | tutti i `qr_code` dell'XML letti dal PDF FOP, dal riquadro esatto di ogni codice a 600 dpi; se zxing non lo legge, riprova con un margine bianco, a scale minori e con `PURE_BARCODE` |
 | DataMatrix (bollettino postale) | tutti i `data_matrix` dell'XML letti dal PDF FOP |
 
 Differenze accettate in `RataUnica` e `RataUnicaPostale`: il grassetto simulato di "pagopa.gov.it" (`--escludi 480,250,100,22`).
@@ -169,14 +200,15 @@ superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo st
 `MotoreFop` è il componente Spring che stampa con FOP:
 - **Bean, non XML:** riceve l'oggetto JAXB dell'avviso e lo passa all'XSLT con `JAXBSource`, senza serializzarlo.
 - **Dati calcolati:** prima della stampa `PreparazioneAvviso` valorizza i campi opzionali dell'XSD che XSLT non può calcolare:
-  - `qr_code_svg` e `data_matrix_svg` di ogni rata;
-  - `logo_ente_px` e `logo_ente_secondario_px`.
+  - `qr_code_svg` e `data_matrix_svg` di ogni rata, nei modelli v1 e v2;
+  - `logo_ente_px` e `logo_ente_secondario_px`, `logo_pagopa_px` per la ricevuta.
 - **Cache:** `FopFactory` (configurazione e font) è unica; i fogli XSLT compilati sono in cache, e quelli dei tipi configurati con `fop` si compilano all'avvio.
 - **Classpath:** fogli, configurazione e font vengono letti solo dal classpath (i font come `classpath:/fonts/...`), quindi funzionano da `target/classes`, dal jar eseguibile e dal war. Ogni altra risorsa esterna viene rifiutata.
 
-Il motore si sceglie per tipo di avviso con `stampe.motore.avviso-semplice` e `stampe.motore.avviso-postale`
-(`jasper` di default). `LayoutMigrati` decide quali avvisi stampare con FOP: oggi quelli fatti solo di pagine
-`singola`. Va esteso a ogni layout migrato.
+Il motore si sceglie per tipo di avviso con `stampe.motore.avviso-semplice`, `stampe.motore.avviso-postale`,
+`stampe.motore.violazione-cds`, `stampe.motore.ricevuta` e `stampe.motore.avviso-bilingue` (`jasper` di
+default). `LayoutMigrati` decide quali avvisi stampare con FOP: postale con pagine multiple e violazione
+`RidottoScontato`, che il mapper non produce, restano su Jasper.
 
 Test:
 - `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
@@ -185,8 +217,9 @@ Test:
 ## Casi di riferimento
 
 I PDF Jasper dei layout a pagina singola vengono dalla testsuite del core (`pdf-riferimento/run-*`). Quelli
-multi-rata, che il core non produce, si generano con `GeneraRiferimentiJasperTest`. Il test costruisce
-38 varianti (rate, soglie, pagine multiple, postale) come il controller e salva XML e PDF Jasper:
+multi-rata, la ricevuta e l'avviso bilingue, che il core non produce, si generano con
+`GeneraRiferimentiJasperTest`. Il test costruisce le varianti (rate, soglie, pagine multiple, postale,
+violazione CdS, ricevuta, bilingue in tedesco e sloveno) come il controller e salva XML e PDF Jasper:
 
 ```bash
 mvn test -Dtest=GeneraRiferimentiJasperTest -Driferimenti.uscita=$PWD/pdf-riferimento/jasper-multirata
@@ -194,7 +227,8 @@ mvn test -Dtest=GeneraRiferimentiJasperTest -Driferimenti.uscita=$PWD/pdf-riferi
 
 ## Verifica
 
-`PrototipoFopTest` genera con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper.
+`PrototipoFopTest` genera con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper, e
+accanto il documento XSL-FO prodotto con le funzioni Java.
 I casi restano fuori dal repository e si indicano da riga di comando:
 
 ```bash

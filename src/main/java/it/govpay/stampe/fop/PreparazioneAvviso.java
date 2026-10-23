@@ -32,6 +32,8 @@ import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
  * decodificabile resta senza dimensioni: il layout lo scala nel riquadro senza troncamenti.
  * Per la ricevuta, allo stesso modo, {@code logo_ente_px} e {@code logo_pagopa_px}.</li>
  * </ul>
+ * L'avviso bilingue (modello v2) ha gli stessi campi: {@code qr_code_svg} e {@code data_matrix_svg} di ogni
+ * rata, {@code logo_ente_px} e {@code logo_ente_secondario_px}.
  */
 public final class PreparazioneAvviso {
 
@@ -48,6 +50,34 @@ public final class PreparazioneAvviso {
 				}
 				if (rata.getQrCode2() != null && !rata.getQrCode2().isBlank()) {
 					rata.setQrCode2Svg(CodiciSvg.qrCodeDataUri(rata.getQrCode2().trim()));
+				}
+				if (rata.getDataMatrix() != null && !rata.getDataMatrix().isBlank()) {
+					rata.setDataMatrixSvg(CodiciSvg.dataMatrixDataUri(rata.getDataMatrix()));
+				}
+			}
+		} catch (WriterException e) {
+			throw new IllegalStateException("Generazione del QR code non riuscita", e);
+		}
+	}
+
+	public static void completa(it.govpay.stampe.model.v2.AvvisoPagamentoInput avviso) {
+		avviso.setLogoEntePx(dimensioni(avviso.getLogoEnte()));
+		avviso.setLogoEnteSecondarioPx(dimensioni(avviso.getLogoEnteSecondario()));
+		if (avviso.getPagine() == null) {
+			return;
+		}
+		List<it.govpay.stampe.model.v2.RataAvviso> rate = new ArrayList<>();
+		for (Object pagina : avviso.getPagine().getSingolaOrDoppia()) {
+			if (pagina instanceof it.govpay.stampe.model.v2.PaginaAvvisoSingola p && p.getRata() != null) {
+				rate.add(p.getRata());
+			} else if (pagina instanceof it.govpay.stampe.model.v2.PaginaAvvisoDoppia p) {
+				rate.addAll(p.getRata());
+			}
+		}
+		try {
+			for (it.govpay.stampe.model.v2.RataAvviso rata : rate) {
+				if (rata.getQrCode() != null && !rata.getQrCode().isBlank()) {
+					rata.setQrCodeSvg(CodiciSvg.qrCodeDataUri(rata.getQrCode().trim()));
 				}
 				if (rata.getDataMatrix() != null && !rata.getDataMatrix().isBlank()) {
 					rata.setDataMatrixSvg(CodiciSvg.dataMatrixDataUri(rata.getDataMatrix()));

@@ -361,15 +361,19 @@ def fo_statico(run, posizioni):
 # --- espressioni ---------------------------------------------------------------
 
 class Contesto:
-    def __init__(self, campi, param_xpath, parametri=()):
+    def __init__(self, campi, param_xpath, parametri=(), param_campi=None):
         self.campi = campi
         self.param_xpath = param_xpath.rstrip('/')
         # parametri del template XSLT: valori costanti passati dal report che lo richiama come sottoreport
         self.parametri = set(parametri)
+        # parametri che sono campi del report principale, passati invariati lungo i sottoreport: XPath assoluto
+        self.param_campi = param_campi or {}
 
     def p(self, nome):
         if nome in self.parametri:
             return f'${nome}'
+        if nome in self.param_campi:
+            return self.param_campi[nome]
         return f'{self.param_xpath}/{nome}'
 
     def f(self, nome):
@@ -418,7 +422,7 @@ def condizione(espr, ctx):
     e = re.sub(r'\s+', '', espr)
     if '&&' in e and '(' not in e.replace('newBoolean(', '').replace('.equals(null)', '').replace(')', ''):
         parti = [condizione(x, ctx) for x in e.split('&&')]
-        return None if None in parti else ' and '.join(f'({x})' for x in parti)
+        return condizione_composta(espr, ctx) if None in parti else ' and '.join(f'({x})' for x in parti)
     m = re.fullmatch(r'(\$V\{\w+\})==(true|false)', e)
     if m and m.group(1) in BOOLEANI_NOTI:
         t = BOOLEANI_NOTI[m.group(1)]
@@ -459,7 +463,280 @@ def condizione(espr, ctx):
     m = re.fullmatch(r'\$([PF])\{(\w+)\}==true', e)
     if m:
         return f"{nodo(*m.groups())} = 'true'"
-    return None
+    return condizione_composta(espr, ctx)
+
+
+# --- espressioni Java composte ------------------------------------------------------------------------
+#
+# Le espressioni dei testi bilingue compongono il valore con concatenazioni, ternari, controlli di null e
+# markup nelle stringhe, per esempio $P{x} + ($P{y}.equals(null) ? "" : "<style forecolor=..> · " + $P{y} + "</style>").
+# Qui un sottoinsieme di Java diventa XSLT: le condizioni un test XPath, i testi un frammento XSLT
+# (xsl:choose per i ternari) che produce la stessa stringa, markup compreso, che Jasper interpreta dopo.
+
+class NonTradotta(Exception):
+    pass
+
+
+TOKEN = re.compile(r'\s*(?:(?P<str>"(?:[^"\\]|\\.)*")|(?P<ref>\$[PFV]\{\w+\})|(?P<num>\d+(?:\.\d+)?)'
+                   r'|(?P<op>&&|\|\||==|!=|[!?:+().,])|(?P<id>[A-Za-z_][\w.]*))')
+
+
+def token(espr):
+    pos, out = 0, []
+    espr = espr.strip()
+    while pos < len(espr):
+        m = TOKEN.match(espr, pos)
+        if not m or m.end() == pos:
+            raise NonTradotta(espr[pos:pos + 20])
+        tipo = m.lastgroup
+        out.append((tipo, m.group(tipo)))
+        pos = m.end()
+        while pos < len(espr) and espr[pos].isspace():
+            pos += 1
+    return out
+
+
+class Parser:
+    """Albero di un'espressione: ('lit', s), ('ref', '$P{x}'), ('null',), ('bool', b), ('num', n),
+    ('concat', [..]), ('cond', c, a, b), ('not', e), ('and', a, b), ('or', a, b), ('isnull', e),
+    ('eq', a, b), ('upper', e), ('fmt', suffisso, e)."""
+
+    def __init__(self, espr):
+        self.t = token(espr)
+        self.i = 0
+
+    def vedi(self, v=None):
+        if self.i >= len(self.t):
+            return None
+        return self.t[self.i] if v is None or self.t[self.i][1] == v else None
+
+    def prendi(self, v=None):
+        t = self.vedi(v)
+        if t is None:
+            raise NonTradotta(f'atteso {v}')
+        self.i += 1
+        return t
+
+    def tutto(self):
+        e = self.ternario()
+        if self.i != len(self.t):
+            raise NonTradotta('resto')
+        return e
+
+    def ternario(self):
+        c = self.o()
+        if self.vedi('?'):
+            self.prendi('?')
+            a = self.ternario()
+            self.prendi(':')
+            return ('cond', c, a, self.ternario())
+        return c
+
+    def o(self):
+        e = self.e()
+        while self.vedi('||'):
+            self.prendi()
+            e = ('or', e, self.e())
+        return e
+
+    def e(self):
+        e = self.uguale()
+        while self.vedi('&&'):
+            self.prendi()
+            e = ('and', e, self.uguale())
+        return e
+
+    def uguale(self):
+        e = self.somma()
+        for op in ('==', '!='):
+            if self.vedi(op):
+                self.prendi()
+                d = self.somma()
+                r = ('eq', e, d)
+                return ('not', r) if op == '!=' else r
+        return e
+
+    def somma(self):
+        parti = [self.unario()]
+        while self.vedi('+'):
+            self.prendi()
+            parti.append(self.unario())
+        return parti[0] if len(parti) == 1 else ('concat', parti)
+
+    def unario(self):
+        if self.vedi('!'):
+            self.prendi()
+            return ('not', self.unario())
+        return self.postfisso(self.primario())
+
+    def argomenti(self):
+        self.prendi('(')
+        args = []
+        while not self.vedi(')'):
+            args.append(self.ternario())
+            if self.vedi(','):
+                self.prendi()
+        self.prendi(')')
+        return args
+
+    def postfisso(self, e):
+        while self.vedi('.'):
+            self.prendi()
+            metodo = self.prendi()[1]
+            args = self.argomenti()
+            if metodo == 'equals' and args == [('null',)]:
+                e = ('isnull', e)
+            elif metodo == 'equals' and len(args) == 1:
+                e = ('eq', e, args[0])
+            elif metodo == 'toUpperCase' and not args:
+                e = ('upper', e)
+            elif metodo in ('toString', 'trim') and not args:
+                pass
+            elif metodo == 'format' and e[0] == 'decimalformat':
+                arg = args[0]
+                if arg[0] == 'doublevalueof':
+                    arg = arg[1]
+                e = ('fmt', e[1], arg)
+            else:
+                raise NonTradotta(f'metodo {metodo}')
+        return e
+
+    def primario(self):
+        tipo, v = self.prendi()
+        if tipo == 'str':
+            return ('lit', re.sub(r'\\(.)', r'\1', v[1:-1]))
+        if tipo == 'ref':
+            return ('ref', v)
+        if tipo == 'num':
+            return ('num', v)
+        if v == '(':
+            e = self.ternario()
+            self.prendi(')')
+            return e
+        if v in ('true', 'false'):
+            return ('bool', v == 'true')
+        if v == 'null':
+            return ('null',)
+        if v == 'new':
+            classe = self.prendi()[1]
+            args = self.argomenti()
+            if classe == 'Boolean' and len(args) == 1:
+                return args[0]
+            if classe in ('java.text.DecimalFormat', 'DecimalFormat') and args and args[0][0] == 'lit':
+                m = re.fullmatch(r'#,###,##0\.00(.*)', args[0][1])
+                if m:
+                    return ('decimalformat', m.group(1))
+            if classe == 'DecimalFormatSymbols':
+                return ('locale',)
+            raise NonTradotta(f'new {classe}')
+        if v == 'Double.valueOf':
+            return ('doublevalueof', self.argomenti()[0])
+        if v == 'Locale.ITALY':
+            return ('locale',)
+        raise NonTradotta(v)
+
+
+# toUpperCase di Java; la ß, che diventa "SS", resta com'e'
+MINUSCOLE = 'abcdefghijklmnopqrstuvwxyzàèéìòùäöüčšž'
+MAIUSCOLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÈÉÌÒÙÄÖÜČŠŽ'
+
+
+def xpath_ref(ref, ctx):
+    tipo, nome = ref[1], ref[3:-1]
+    if ref in NUMERI_NOTI:
+        return NUMERI_NOTI[ref]
+    if tipo == 'P':
+        return ctx.p(nome)
+    if tipo == 'F':
+        return ctx.f(nome)
+    raise NonTradotta(ref)
+
+
+def letterale_xpath(s):
+    if "'" not in s:
+        return f"'{html.escape(s, quote=False)}'"
+    if '"' not in s:
+        return '"' + html.escape(s, quote=False) + '"'
+    raise NonTradotta('apici')
+
+
+def booleano(n, ctx):
+    """Test XPath di un'espressione booleana."""
+    k = n[0]
+    if k == 'isnull':
+        return f'not(normalize-space({valore_xpath(n[1], ctx)}))'
+    if k == 'not':
+        return f'not({booleano(n[1], ctx)})'
+    if k in ('and', 'or'):
+        return f'({booleano(n[1], ctx)}) {k} ({booleano(n[2], ctx)})'
+    if k == 'bool':
+        return 'true()' if n[1] else 'false()'
+    if k == 'eq':
+        a, b = n[1], n[2]
+        if b[0] == 'bool':
+            return booleano(a, ctx) if b[1] else f'not({booleano(a, ctx)})'
+        if b[0] == 'null':
+            return booleano(('isnull', a), ctx)
+        return f'{valore_xpath(a, ctx)} = {valore_xpath(b, ctx)}'
+    if k == 'ref':
+        if n[1] in BOOLEANI_NOTI:
+            return BOOLEANI_NOTI[n[1]]
+        # parametro booleano (per esempio poste)
+        return f"{xpath_ref(n[1], ctx)} = 'true'"
+    raise NonTradotta(f'condizione {k}')
+
+
+def valore_xpath(n, ctx):
+    """Espressione XPath di un valore semplice (riferimento, letterale, maiuscolo, importo)."""
+    k = n[0]
+    if k == 'ref':
+        return xpath_ref(n[1], ctx)
+    if k == 'lit':
+        return letterale_xpath(n[1])
+    if k == 'num':
+        return n[1]
+    if k == 'upper':
+        return f"translate({valore_xpath(n[1], ctx)}, '{MINUSCOLE}', '{MAIUSCOLE}')"
+    if k == 'fmt':
+        numero = f"format-number(number({valore_xpath(n[2], ctx)}), '#.##0,00', 'it')"
+        return f"concat({numero}, {letterale_xpath(n[1])})" if n[1] else numero
+    if k == 'concat':
+        return 'concat(' + ', '.join(valore_xpath(x, ctx) for x in n[1]) + ", '')"
+    raise NonTradotta(f'valore {k}')
+
+
+def frammento(n, ctx):
+    """Frammento XSLT che produce il testo dell'espressione."""
+    k = n[0]
+    if k == 'lit':
+        return f'<xsl:text>{html.escape(n[1], quote=False)}</xsl:text>' if n[1] else ''
+    if k == 'null':
+        return ''
+    if k == 'concat':
+        # come in Java, un valore assente concatenato a una stringa diventa "null": Jasper lo stampa
+        return ''.join(f'<xsl:choose><xsl:when test="{valore_xpath(x, ctx)}"><xsl:value-of select="{valore_xpath(x, ctx)}"/>'
+                       f'</xsl:when><xsl:otherwise>null</xsl:otherwise></xsl:choose>' if x[0] == 'ref' else frammento(x, ctx)
+                       for x in n[1])
+    if k == 'cond':
+        return (f'<xsl:choose><xsl:when test="{booleano(n[1], ctx)}">{frammento(n[2], ctx)}</xsl:when>'
+                f'<xsl:otherwise>{frammento(n[3], ctx)}</xsl:otherwise></xsl:choose>')
+    return f'<xsl:value-of select="{valore_xpath(n, ctx)}"/>'
+
+
+def testo_composto(espr, ctx):
+    """Frammento XSLT del valore di un'espressione composta, None se non e' traducibile."""
+    try:
+        return frammento(Parser(espr).tutto(), ctx)
+    except (NonTradotta, IndexError, ValueError):
+        return None
+
+
+def condizione_composta(espr, ctx):
+    """Test XPath di una condizione composta, None se non e' traducibile."""
+    try:
+        return booleano(Parser(espr).tutto(), ctx)
+    except (NonTradotta, IndexError, ValueError):
+        return None
 
 
 def svg_da_batik(espr):
@@ -485,6 +762,7 @@ def svg_da_batik(espr):
 # Le bande mantengono la loro altezza: le righe rimosse spostano solo gli elementi della stessa banda.
 
 SPOSTAMENTI = {}      # id(reportElement) -> espressione XPath dello spostamento verso l'alto, in punti
+SOVRAPPOSIZIONE = 1.0 # pt di sovrapposizione tra elementi che per le righe rimosse non contano
 RIMOVIBILI = {}       # id(reportElement) -> condizione XPath di elemento vuoto
 SPOSTAMENTO = None    # spostamento dell'elemento in conversione
 DICHIARAZIONI = []    # variabili XSLT degli allungamenti della banda in conversione, da dichiarare in testa
@@ -534,9 +812,12 @@ def analizza_banda(banda, ctx, base):
     # gruppo lo rende non rimovibile.
     candidati = [(num(re_el, 'y'), num(re_el, 'y') + num(re_el, 'height'), c, re_el)
                  for el, re_el in elementi_banda if (c := condizione_vuoto(el, ctx))]
+    # Una sovrapposizione di 1 pt non conta: nell'avviso bilingue senza indirizzo del destinatario Jasper
+    # toglie la fascia degli indirizzi (136-167) anche se le informazioni dell'ente, stampate, partono da 166,
+    # e le sposta in su con il resto
     gruppi = []
     for cand in sorted(candidati, key=lambda t: t[0]):
-        if gruppi and cand[0] < max(t[1] for t in gruppi[-1]):
+        if gruppi and cand[0] < max(t[1] for t in gruppi[-1]) - SOVRAPPOSIZIONE:
             gruppi[-1].append(cand)
         else:
             gruppi.append([cand])
@@ -544,7 +825,8 @@ def analizza_banda(banda, ctx, base):
     for g in gruppi:
         membri = {id(t[3]) for t in g}
         inizio, fine = min(t[0] for t in g), max(t[1] for t in g)
-        if any(id(o) not in membri and num(o, 'y') < fine and num(o, 'y') + num(o, 'height') > inizio for _, o in elementi_banda):
+        if any(id(o) not in membri and num(o, 'y') < fine - SOVRAPPOSIZIONE and num(o, 'y') + num(o, 'height') > inizio + SOVRAPPOSIZIONE
+               for _, o in elementi_banda):
             continue
         # Jasper toglie l'altezza dell'elemento piu' alto del gruppo, non l'unione delle fasce: nella
         # violazione CdS senza indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt, sovrapposti di 1)
@@ -562,7 +844,14 @@ def analizza_banda(banda, ctx, base):
             _, selezione, colonne, _, altezza, _ = dati
             pw = re_el.findtext(f'{J}printWhenExpression')
             c = (personalizzazioni['condizione'].get(re_el.get('uuid')) or condizione(pw, ctx)) if pw else None
-            allungamento = f'(ceiling(count({selezione}) div {colonne}) * {altezza} - {pt(num(re_el, "height"))[:-2]})'
+            # Jasper non accorcia un sottoreport sotto l'altezza dichiarata: DoppioFormatoV2, alto 211 pt in un
+            # riquadro di 212, non sposta in su gli elementi sotto
+            contenuto = f'ceiling(count({selezione}) div {colonne}) * {altezza}'
+            dichiarata = pt(num(re_el, "height"))[:-2]
+            # massimo con zero senza confronti, perche' l'espressione finisce sia negli attributi sia nei select:
+            # (x + |x|) / 2, con |x| ottenuto togliendo il segno
+            x = f'({contenuto} - {dichiarata})'
+            allungamento = f"(({x} + number(translate(string({x}), '-', ''))) div 2)"
             allungati.append((num(re_el, 'y') + num(re_el, 'height'), f'{allungamento} * number({c})' if c else allungamento, re_el))
     # testi che si allungano: raggruppati quando le loro fasce verticali si sovrappongono, perche' per gli
     # elementi affiancati conta il piu' alto; i gruppi uno sotto l'altro si sommano
@@ -594,7 +883,7 @@ def analizza_banda(banda, ctx, base):
     for el, re_el in elementi_banda:
         termini = [base] if base else []
         if re_el.get('positionType') == 'Float':
-            termini += [f'{pt(round(h, 3))[:-2]} * number({c})' for y, h, c, fine in rimovibili if fine <= num(re_el, 'y')]
+            termini += [f'{pt(round(h, 3))[:-2]} * number({c})' for y, h, c, fine in rimovibili if fine - SOVRAPPOSIZIONE <= num(re_el, 'y')]
             termini += [f'-{a}' for fondo, a, r in allungati if r is not re_el and fondo <= num(re_el, 'y')]
         if termini:
             SPOSTAMENTI[id(re_el)] = ' + '.join(termini)
@@ -675,25 +964,38 @@ def testo(el, ox, oy, ctx, out, rientro):
     variabile = ''
     if righe_xpath:
         # numero di righe calcolato dal contenuto: interlinea e padding per ogni caso, scelti in XSLT
-        casi = {n: geometria_testo(el, blocco, n, altezza) for n in range(1, 6)}
+        # interlinea e padding dipendono dal numero di righe: un caso per ogni numero possibile, almeno 5, fino
+        # alle righe che stanno nel riquadro (10 se il riquadro si allunga); oltre, l'ultimo caso
+        massimo_righe = righe_massime(el, blocco, altezza)
+        ultimo = max(5, massimo_righe) if massimo_righe else (10 if el.get('isStretchWithOverflow') == 'true' else 5)
+        casi = {n: geometria_testo(el, blocco, n, altezza) for n in range(1, ultimo + 1)}
         if sopra:
             for g in casi.values():
                 g['padding-top'] = pt(round(float(g['padding-top'][:-2]) + sopra, 3))
         blocco.pop('line-height', None); blocco.pop('padding-top', None)
         for nome_attr in ('line-height', 'padding-top'):
-            scelte = ''.join(f'<xsl:when test="$righe = {n}">{g[nome_attr]}</xsl:when>' for n, g in casi.items() if n < 5)
-            variabile += f'<xsl:attribute name="{nome_attr}"><xsl:choose>{scelte}<xsl:otherwise>{casi[5][nome_attr]}</xsl:otherwise></xsl:choose></xsl:attribute>'
+            scelte = ''.join(f'<xsl:when test="$righe = {n}">{g[nome_attr]}</xsl:when>' for n, g in casi.items() if n < ultimo)
+            variabile += f'<xsl:attribute name="{nome_attr}"><xsl:choose>{scelte}<xsl:otherwise>{casi[ultimo][nome_attr]}</xsl:otherwise></xsl:choose></xsl:attribute>'
         variabile = f'<xsl:variable name="righe" select="{righe_xpath}"/>' + variabile
     if a_runtime:
         xp, con_tag, scelta = a_runtime
         variabile = f'<xsl:variable name="testo-righe">{scelta}</xsl:variable>' + variabile
-        if markup == 'none':
+        if xp == '$valore':
+            # espressione composta: con markup le righe sono nodi XSL-FO
+            corpo = '<xsl:copy-of select="$testo-righe"/>'
+        elif markup == 'none':
             corpo = '<xsl:value-of select="$testo-righe"/>'
         else:
             corpo = (f'<xsl:choose><xsl:when test="{con_tag}"><xsl:call-template name="markup"><xsl:with-param name="testo" select="{xp}"/></xsl:call-template></xsl:when>'
                      f'<xsl:otherwise><xsl:value-of select="$testo-righe"/></xsl:otherwise></xsl:choose>')
         blocco['linefeed-treatment'] = 'preserve'
         blocco['wrap-option'] = 'no-wrap'
+        if 'tj:stile' in scelta and blocco['font-family'].startswith('TitilliumWeb'):
+            # come TestoJasper.stileBlocco: il blocco in TitilliumWeb normale, i tratti nel font del riquadro
+            # sono fo:inline (FOP allarga la riga per un inline con capHeight maggiore di quella del blocco)
+            blocco['font-family'] = 'TitilliumWeb'
+            blocco.pop('font-weight', None)
+            blocco.pop('font-style', None)
     if re_el.get('uuid') in personalizzazioni['elemento']:
         corpo = personalizzazioni['elemento'][re_el.get('uuid')]
     elif costante is not None:
@@ -718,10 +1020,12 @@ def testo(el, ox, oy, ctx, out, rientro):
 
 
 def testo_a_runtime(el, ctx):
-    """Per un testo variabile con gli a capo calcolati a runtime come in Jasper (TestoJasper.righe):
-    (XPath del valore, condizione XPath di valore con tag, xsl:choose che produce il testo con gli a capo).
-    None se il testo non e' di questo tipo. Con markup, solo se il valore non contiene tag: altrimenti resta
-    il template markup, con gli a capo scelti da FOP."""
+    """Per un testo variabile con gli a capo calcolati a runtime come in Jasper: (XPath del valore, condizione
+    XPath di valore con tag, istruzioni XSLT che producono il testo con gli a capo). None se il testo non e' di
+    questo tipo.
+    - Senza markup: TestoJasper.righe sul valore, semplice o composto (testo_composto) in una variabile.
+    - Con markup: TestoJasper.stile, che interpreta i tag come Jasper (anche gli a capo <br/>) e restituisce
+      le righe come nodi XSL-FO."""
     re_el = el.find(f'{J}reportElement')
     te = el.find(f'{J}textElement')
     markup = (te.get('markup') if te is not None else None) or 'none'
@@ -731,15 +1035,37 @@ def testo_a_runtime(el, ctx):
         return None
     blocco = font_attrs(el)
     blocco.update(padding_block(el, avvisa=False))
-    xp = xpath_semplice(el.findtext(f'{J}textFieldExpression') or '', ctx)
+    espr = el.findtext(f'{J}textFieldExpression') or ''
+    xp = xpath_semplice(espr, ctx)
+    composto = None if xp else testo_composto(espr, ctx)
+    if xp and markup != 'none':
+        # valore semplice con markup: i tag del valore si interpretano come per le espressioni composte
+        composto = f'<xsl:value-of select="{xp}"/>'
     ff = file_font(blocco, {})
-    if not xp or not ff:
+    if not (xp or composto) or not ff:
         return None
     sopra, sotto = padding_verticale(el)
     larghezza = float(re_el.get('width')) - float(blocco.get('start-indent', '0pt')[:-2]) - float(blocco.get('end-indent', '0pt')[:-2])
     massimo = righe_massime(el, blocco, float(re_el.get('height')) - sopra - sotto)
     proprieta = {p.get('name'): p.get('value') for p in re_el.findall(f'{J}property')}
     tronca = 'true()' if proprieta.get('net.sf.jasperreports.text.truncate.at.char') == 'true' else 'false()'
+    if composto is not None and markup != 'none':
+        colore = re_el.get('forecolor') or ''
+        grassetto = 'true()' if blocco.get('font-weight') == 'bold' else 'false()'
+        corsivo = 'true()' if blocco.get('font-style') == 'italic' else 'false()'
+        chiamata = (f"tj:stile(string($valore), '{markup}', '{blocco['font-family']}', {grassetto}, {corsivo}, {ff[1]}, "
+                    f"'{colore}', {round(larghezza, 3)}, {massimo}, {tronca})")
+        # con xsltproc (solo per le verifiche) la funzione Java non c'e': resta il testo con i tag
+        scelta = (f'<xsl:variable name="valore">{composto}</xsl:variable>'
+                  f'<xsl:choose><xsl:when test="function-available(\'tj:stile\')"><xsl:copy-of select="{chiamata}"/></xsl:when>'
+                  f'<xsl:otherwise><xsl:value-of select="$valore"/></xsl:otherwise></xsl:choose>')
+        return '$valore', 'false()', scelta
+    if composto is not None:
+        chiamata = f"tj:righe(string($valore), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
+        scelta = (f'<xsl:variable name="valore">{composto}</xsl:variable>'
+                  f'<xsl:choose><xsl:when test="function-available(\'tj:righe\')"><xsl:value-of select="{chiamata}"/></xsl:when>'
+                  f'<xsl:otherwise><xsl:value-of select="$valore"/></xsl:otherwise></xsl:choose>')
+        return '$valore', 'false()', scelta
     # con xsltproc (solo per le verifiche) la funzione Java non c'e': il testo resta intero
     chiamata = f"tj:righe(string({xp}), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
     con_tag = f"contains({xp}, '&lt;')" if markup != 'none' else 'false()'
@@ -999,6 +1325,9 @@ def sottoreport(el, ox, oy, ctx, out, rientro):
     out.append(f'{rientro}<xsl:for-each select="{selezione}">')
     out.append(f'{rientro}\t<fo:block-container absolute-position="absolute" left="{{{x} + ((position() - 1) mod {colonne}) * {larghezza}}}pt"'
                f' top="{{{y}{sopra} + floor((position() - 1) div {colonne}) * {altezza}}}pt" width="{pt(larghezza)}" height="{pt(altezza)}">')
+    # un blocco vuoto: il record puo' non stampare nulla (per esempio il bollettino senza poste), e FOP
+    # vuole almeno un blocco nel riquadro
+    out.append(f'{rientro}\t\t<fo:block/>')
     out.append(f'{rientro}\t\t<xsl:call-template name="{nome}">')
     for k, v in costanti.items():
         out.append(f'{rientro}\t\t\t<xsl:with-param name="{k}" select="{v}"/>')
@@ -1123,6 +1452,9 @@ def main():
     ap.add_argument('--param-xpath', default='/AvvisoPagamentoInput')
     ap.add_argument('--personalizzazioni')
     ap.add_argument('--parametri', help='parametri ricevuti come costanti dal report principale, separati da virgola')
+    ap.add_argument('--param-campi', metavar='JRXML',
+                    help='report principale i cui campi arrivano al sottoreport come parametri omonimi: $P{x} '
+                         'diventa l\'XPath assoluto del campo x (per esempio le etichette di AvvisoPagamentoV2)')
     ap.add_argument('--flusso', action='store_true',
                     help='report che va su piu\' pagine: posizioni relative alla region-body, che ha i margini '
                          'del report, e sottoreport nel flusso di FOP')
@@ -1142,7 +1474,14 @@ def main():
     # parametri che il template riceve come costanti da chi lo richiama come sottoreport (per esempio
     # Multipla): tutti gli altri si leggono dalla radice dell'XML
     parametri = [x for x in (a.parametri or '').split(',') if x]
-    ctx = Contesto(campi, a.param_xpath, parametri)
+    param_campi = {}
+    if a.param_campi:
+        principale = ET.parse(a.param_campi).getroot()
+        radice = (principale.findtext(f'{J}queryString') or '').strip().rstrip('/')
+        for f in principale.findall(f'{J}field'):
+            d = (f.findtext(f'{J}fieldDescription') or f.get('name')).strip()
+            param_campi[f.get('name')] = d if d.startswith('/') else f'{radice}/{d}'
+    ctx = Contesto(campi, a.param_xpath, parametri, param_campi)
 
     calcola_a_capo(r)
     ox = a.offset_x + float(r.get('leftMargin', 0))

@@ -18,6 +18,7 @@ import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.Languages;
 import it.govpay.stampe.beans.NoticeMetadataSecondLanguage;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.PaymentNoticeOption;
 import it.govpay.stampe.beans.ThresholdPayment;
 import it.govpay.stampe.beans.ThresholdType;
 import it.govpay.stampe.test.costanti.Costanti;
@@ -250,6 +251,71 @@ public class AvvisiPagamentoFactory {
 		}
 
 		return paymentNotice;
+	}
+
+	/**
+	 * Documento con piu' opzioni di pagamento alternative (PaymentNotice.options): stesso
+	 * creditore/debitore/postale di un documento a opzione singola, condivisi una volta -
+	 * ciascun elemento di {@code opzioni} porta solo i propri campi di importo.
+	 */
+	public PaymentNotice creaPaymentNoticeConOpzioni(PaymentNoticeOption... opzioni) {
+		PaymentNotice paymentNotice = new PaymentNotice();
+		paymentNotice.setLanguage(Languages.IT);
+		paymentNotice.setTitle("Avviso di pagamento con piu' opzioni");
+
+		Creditor creditor = new Creditor();
+		creditor.setCbillCode("ABC12");
+		creditor.setFiscalCode(Costanti.ID_DOMINIO_1);
+		creditor.setBusinessName("Ente Creditore Test");
+		creditor.setInfoLine1("Tel: 00 1234 5678 - Fax: 00 1234 5678");
+		creditor.setInfoLine2("pec: protocollo.generale@pec.entecreditore.it");
+		paymentNotice.setCreditor(creditor);
+
+		Debtor debtor = new Debtor();
+		debtor.setFiscalCode("RSSMRA50A01A110X");
+		debtor.setFullName("Mario Rossi");
+		debtor.setAddressLine1("Viale Monterosa 11Bis");
+		debtor.setAddressLine2("340 Roma (RM)");
+		paymentNotice.setDebtor(debtor);
+
+		paymentNotice.setPostal(false);
+		paymentNotice.setOptions(new ArrayList<>(List.of(opzioni)));
+		paymentNotice.setFirstLogo(new ByteArrayResource(this.logoEnte.getBytes()));
+
+		return paymentNotice;
+	}
+
+	/** Un'opzione a rata unica (es. "paga tutto"). */
+	public PaymentNoticeOption creaOpzioneFull() {
+		PaymentNoticeOption opzione = new PaymentNoticeOption();
+		String numeroAvviso = this.generaNumeroAvviso();
+		Amount full = new Amount();
+		full.setAmount(Double.valueOf(50.00));
+		full.setDueDate(LocalDate.now());
+		full.setNoticeNumber(numeroAvviso);
+		full.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
+		full.setIban(this.creaIban());
+		opzione.setFull(full);
+		return opzione;
+	}
+
+	/** Un'opzione a piu' rate (es. "paga a rate"). */
+	public PaymentNoticeOption creaOpzioneConRate(int numeroRate) {
+		PaymentNoticeOption opzione = new PaymentNoticeOption();
+		List<Instalment> rate = new ArrayList<>();
+		for (int i = 0; i < numeroRate; i++) {
+			String numeroAvviso = this.generaNumeroAvviso();
+			Instalment rata = new Instalment();
+			rata.setAmount(Double.valueOf(50.00));
+			rata.setDueDate(LocalDate.now());
+			rata.setNoticeNumber(numeroAvviso);
+			rata.setQrcode("PAGOPA|002|"+numeroAvviso+"|"+Costanti.ID_DOMINIO_1+"|5000");
+			rata.setInstalmentNumber((i + 1));
+			rata.setIban(this.creaIban());
+			rate.add(rata);
+		}
+		opzione.setInstalments(rate);
+		return opzione;
 	}
 
 	public String generaNumeroAvviso() {

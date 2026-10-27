@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import it.govpay.stampe.beans.Creditor;
 import it.govpay.stampe.beans.Instalment;
 import it.govpay.stampe.beans.PaymentNotice;
+import it.govpay.stampe.beans.PaymentNoticeOption;
 import it.govpay.stampe.beans.ThresholdPayment;
 import it.govpay.stampe.beans.ThresholdType;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
@@ -38,9 +39,26 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 			noticeNumber = paymentNotice.getInstalments().get(0).getNoticeNumber();
 		} else if(paymentNotice.getReducedPayments() != null && !paymentNotice.getReducedPayments().isEmpty()) {
 			noticeNumber = paymentNotice.getReducedPayments().get(0).getNoticeNumber();
+		} else if(paymentNotice.getOptions() != null && !paymentNotice.getOptions().isEmpty()) {
+			// il nome del file identifica il documento con il notice number della PRIMA opzione,
+			// stesso criterio "primo elemento" gia' usato sopra per instalments/reducedPayments
+			noticeNumber = noticeNumberDiOpzione(paymentNotice.getOptions().get(0));
 		}
 
 		return paymentNotice.getCreditor().getFiscalCode() + "_" + noticeNumber + ".pdf";
+	}
+
+	private String noticeNumberDiOpzione(PaymentNoticeOption opzione) {
+		if(opzione.getFull() != null) {
+			return opzione.getFull().getNoticeNumber();
+		}
+		if(opzione.getInstalments() != null && !opzione.getInstalments().isEmpty()) {
+			return opzione.getInstalments().get(0).getNoticeNumber();
+		}
+		if(opzione.getReducedPayments() != null && !opzione.getReducedPayments().isEmpty()) {
+			return opzione.getReducedPayments().get(0).getNoticeNumber();
+		}
+		return null;
 	}
 
 	public default AvvisoPagamentoInput toPaymentNoticeAvvisoPagamentoInput(Logger logger, PaymentNotice paymentNotice, LabelAvvisiProperties labelAvvisiProperties) {
@@ -57,9 +75,15 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		avvisoPagamentoInput.setNascondiInformativaImportoAvviso(
 				informativaImporto != null && informativaImporto.isEmpty());
 
-		boolean postale = Boolean.TRUE.equals(paymentNotice.getPostal());
-
 		avvisoPagamentoInput.setPagine(new PagineAvviso());
+
+		List<PaymentNoticeOption> options = paymentNotice.getOptions();
+		if(options != null && !options.isEmpty()) {
+			creaPagineOpzioni(logger, paymentNotice, avvisoPagamentoInput);
+			return avvisoPagamentoInput;
+		}
+
+		boolean postale = Boolean.TRUE.equals(paymentNotice.getPostal());
 
 		List<ThresholdPayment> reducedPayments = paymentNotice.getReducedPayments();
 		boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
@@ -77,6 +101,46 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		}
 
 		return avvisoPagamentoInput;
+	}
+
+	/**
+	 * Una pagina (o pagine, se l'opzione ha piu' rate) per ciascun elemento di
+	 * {@code paymentNotice.getOptions()}, mai due opzioni sulla stessa pagina: ogni opzione e'
+	 * delegata, IN SEQUENZA, agli stessi metodi di dispatch usati per il documento a opzione
+	 * singola ({@link #creaRatePerAvvisoSemplice}/{@link #creaRatePerAvvisoPostale}/
+	 * {@link #creaRateRidottePerAvvisoSemplice}/{@link #creaRateRidottePerAvvisoPostale}), su un
+	 * {@link PaymentNotice} sintetico che porta solo i campi di importo della singola opzione
+	 * (full/instalments/reducedPayments) e {@code postal}/{@code creditor} del documento reale
+	 * (condivisi, mai per-opzione). Ciascuna chiamata parte da zero e accoda le proprie pagine
+	 * in coda a {@code avvisoPagamentoInput.getPagine()}: il confine fra opzioni e' quindi
+	 * garantito dalla sequenzialita' delle chiamate, non da un controllo esplicito aggiuntivo.
+	 */
+	public default void creaPagineOpzioni(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput) {
+		boolean postale = Boolean.TRUE.equals(paymentNotice.getPostal());
+
+		for (PaymentNoticeOption opzione : paymentNotice.getOptions()) {
+			PaymentNotice notificaOpzione = new PaymentNotice();
+			notificaOpzione.setPostal(paymentNotice.getPostal());
+			notificaOpzione.setCreditor(paymentNotice.getCreditor());
+			notificaOpzione.setFull(opzione.getFull());
+			notificaOpzione.setInstalments(opzione.getInstalments());
+			notificaOpzione.setReducedPayments(opzione.getReducedPayments());
+
+			List<ThresholdPayment> reducedPayments = opzione.getReducedPayments();
+			boolean hasReducedPayments = reducedPayments != null && !reducedPayments.isEmpty();
+
+			if(hasReducedPayments) {
+				if(postale) {
+					creaRateRidottePerAvvisoPostale(logger, notificaOpzione, avvisoPagamentoInput);
+				} else {
+					creaRateRidottePerAvvisoSemplice(logger, notificaOpzione, avvisoPagamentoInput);
+				}
+			} else if(postale) {
+				creaRatePerAvvisoPostale(logger, notificaOpzione, avvisoPagamentoInput);
+			} else {
+				creaRatePerAvvisoSemplice(logger, notificaOpzione, avvisoPagamentoInput);
+			}
+		}
 	}
 
 	public default void creaRatePerAvvisoPostale(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput) {

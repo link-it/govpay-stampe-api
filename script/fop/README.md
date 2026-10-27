@@ -239,3 +239,19 @@ mvn test -Dtest=PrototipoFopTest \
 mvn test -Dtest=PrototipoFopTest -Dprototipo.run=$PWD/pdf-riferimento/run-20261012 \
   -Dprototipo.casi=casi-prototipo-RataUnicaPostale.json -Dprototipo.foglio=avviso-postale.xsl
 ```
+
+## Regressione dei layout
+
+`RegressioneLayoutTest` protegge i layout da modifiche non volute, anche senza i riferimenti Jasper. Per
+ogni caso in `src/test/resources/regressione-layout/<foglio>/` stampa l'XML con `<foglio>.xsl` e confronta
+l'hash SHA-256 dell'area tree di FOP (la pagina impaginata: posizioni, testi, immagini) con quello in
+`attesi.properties`. Se l'hash cambia, area tree e PDF del caso vanno in `target/regressione-layout/`.
+
+- Gli XML vengono da `GeneraCasiRegressioneTest` (factory e mapper, come il controller), con i loghi
+  sostituiti da `@logo`; si rigenerano solo su richiesta, perché la factory usa codici avviso casuali:
+  `mvn test -Dtest=GeneraCasiRegressioneTest -Dregressione.genera=true`.
+- Dopo una modifica voluta del layout, si aggiornano gli hash:
+  `mvn test -Dtest=RegressioneLayoutTest -Dregressione.aggiorna=true`.
+
+Per confrontare due versioni dei fogli su tutti i casi di riferimento, `PrototipoFopTest` scrive anche
+l'area tree con `-Dprototipo.areatree=true`.

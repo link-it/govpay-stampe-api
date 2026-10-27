@@ -1,9 +1,5 @@
 package it.govpay.stampe.service;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
@@ -11,81 +7,39 @@ import javax.xml.namespace.QName;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneAvvisoException;
-import it.govpay.stampe.fop.LayoutMigrati;
-import it.govpay.stampe.fop.Motore;
 import it.govpay.stampe.fop.MotoreFop;
 import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
-import net.sf.jasperreports.engine.JRException;
 
 @Service
-public class ViolazioneCdsService extends AvvisoPagamentoService{
-	
-	private Resource templateViolazioneCDS;
-	private Resource templateRidottoScontato;
-	private Resource templateSanzione;
-	private Resource templateFormato;
-	
+public class ViolazioneCdsService extends AvvisoPagamentoService {
+
 	@Value("${stampe.debugInputJasper:false}")
 	private Boolean debugInputJasper;
 
-	private static final String PROPRIETA_MOTORE = "stampe.motore.violazione-cds";
 	private static final String FOGLIO_FOP = "violazione-cds.xsl";
 
-	@Value("${" + PROPRIETA_MOTORE + ":jasper}")
-	private String motoreConfigurato;
-
-	private Motore motore;
-
 	private final MotoreFop motoreFop;
-	
-	private String xmlRootName = Costanti.VIOLAZIONE_CDS_ROOT_ELEMENT_NAME; 
 
-    @Autowired
-    public ViolazioneCdsService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento, MotoreFop motoreFop) {
-    	super(jaxb2MarshallerAvvisoPagamento);
-    	this.motoreFop = motoreFop;
-    }
-	
+	private String xmlRootName = Costanti.VIOLAZIONE_CDS_ROOT_ELEMENT_NAME;
+
+	@Autowired
+	public ViolazioneCdsService(Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento, MotoreFop motoreFop) {
+		super(jaxb2MarshallerAvvisoPagamento);
+		this.motoreFop = motoreFop;
+	}
+
 	@PostConstruct
-	public void loadResources(){
-		this.templateViolazioneCDS = new ClassPathResource(Costanti.VIOLAZIONE_CDS_TEMPLATE_JASPER);
-		this.templateRidottoScontato = new ClassPathResource(Costanti.RIDOTTOSCONTATO_TEMPLATE_JASPER);
-		this.templateSanzione = new ClassPathResource(Costanti.SANZIONE_TEMPLATE_JASPER);
-		this.templateFormato = new ClassPathResource(Costanti.FORMATO_TEMPLATE_JASPER);
-		this.motore = Motore.da(PROPRIETA_MOTORE, this.motoreConfigurato);
-		if (this.motore == Motore.FOP) {
-			this.motoreFop.prepara(FOGLIO_FOP);
-		}
+	public void loadResources() {
+		this.motoreFop.prepara(FOGLIO_FOP);
 	}
-	
+
 	public byte[] creaAvviso(AvvisoPagamentoInput input) {
-		if (this.motore == Motore.FOP && LayoutMigrati.violazioneCds(input)) {
-			return creaAvvisoConFop(input);
-		}
-		try {
-			Map<String, Object> parameters = new HashMap<>();
-			
-			parameters.put("RidottoScontato", this.templateRidottoScontato.getInputStream());
-			parameters.put("Sanzione", this.templateSanzione.getInputStream());
-			parameters.put("Formato", this.templateFormato.getInputStream());
-			
-			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
-			
-			return creaAvvisoInner(jaxbElement, parameters, this.templateViolazioneCDS, this.debugInputJasper);
-		}catch (JAXBException | IOException | JRException e) {
-			throw new GenerazioneAvvisoException(e);
-		}
-	}
-	
-	private byte[] creaAvvisoConFop(AvvisoPagamentoInput input) {
 		try {
 			PreparazioneAvviso.completa(input);
 			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
@@ -100,4 +54,3 @@ public class ViolazioneCdsService extends AvvisoPagamentoService{
 		return this.xmlRootName;
 	}
 }
-

@@ -1,11 +1,8 @@
 package it.govpay.stampe.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.namespace.QName;
 
@@ -13,32 +10,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneRicevutaException;
-import it.govpay.stampe.fop.Motore;
 import it.govpay.stampe.fop.MotoreFop;
 import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
+import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
-import net.sf.jasperreports.engine.DefaultJasperReportsContext;
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JRPropertiesUtil;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRXmlDataSource;
-import net.sf.jasperreports.engine.fill.JRGzipVirtualizer;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 @Service
 public class RicevutaService {
@@ -52,15 +34,7 @@ public class RicevutaService {
 	@Value("${stampe.debugInputJasper:false}")
 	private Boolean debugInputJasper;
 
-	private Resource templateRicevuta = null;
-
-	private static final String PROPRIETA_MOTORE = "stampe.motore.ricevuta";
 	private static final String FOGLIO_FOP = "ricevuta.xsl";
-
-	@Value("${" + PROPRIETA_MOTORE + ":jasper}")
-	private String motoreConfigurato;
-
-	private Motore motore;
 
 	private final MotoreFop motoreFop;
 
@@ -70,75 +44,23 @@ public class RicevutaService {
 		this.motoreFop = motoreFop;
 	}
 
-	@jakarta.annotation.PostConstruct
+	@PostConstruct
 	public void loadResources(){
-		templateRicevuta = new ClassPathResource(Costanti.RICEVUTA_TELEMATICA_TEMPLATE_JASPER);
-		this.motore = Motore.da(PROPRIETA_MOTORE, this.motoreConfigurato);
-		if (this.motore == Motore.FOP) {
-			this.motoreFop.prepara(FOGLIO_FOP);
-		}
+		this.motoreFop.prepara(FOGLIO_FOP);
 	}
 
 	public byte[] creaRicevuta(RicevutaTelematicaInput input) {
-		if (this.motore == Motore.FOP) {
-			return creaRicevutaConFop(input);
-		}
-		Map<String, Object> parameters = new HashMap<>();
-
-		JRGzipVirtualizer virtualizer = new JRGzipVirtualizer(50);
-		parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-
-		try (InputStream templateIS = templateRicevuta.getInputStream();
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();){
-
-			DefaultJasperReportsContext defaultJasperReportsContext = DefaultJasperReportsContext.getInstance();
-
-			JRPropertiesUtil.getInstance(defaultJasperReportsContext).setProperty(Costanti.PROPERTY_NAME_NET_SF_JASPERREPORTS_XPATH_EXECUTER_FACTORY, Costanti.PROPERTY_VALUE_NET_SF_JASPERREPORTS_ENGINE_UTIL_XML_JAXEN_X_PATH_EXECUTER_FACTORY);
-			Marshaller marshaller = jaxb2Marshaller.createMarshaller();
-			
-			JAXBElement<RicevutaTelematicaInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), RicevutaTelematicaInput.class, null, input);
-			
-			marshaller.marshal(jaxbElement, baos);
-			byte[] byteArray = baos.toByteArray();
-
-			if(Boolean.TRUE.equals(this.debugInputJasper)) {
-				String inputString = new String(byteArray);
-				logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, inputString);
-			}
-
-			return exportToPdf(parameters, templateIS, defaultJasperReportsContext, byteArray);
-		}catch (JAXBException | IOException e) {
-			throw new GenerazioneRicevutaException(e);
-		}
-	}
-
-	private byte[] creaRicevutaConFop(RicevutaTelematicaInput input) {
 		try {
 			PreparazioneAvviso.completa(input);
 			JAXBElement<RicevutaTelematicaInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), RicevutaTelematicaInput.class, null, input);
 			if(Boolean.TRUE.equals(this.debugInputJasper)) {
 				try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 					jaxb2Marshaller.createMarshaller().marshal(jaxbElement, baos);
-					logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(java.nio.charset.StandardCharsets.UTF_8));
+					logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(StandardCharsets.UTF_8));
 				}
 			}
 			return this.motoreFop.genera(FOGLIO_FOP, jaxb2Marshaller.getJaxbContext(), jaxbElement);
 		} catch (JAXBException | IOException | IllegalStateException e) {
-			throw new GenerazioneRicevutaException(e);
-		}
-	}
-
-	private byte[] exportToPdf(Map<String, Object> parameters, InputStream templateIS,
-			DefaultJasperReportsContext defaultJasperReportsContext, byte[] byteArray) {
-		try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArray);){
-
-			JRDataSource dataSource = new JRXmlDataSource(defaultJasperReportsContext, byteArrayInputStream, this.getXmlRootName());
-			JasperReport jasperReport = (JasperReport) JRLoader.loadObject(defaultJasperReportsContext,templateIS);
-			JasperPrint jasperPrint = JasperFillManager.getInstance(defaultJasperReportsContext).fill(jasperReport, parameters, dataSource);
-
-			return JasperExportManager.getInstance(defaultJasperReportsContext).exportToPdf(jasperPrint);
-
-		}catch (IOException | JRException e) {
 			throw new GenerazioneRicevutaException(e);
 		}
 	}

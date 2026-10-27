@@ -1,9 +1,11 @@
 # Sorgenti dei template JasperReports
 
-Questa cartella contiene i sorgenti `.jrxml` dei 28 template usati a runtime, i cui compilati
-`.jasper` sono in `src/main/resources/`. I sorgenti non vengono compilati dalla build e non
-finiscono nel jar: servono come riferimento per la manutenzione e come specifica per la
-sostituzione di JasperReports (issue [#37](https://github.com/link-it/govpay-stampe-api/issues/37)).
+Questa cartella contiene i sorgenti `.jrxml` dei 28 template JasperReports usati fino alla
+sostituzione con Apache FOP (issue [#37](https://github.com/link-it/govpay-stampe-api/issues/37)).
+JasperReports e i compilati `.jasper` sono stati rimossi: i sorgenti non vengono compilati dalla
+build e non finiscono nel jar. Restano come specifica dei layout: `script/fop/genera-xsl.sh` li
+converte nei layout XSL-FO di `src/main/resources/fop`, finche' questi non diventano il sorgente
+modificato a mano.
 
 Ogni `.jrxml` ha lo stesso nome del `.jasper` corrispondente. Compilati con JasperReports 6.21.5
 (espressioni Groovy), producono report equivalenti ai `.jasper` in produzione: il confronto
@@ -62,6 +64,6 @@ nome dal classpath, tramite il valore di default dei parametri `InputStream`
 ## Modificare un template
 
 1. Modificare il `.jrxml` in questa cartella (Jaspersoft Studio compatibile con JasperReports 6.21).
-2. Compilarlo con JasperReports 6.21.5 e copiare il `.jasper` prodotto in `src/main/resources/`
-   con lo stesso nome.
-3. Versionare insieme sorgente e compilato.
+2. Rigenerare i layout XSL-FO con `script/fop/genera-xsl.sh` e verificarli come descritto in
+   `script/fop/README.md`.
+3. Versionare insieme sorgente e layout generato.

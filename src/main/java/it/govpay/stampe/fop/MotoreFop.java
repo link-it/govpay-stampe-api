@@ -85,9 +85,9 @@ public class MotoreFop {
 		} catch (IOException | SAXException | URISyntaxException e) {
 			throw new IllegalStateException("Configurazione di FOP non leggibile: " + CONFIGURAZIONE, e);
 		}
-		// il processore XSLT del JDK (XSLTC), non quello trovato nel classpath: Xalan, che arriva con
-		// JasperReports, non risolve i template con nome dei fogli inclusi, e alla rimozione di Jasper il
-		// processore cambierebbe senza che nessuno lo scelga
+		// il processore XSLT del JDK (XSLTC), non quello trovato nel classpath: Xalan, che arrivava con
+		// JasperReports, non risolve i template con nome dei fogli inclusi, e una dipendenza che lo
+		// riportasse cambierebbe il processore senza che nessuno lo scelga
 		this.transformerFactory = TransformerFactory.newDefaultInstance();
 		// i fogli sono generati da jrxml2fo.py, non arrivano dall'esterno: le posizioni con righe rimosse
 		// e sottoreport allungati sono espressioni XPath piu' lunghe dei limiti di default del JDK

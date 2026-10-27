@@ -1,3 +1,14 @@
+2026-10-26  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Stampa con Apache FOP, rimosso JasperReports (#37).
+	Avvisi semplici, postali, bilingui, violazioni del codice della strada
+	e ricevute sono stampati solo con Apache FOP. Rimossi JasperReports,
+	DynamicReports e le librerie usate solo da Jasper (Groovy, Jaxen, Xalan,
+	barcode4j, barbecue, Ant, commons-beanutils), i template .jasper e le
+	eccezioni OWASP e OSV per le vulnerabilita' di JasperReports. Le
+	proprieta' stampe.motore.* non servono piu' e vanno tolte dalle
+	configurazioni. Verificati di nuovo i 71 casi di riferimento Jasper.
+
 2026-10-23  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Avviso bilingue con FOP (#37).

@@ -52,10 +52,10 @@ mvn test -Dtest=UC_4_AvvisoStandardTest#UC_4_01_AvvisoSempliceRataUnicaOk
 1. `StampeController` receives JSON request
 2. `SemanticValidator` validates business rules
 3. MapStruct mappers (`AvvisoPagamentoMapper`, `ViolazioneCdsMapper`, `AvvisoPagamentoBilingueMapper`) convert API beans to JAXB model objects
-4. Service layer generates PDF using JasperReports
+4. Service layer generates PDF using Apache FOP (XSLT + XSL-FO)
 
 ### Service Layer
-Base class `AvvisoPagamentoService` handles JasperReports PDF generation. Concrete services:
+Base class `AvvisoPagamentoService` handles PDF generation through `MotoreFop`. Concrete services:
 - `AvvisoSempliceService` - Standard notices without postal slip
 - `AvvisoPostaleService` - Notices with postal payment slip (bollettino postale)
 - `AvvisoBilingueService` - Bilingual notices (IT + second language)
@@ -67,17 +67,15 @@ Two JAXB model versions generated from XSD schemas:
 - `it.govpay.stampe.model.v2` from `xsd/avvisiPagamento_v2.xsd` - Bilingual notices
 
 ### PDF Templates
-JasperReports `.jasper` files in `src/main/resources/`:
-- `AvvisoPagamento*.jasper` - Main templates
-- `RataUnica*.jasper`, `DoppiaRata*.jasper`, `TriplaRata*.jasper` - Layout variants by installment count
-- `*Postale.jasper` - Postal slip variants
-- `*V2.jasper` - Bilingual variants
-- `ViolazioneCDS.jasper` - Traffic violation template
+XSL-FO layouts in `src/main/resources/fop/`, rendered by `MotoreFop` (Apache FOP, JDK XSLT processor):
+- `avviso-semplice.xsl`, `avviso-postale.xsl`, `violazione-cds.xsl`, `ricevuta.xsl`, `avviso-bilingue.xsl` - Main sheets, one per print type
+- `RataUnica*.xsl`, `DoppiaRata*.xsl`, `TriplaRata*.xsl`, `*Postale.xsl`, `*V2.xsl` - Layout variants
+- The layouts are generated from the former Jasper sources `src/main/jasper/*.jrxml` by `script/fop/genera-xsl.sh` (do not edit by hand); see `script/fop/README.md`
 
 ### Key Technologies
 - **MapStruct**: Bean mapping with custom qualifiers in `BaseAvvisoMapper`
 - **Lombok**: Used for boilerplate reduction
-- **JasperReports + DynamicReports**: PDF generation engine
+- **Apache FOP**: PDF generation engine (JasperReports removed, issue #37)
 - **ZXing**: QR code and DataMatrix barcode generation
 
 ## Test Structure

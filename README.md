@@ -55,19 +55,12 @@ management.endpoints.web.base-path=[Basepath dove esporre i servizi di stato app
 
 stampe.time-zone=[TimeZone dell'applicazione]
 
-# Motore di stampa: jasper (default) o fop
-stampe.motore.avviso-semplice=[Motore per l'avviso senza bollettino postale]
-stampe.motore.avviso-postale=[Motore per l'avviso con bollettino postale]
-stampe.motore.violazione-cds=[Motore per la violazione del codice della strada senza bollettino]
-stampe.motore.ricevuta=[Motore per la ricevuta telematica]
-stampe.motore.avviso-bilingue=[Motore per l'avviso bilingue, con e senza bollettino]
 
 ```
 
-Il motore Apache FOP sostituisce JasperReports un tipo di avviso alla volta (issue #37). Con `fop`,
-l'avviso semplice e quello con bollettino postale sono stampati con FOP in tutti i loro layout (rata
-unica, rate, soglie e pagine multiple), come la violazione del codice della strada (con bollettino usa
-il motore dell'avviso postale), la ricevuta telematica e l'avviso bilingue.
+Avvisi e ricevute sono stampati con Apache FOP, a partire dai layout XSL-FO in
+`src/main/resources/fop` (issue #37). JasperReports non e' piu' usato e le proprieta'
+`stampe.motore.*` delle versioni precedenti non hanno piu' effetto.
 
 L'applicazione e' configurata per loggare su standardOutput e' possibile sovrascrivere la configurazione di default utilizzando il meccanismo di override delle properties di spring.
 

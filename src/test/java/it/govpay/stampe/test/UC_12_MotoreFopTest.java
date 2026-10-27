@@ -15,7 +15,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -31,15 +30,13 @@ import it.govpay.stampe.test.serializer.ObjectMapperUtils;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Motore FOP configurato per avviso semplice, postale, bilingue, violazione del codice della strada e
- * ricevuta (issue #37): sono stampati con FOP in tutti i loro layout. Il motore usato si riconosce dal Producer del PDF.
+ * Avviso semplice, postale, bilingue, violazione del codice della strada e ricevuta sono stampati con
+ * FOP in tutti i loro layout (issue #37). Il motore usato si riconosce dal Producer del PDF.
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 @DisplayName("Test Motore FOP")
 @ActiveProfiles("test")
-@TestPropertySource(properties = { "stampe.motore.avviso-semplice=fop", "stampe.motore.avviso-postale=fop",
-		"stampe.motore.violazione-cds=fop", "stampe.motore.ricevuta=fop", "stampe.motore.avviso-bilingue=fop" })
 class UC_12_MotoreFopTest {
 
 	private static final String PRODUCER_FOP = "Apache FOP";

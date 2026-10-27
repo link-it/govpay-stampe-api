@@ -41,36 +41,15 @@
 		<!-- govpay-common (not in BOM) -->
 		<govpay-common.version>2.0.4-SNAPSHOT</govpay-common.version>
 
-		<!-- xalan -->
-		<xalan.version>2.7.3</xalan.version>
-		<!-- Jaxen -->
-        <jaxen.version>2.0.0</jaxen.version>
-		<!-- barbecue -->
-		<barbecue.version>1.5-beta1</barbecue.version>
-		<!-- Groovy -->
-		<groovy-all.version>2.4.21</groovy-all.version>
 		<!-- xmlgraphics-commons -->
 		<xmlgraphics.commons.version>2.11</xmlgraphics.commons.version>
 		<!-- xmlgraphics-batik-bridge -->
 		<batik-bridge.version>1.19</batik-bridge.version>
-		<!-- Apache FOP: motore XSL-FO che sostituira' JasperReports (#37), allineato a batik e xmlgraphics-commons -->
+		<!-- Apache FOP: motore XSL-FO di stampa (#37), allineato a batik e xmlgraphics-commons -->
 		<fop.version>2.11</fop.version>
 		<!-- com.google.zxing.javase -->
 		<com.google.zxing.javase.version>3.5.3</com.google.zxing.javase.version>
-		<!-- dynamicreports-core -->
-		<dynamicreports-core.version>6.20.1</dynamicreports-core.version>
-		<!-- jasperreports -->
-		<jasperreports.version>6.21.5</jasperreports.version>
 
-		<!-- ant version -->
-		<ant.version>1.10.15</ant.version>
-		<!-- commons bean utils-->
-		<commons-beanutils.version>1.11.0</commons-beanutils.version>
-		
-		<jfreechart.version>1.5.6</jfreechart.version>
-		
-		<!-- barcode4j -->
-		<barcode4j.version>2.1</barcode4j.version>
 		<owasp.falsePositives.dir>src/main/resources/owasp/falsePositives</owasp.falsePositives.dir>
 		<!-- owasp config -->
 		<owasp>verify</owasp> <!-- owasp phase, use 'none' for disable -->
@@ -300,75 +279,6 @@
 			</exclusions>
 		</dependency>
 
-
-		<dependency>
-			<groupId>net.sourceforge.dynamicreports</groupId>
-			<artifactId>dynamicreports-core</artifactId>
-			<version>${dynamicreports-core.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>net.sf.jasperreports</groupId>
-					<artifactId>jasperreports</artifactId>
-				</exclusion>
-				<exclusion>
-					<artifactId>core</artifactId>
-					<groupId>com.google.zxing</groupId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.xmlgraphics</groupId>
-					<artifactId>batik-bridge</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-lang3</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>xml-apis</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>net.sf.barcode4j</groupId>
-   					<artifactId>barcode4j</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>net.sf.jasperreports</groupId>
-			<artifactId>jasperreports</artifactId>
-			<version>${jasperreports.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-databind</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-annotations</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.dataformat</groupId>
-					<artifactId>jackson-dataformat-xml</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.jfree</groupId>
-  					<artifactId>jfreechart</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>net.sf.barcode4j</groupId>
-   					<artifactId>barcode4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-beanutils</groupId>
-		    		<artifactId>commons-beanutils</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 		<dependency>
 			<groupId>com.google.zxing</groupId>
 			<artifactId>javase</artifactId>
@@ -418,70 +328,10 @@
 			</exclusions>
 		</dependency>
 
-		<dependency>
-			<groupId>jaxen</groupId>
-			<artifactId>jaxen</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-all</artifactId>
-			<version>${groovy-all.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>net.sourceforge.barbecue</groupId>
-			<artifactId>barbecue</artifactId>
-			<version>${barbecue.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>net.sf.barcode4j</groupId>
-   			<artifactId>barcode4j</artifactId>
-   			<version>${barcode4j.version}</version>
-   			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-		    <groupId>org.apache.ant</groupId>
-		    <artifactId>ant</artifactId>
-		    <version>${ant.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>${xalan.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>serializer</artifactId>
-			<version>${xalan.version}</version>
-		</dependency>
-		
 	 	<dependency>
 	      <groupId>commons-codec</groupId>
 	      <artifactId>commons-codec</artifactId>
 	    </dependency>
-
-		<!-- Dipendenze con versioni aggiornate per risolvere vulnerabilita' -->
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>${commons-beanutils.version}</version>
-		</dependency>
 
 		<!-- Integration Test -->
 		<dependency>
@@ -659,8 +509,6 @@
 				<version>${owasp.plugin.version}</version>
 				<configuration>
 					<suppressionFiles>
-						<suppressionFile>${owasp.falsePositives.dir}/CVE-2025-10492.xml</suppressionFile>
-						<suppressionFile>${owasp.falsePositives.dir}/CVE-2026-6009.xml</suppressionFile>
 						<suppressionFile>${owasp.falsePositives.dir}/CVE-2026-54515.xml</suppressionFile>
 					</suppressionFiles>
 				</configuration>

@@ -202,13 +202,12 @@ superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo st
 - **Dati calcolati:** prima della stampa `PreparazioneAvviso` valorizza i campi opzionali dell'XSD che XSLT non può calcolare:
   - `qr_code_svg` e `data_matrix_svg` di ogni rata, nei modelli v1 e v2;
   - `logo_ente_px` e `logo_ente_secondario_px`, `logo_pagopa_px` per la ricevuta.
-- **Cache:** `FopFactory` (configurazione e font) è unica; i fogli XSLT compilati sono in cache, e quelli dei tipi configurati con `fop` si compilano all'avvio.
+- **Cache:** `FopFactory` (configurazione e font) è unica; i fogli XSLT compilati sono in cache e si compilano all'avvio.
 - **Classpath:** fogli, configurazione e font vengono letti solo dal classpath (i font come `classpath:/fonts/...`), quindi funzionano da `target/classes`, dal jar eseguibile e dal war. Ogni altra risorsa esterna viene rifiutata.
 
-Il motore si sceglie per tipo di avviso con `stampe.motore.avviso-semplice`, `stampe.motore.avviso-postale`,
-`stampe.motore.violazione-cds`, `stampe.motore.ricevuta` e `stampe.motore.avviso-bilingue` (`jasper` di
-default). `LayoutMigrati` decide quali avvisi stampare con FOP: postale con pagine multiple e violazione
-`RidottoScontato`, che il mapper non produce, restano su Jasper.
+Tutti i tipi di stampa usano FOP: JasperReports e i `.jasper` sono stati rimossi, insieme alle proprietà
+`stampe.motore.*` che sceglievano il motore per tipo durante la migrazione. I layout `RidottoScontato`, e
+postale con pagine multiple, non sono stati migrati: il mapper non li produce.
 
 Test:
 - `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
@@ -217,9 +216,10 @@ Test:
 ## Casi di riferimento
 
 I PDF Jasper dei layout a pagina singola vengono dalla testsuite del core (`pdf-riferimento/run-*`). Quelli
-multi-rata, la ricevuta e l'avviso bilingue, che il core non produce, si generano con
-`GeneraRiferimentiJasperTest`. Il test costruisce le varianti (rate, soglie, pagine multiple, postale,
-violazione CdS, ricevuta, bilingue in tedesco e sloveno) come il controller e salva XML e PDF Jasper:
+multi-rata, la ricevuta e l'avviso bilingue, che il core non produce, sono stati generati con
+`GeneraRiferimentiJasperTest`. Il test costruiva le varianti (rate, soglie, pagine multiple, postale,
+violazione CdS, ricevuta, bilingue in tedesco e sloveno) come il controller e salvava XML e PDF Jasper.
+È stato rimosso con JasperReports: per rigenerare i riferimenti si usa il commit `c88aed7`, l'ultimo con Jasper:
 
 ```bash
 mvn test -Dtest=GeneraRiferimentiJasperTest -Driferimenti.uscita=$PWD/pdf-riferimento/jasper-multirata

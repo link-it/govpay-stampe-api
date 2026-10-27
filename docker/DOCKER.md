@@ -48,12 +48,12 @@ curl http://localhost:10003/actuator/health
 │  │   Spring Boot Application    │  │
 │  │   - REST Controllers         │  │
 │  │   - PDF Generation Service   │  │
-│  │   - JasperReports Engine     │  │
+│  │   - Apache FOP Engine        │  │
 │  └──────────────────────────────┘  │
 │              │                      │
 │              ▼                      │
 │  ┌──────────────────────────────┐  │
-│  │   PDF Templates (Jasper)     │  │
+│  │   PDF Layouts (XSL-FO)       │  │
 │  └──────────────────────────────┘  │
 └─────────────────────────────────────┘
 ```

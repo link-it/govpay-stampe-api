@@ -6,8 +6,6 @@ public class Costanti {
 
 	public static final String PROPERY_NAME_COM_SUN_XML_BIND_XML_DECLARATION = "com.sun.xml.bind.xmlDeclaration";
 	public static final String LOG_MSG_AVVISO_PAGAMENTO_INPUT = "AvvisoPagamentoInput: {}";
-	public static final String PROPERTY_VALUE_NET_SF_JASPERREPORTS_ENGINE_UTIL_XML_JAXEN_X_PATH_EXECUTER_FACTORY = "net.sf.jasperreports.engine.util.xml.JaxenXPathExecuterFactory";
-	public static final String PROPERTY_NAME_NET_SF_JASPERREPORTS_XPATH_EXECUTER_FACTORY = "net.sf.jasperreports.xpath.executer.factory";
 	
 	public static final String PATTERN_DATA_GG_MM_AAAA = "dd/MM/yyyy";
 	
@@ -15,38 +13,7 @@ public class Costanti {
 	public static final String AVVISO_PAGAMENTO_ROOT_ELEMENT_NAME= "AvvisoPagamentoInput";
 	public static final String VIOLAZIONE_CDS_ROOT_ELEMENT_NAME= "ViolazioneInput";
 
-	public static final String AVVISO_PAGAMENTO_TEMPLATE_JASPER = "/AvvisoPagamento.jasper";
-	public static final String RATA_DOPPIA_TEMPLATE_JASPER = "/DoppiaRata.jasper";
-	public static final String DOPPIO_FORMATO_TEMPLATE_JASPER = "/DoppioFormato.jasper";
-	public static final String RATA_MULTIPLA_TEMPLATE_JASPER = "/RataMultipla.jasper";
-	public static final String RATA_UNICA_TEMPLATE_JASPER = "/RataUnica.jasper";
-	public static final String RATA_TRIPLA_TEMPLATE_JASPER = "/TriplaRata.jasper";
-	public static final String TRIPLO_FORMATO_TEMPLATE_JASPER = "/TriploFormato.jasper";
-
-	public static final String AVVISO_PAGAMENTO_POSTALE_TEMPLATE_JASPER = "/AvvisoPagamentoPostale.jasper";
-	public static final String BOLLETTINO_RATA_TEMPLATE_JASPER = "/BollettinoRataPostale.jasper";
-	public static final String BOLLETTINO_TRIRATA_TEMPLATE_JASPER = "/BollettinoTriRataPostale.jasper";
-	public static final String RATA_DOPPIA_POSTALE_TEMPLATE_JASPER = "/DoppiaRataPostale.jasper";
-	public static final String DOPPIO_FORMATO_POSTALE_TEMPLATE_JASPER = "/DoppioFormatoPostale.jasper";
-	public static final String RATA_UNICA_POSTALE_TEMPLATE_JASPER = "/RataUnicaPostale.jasper";
-	public static final String RATA_TRIPLA_POSTALE_TEMPLATE_JASPER = "/TriplaRataPostale.jasper";
-	public static final String TRIPLO_FORMATO_POSTALE_TEMPLATE_JASPER = "/TriploFormatoPostale.jasper";
-
 	public static final String VIOLAZIONE_CDS_DIR = "/violazioneCDS";
-
-	public static final String VIOLAZIONE_CDS_TEMPLATE_JASPER = "/ViolazioneCDS.jasper";
-	public static final String RIDOTTOSCONTATO_TEMPLATE_JASPER = "/RidottoScontato.jasper";
-	public static final String SANZIONE_TEMPLATE_JASPER = "/Sanzione.jasper";
-	public static final String FORMATO_TEMPLATE_JASPER = "/Formato.jasper";
-
-
-	public static final String AVVISO_PAGAMENTO_TEMPLATE_JASPER_V2 = "/AvvisoPagamentoV2.jasper";
-	public static final String MONOBAND_TEMPLATE_JASPER_V2 = "/MonoBandV2.jasper";
-	public static final String RATAUNICA_TEMPLATE_JASPER_V2 = "/RataUnicaV2.jasper";
-	public static final String RATADOPPIA_TEMPLATE_JASPER_V2 = "/DoppiaRataV2.jasper";
-	public static final String DOPPIOFORMATO_TEMPLATE_JASPER_V2 = "/DoppioFormatoV2.jasper";
-	public static final String BOLLETTINORATA_TEMPLATE_JASPER_V2 = "/BollettinoRataV2.jasper";
-	public static final String DUALBAND_TEMPLATE_JASPER_V2 = "/DualBandV2.jasper";
 
 	public static final String AVVISO_PAGAMENTO_V2_DIR = "/avvisoPagamentoV2";
 
@@ -74,7 +41,6 @@ public class Costanti {
 	// root element elemento di input
 	public static final String RICEVUTA_TELEMATICA_ROOT_ELEMENT_NAME= "root";
 
-	public static final String RICEVUTA_TELEMATICA_TEMPLATE_JASPER = "RicevutaMae.jasper";
 	
 	public static final String PAGAMENTO_ESEGUITO = "Eseguito";
 	public static final String PAGAMENTO_NON_ESEGUITO = "Non eseguito";

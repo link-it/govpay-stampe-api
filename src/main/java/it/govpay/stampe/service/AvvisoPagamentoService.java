@@ -1,34 +1,18 @@
 package it.govpay.stampe.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.fop.MotoreFop;
-import net.sf.jasperreports.engine.DefaultJasperReportsContext;
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JRPropertiesUtil;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRXmlDataSource;
-import net.sf.jasperreports.engine.fill.JRGzipVirtualizer;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 public abstract class AvvisoPagamentoService {
 	
@@ -44,53 +28,17 @@ public abstract class AvvisoPagamentoService {
 
 	/**
 	 * Stampa con FOP: l'oggetto JAXB e' passato direttamente alla trasformazione XSLT, senza
-	 * serializzarlo. Con il debug attivo l'XML viene comunque scritto nel log, come per Jasper.
+	 * serializzarlo. Con il debug attivo l'XML di input viene scritto nel log.
 	 */
 	protected byte[] creaAvvisoFop(MotoreFop motoreFop, String foglio, JAXBElement<?> jaxbElement, boolean debug) throws JAXBException {
 		if(debug) {
 			try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 				jaxb2Marshaller.createMarshaller().marshal(jaxbElement, baos);
-				logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(java.nio.charset.StandardCharsets.UTF_8));
+				logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(StandardCharsets.UTF_8));
 			} catch (IOException e) {
 				// ByteArrayOutputStream non lancia eccezioni in chiusura
 			}
 		}
 		return motoreFop.genera(foglio, jaxb2Marshaller.getJaxbContext(), jaxbElement);
-	}
-
-	protected byte[] creaAvvisoInner(JAXBElement<?> jaxbElement, Map<String, Object> parameters, Resource templatePrincipale,
-
-			boolean debug) throws JAXBException, IOException, JRException {
-		JRGzipVirtualizer virtualizer = new JRGzipVirtualizer(50);
-		parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-
-		try (InputStream templateIS = templatePrincipale.getInputStream();
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();){
-
-			DefaultJasperReportsContext defaultJasperReportsContext = DefaultJasperReportsContext.getInstance();
-
-			JRPropertiesUtil.getInstance(defaultJasperReportsContext).setProperty(Costanti.PROPERTY_NAME_NET_SF_JASPERREPORTS_XPATH_EXECUTER_FACTORY, Costanti.PROPERTY_VALUE_NET_SF_JASPERREPORTS_ENGINE_UTIL_XML_JAXEN_X_PATH_EXECUTER_FACTORY);
-			Marshaller marshaller = jaxb2Marshaller.createMarshaller();
-			marshaller.marshal(jaxbElement, baos);
-			byte[] byteArray = baos.toByteArray();
-
-			if(debug) {
-				String inputString = new String(byteArray);
-				logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, inputString);
-			}
-
-			try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArray);){
-
-				JRDataSource dataSource = new JRXmlDataSource(defaultJasperReportsContext, byteArrayInputStream,this.getXmlRootName());
-				JasperReport jasperReport = (JasperReport) JRLoader.loadObject(defaultJasperReportsContext,templateIS);
-				JasperPrint jasperPrint = JasperFillManager.getInstance(defaultJasperReportsContext).fill(jasperReport, parameters, dataSource);
-
-				return JasperExportManager.getInstance(defaultJasperReportsContext).exportToPdf(jasperPrint);
-			}finally {
-				//donothing
-			}
-		}finally {
-			//donothing
-		}
 	}
 }

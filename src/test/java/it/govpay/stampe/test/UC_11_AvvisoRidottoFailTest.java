@@ -103,6 +103,31 @@ class UC_11_AvvisoRidottoFailTest {
 	}
 
 	@Test
+	void UC_11_04_AvvisoRidotto_PostaleIntestatariDiversi() throws Exception {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(2, false, true, false);
+
+		// La seconda soglia risolve a un intestatario diverso dalla prima
+		avviso.getReducedPayments().get(1).getIban().setOwnerBusinessName("Altro Intestatario");
+
+		String body = mapper.writeValueAsString(avviso);
+
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnprocessableEntity())
+				.andReturn();
+
+		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+		JsonObject problem = reader.readObject();
+		assertNotNull(problem.getString("type"));
+		assertNotNull(problem.getString("title"));
+		assertNotNull(problem.getString("detail"));
+		assertEquals(422, problem.getInt("status"));
+		assertEquals("Unprocessable Entity", problem.getString("title"));
+		assertTrue(problem.getString("detail").contains("tutti gli IBAN"));
+	}
+
+	@Test
 	void UC_11_03_AvvisoRidotto_NessunImporto() throws Exception {
 		// Creo un avviso senza full, senza rate e senza soglie
 		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(2, false, false, false);

@@ -25,6 +25,11 @@ public class SemanticValidator {
 	public void validazioneSemanticaViolazioneCds(CdsViolation cdsViolation) {
 		this.validazioneSemanticaAmount(cdsViolation.getDiscountedAmount(), cdsViolation.getPostal());
 		this.validazioneSemanticaAmount(cdsViolation.getReducedAmount(), cdsViolation.getPostal());
+		if(Boolean.TRUE.equals(cdsViolation.getPostal())) {
+			List<Iban> ibanPerPagina = List.of(cdsViolation.getReducedAmount().getIban(),
+					cdsViolation.getDiscountedAmount().getIban());
+			this.validazioneSemanticaIntestatarioPostaleUnico(ibanPerPagina, cdsViolation.getCreditor());
+		}
 	}
 
 	public void validazioneSemanticaPaymentNotice(PaymentNotice paymentNotice) {
@@ -66,6 +71,10 @@ public class SemanticValidator {
 			for (ThresholdPayment thresholdPayment : reducedPayments) {
 				this.validazioneSemanticaThresholdPayment(thresholdPayment, paymentNotice.getPostal());
 			}
+			if(Boolean.TRUE.equals(paymentNotice.getPostal())) {
+				List<Iban> ibanPerSoglia = reducedPayments.stream().map(ThresholdPayment::getIban).toList();
+				this.validazioneSemanticaIntestatarioPostaleUnico(ibanPerSoglia, paymentNotice.getCreditor());
+			}
 		}
 	}
 
@@ -97,7 +106,23 @@ public class SemanticValidator {
 		}
 
 		if(Boolean.TRUE.equals(paymentNotice.getPostal())) {
-			this.validazioneSemanticaIntestatarioPostaleUnico(options, paymentNotice.getCreditor());
+			List<Iban> ibanPerOpzione = new ArrayList<>();
+			for (PaymentNoticeOption option : options) {
+				if(option.getFull() != null) {
+					ibanPerOpzione.add(option.getFull().getIban());
+				}
+				if(option.getInstalments() != null) {
+					for (Instalment instalment : option.getInstalments()) {
+						ibanPerOpzione.add(instalment.getIban());
+					}
+				}
+				if(option.getReducedPayments() != null) {
+					for (ThresholdPayment thresholdPayment : option.getReducedPayments()) {
+						ibanPerOpzione.add(thresholdPayment.getIban());
+					}
+				}
+			}
+			this.validazioneSemanticaIntestatarioPostaleUnico(ibanPerOpzione, paymentNotice.getCreditor());
 		}
 	}
 
@@ -147,37 +172,25 @@ public class SemanticValidator {
 	/**
 	 * {@code AvvisoPagamentoInput.intestatarioContoCorrentePostale} e' un campo UNICO per tutto
 	 * il documento ({@code BaseAvvisoMapper#impostaDatiPostaliNellaRata} lo sovrascrive a ogni
-	 * importo processato, mai un dato per pagina/rata): con piu' opzioni che risolvono IBAN con
-	 * intestatari diversi, le pagine delle opzioni precedenti mostrerebbero in stampa
-	 * l'intestatario dell'ultima opzione processata, non il proprio. Soluzione temporanea (non
-	 * il dato per pagina/rata, che richiederebbe toccare il modello/template Jasper): rifiutare
-	 * esplicitamente intestatari diversi tra le opzioni, invece di stampare in silenzio quello
-	 * sbagliato.
+	 * importo processato, mai un dato per pagina/rata): con piu' pagine che risolvono IBAN con
+	 * intestatari diversi, le pagine precedenti mostrerebbero in stampa l'intestatario
+	 * dell'ultima pagina processata, non il proprio. Soluzione temporanea (non il dato per
+	 * pagina/rata, che richiederebbe toccare il modello/template Jasper): rifiutare
+	 * esplicitamente intestatari diversi tra le pagine, invece di stampare in silenzio quello
+	 * sbagliato. Si applica sia a {@code options} (un IBAN per opzione) sia a
+	 * {@code reducedPayments} a livello di documento (un IBAN per soglia): in entrambi i casi
+	 * il documento finale ha piu' pagine che condividono quel campo unico.
 	 */
-	private void validazioneSemanticaIntestatarioPostaleUnico(List<PaymentNoticeOption> options, Creditor creditor) {
+	private void validazioneSemanticaIntestatarioPostaleUnico(List<Iban> ibanPerPagina, Creditor creditor) {
 		String intestatarioEnte = creditor != null ? creditor.getBusinessName() : null;
-		List<String> intestatari = new ArrayList<>();
-
-		for (PaymentNoticeOption option : options) {
-			if(option.getFull() != null) {
-				intestatari.add(this.risolviIntestatarioPostale(option.getFull().getIban(), intestatarioEnte));
-			}
-			if(option.getInstalments() != null) {
-				for (Instalment instalment : option.getInstalments()) {
-					intestatari.add(this.risolviIntestatarioPostale(instalment.getIban(), intestatarioEnte));
-				}
-			}
-			if(option.getReducedPayments() != null) {
-				for (ThresholdPayment thresholdPayment : option.getReducedPayments()) {
-					intestatari.add(this.risolviIntestatarioPostale(thresholdPayment.getIban(), intestatarioEnte));
-				}
-			}
-		}
+		List<String> intestatari = ibanPerPagina.stream()
+				.map(iban -> this.risolviIntestatarioPostale(iban, intestatarioEnte))
+				.toList();
 
 		String primoIntestatario = intestatari.isEmpty() ? null : intestatari.get(0);
 		for (String intestatario : intestatari) {
 			if(!Objects.equals(primoIntestatario, intestatario)) {
-				throw new UnprocessableEntityException("Con 'options' e avviso postale, tutti gli IBAN delle opzioni "
+				throw new UnprocessableEntityException("Con piu' pagine e avviso postale, tutti gli IBAN "
 						+ "devono risolvere allo stesso intestatario di conto corrente: la stampa usa un solo "
 						+ "campo per l'intero documento, non uno per pagina");
 			}

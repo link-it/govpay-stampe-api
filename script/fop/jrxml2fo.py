@@ -30,11 +30,13 @@ Il file generato va su stdout.
 """
 
 import argparse
+import hashlib
 import html
 import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 J = '{http://jasperreports.sourceforge.net/jasperreports}'
 BANDE = ['background', 'title', 'pageHeader', 'columnHeader', 'detail',
@@ -763,6 +765,30 @@ def svg_da_batik(espr):
     return s
 
 
+# Icone SVG dei template Jasper, scritte come file in src/main/resources/fop/icone/ e lette da FOP con
+# fo:external-graphic: nome del file per SHA-1 (primi 12 caratteri) del testo SVG
+ICONE = {
+    'b22c4992f35e': 'forbici', '19f59e495afe': 'logo-poste-italiane', 'edcd34c6e576': 'logo-euro-bollettino',
+    '50b814fb0049': 'logo-bollettino-postale', '63a4526e17dc': 'logo-pagopa', '84859fb3403a': 'canali-digitali',
+    'b7dd0df282f9': 'informazioni', '2e4bdcbe06b5': 'canali-fisici', '4522d7eef43d': 'logo-pagopa-nero',
+    '2060847ea183': 'informazioni-bilingue', '4bd3c68ca331': 'nota', '1f7a5fe0fe33': 'calendario',
+    '404aec54b42d': 'freccia-giu',
+}
+CARTELLA_ICONE = 'src/main/resources/fop/icone'
+
+
+def icona(svg):
+    """URI dell'icona SVG, scritta nella cartella delle icone: le icone nuove vanno aggiunte a ICONE."""
+    impronta = hashlib.sha1(svg.encode('utf-8')).hexdigest()[:12]
+    if impronta not in ICONE:
+        sys.exit(f'icona SVG senza nome (SHA-1 {impronta}): aggiungerla a ICONE in jrxml2fo.py')
+    file = Path(CARTELLA_ICONE) / f'{ICONE[impronta]}.svg'
+    file.parent.mkdir(parents=True, exist_ok=True)
+    if not file.exists() or file.read_text(encoding='utf-8') != svg:
+        file.write_text(svg, encoding='utf-8')
+    return f'url(classpath:/fop/icone/{ICONE[impronta]}.svg)'
+
+
 # --- elementi ------------------------------------------------------------------
 
 # --- righe rimosse (isRemoveLineWhenBlank) e posizione Float ----------------------------------------
@@ -1235,12 +1261,12 @@ def immagine(el, ox, oy, ctx, out, rientro):
             interno = {'absolute-position': 'absolute', 'left': pt(dx), 'top': pt(dy), 'width': pt(round(dw, 3)), 'height': pt(round(dh, 3))}
             grafica = {'content-width': pt(round(dw, 3)), 'content-height': pt(round(dh, 3)), 'scaling': 'uniform'}
             out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:block-container{attrs(interno)}><fo:block{attrs(blocco)}>'
-                       f'<fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block></fo:block-container></fo:block>')
+                       f'<fo:external-graphic{attrs(grafica)} src="{icona(svg)}"/></fo:block></fo:block-container></fo:block>')
         else:
             # SVG senza dimensioni: Jasper (BatikRenderer) gli passa tutto il riquadro come area di disegno,
             # ed e' l'SVG stesso (preserveAspectRatio) a centrare il disegno, indipendentemente da hAlign/vAlign
             grafica = {'content-width': w, 'content-height': h, 'scaling': 'non-uniform'}
-            out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:instream-foreign-object{attrs(grafica)}>{svg}</fo:instream-foreign-object></fo:block>')
+            out.append(f'{rientro}\t<fo:block{attrs(blocco)}><fo:external-graphic{attrs(grafica)} src="{icona(svg)}"/></fo:block>')
     elif m_logo:
         xp = ctx.p(m_logo.group(2)) if m_logo.group(1) == 'P' else ctx.f(m_logo.group(2))
         # immagine raster come Jasper (scaleImage RetainShape): template logo di comune.xsl

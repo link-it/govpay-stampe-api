@@ -72,6 +72,9 @@ applicherebbe comunque il kerning delle tabelle GPOS: Jasper non ne usa.
 
 **Immagini.**
 - **SVG:** ricevono tutto il riquadro come area di disegno e si centrano da soli, come in Jasper.
+  Le icone (logo pagoPA, Poste, canali di pagamento, forbici, ...) sono file in
+  `src/main/resources/fop/icone/`, letti con `fo:external-graphic` da `classpath:/fop/icone/<nome>.svg`;
+  il convertitore li scrive dal sorgente Jasper e li chiama per nome (`ICONE` in `jrxml2fo.py`).
 - **Raster (loghi):** Jasper le scala per stare nel riquadro mantenendo le proporzioni, poi le sposta
   secondo `hAlign`/`vAlign` di uno spazio libero troncato a punti interi. Il renderer aggiunge all'XML le
   dimensioni in pixel di ogni logo (`<logo>_px`) e il template `logo` di `comune.xsl` ripete lo stesso

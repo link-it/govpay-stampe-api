@@ -43,9 +43,9 @@ import jakarta.xml.bind.util.JAXBSource;
  * una volta sola, i fogli XSLT sono compilati al primo uso (o con {@link #prepara(String)}) e
  * riusati tra le richieste.
  * <p>
- * Fogli, font e configurazione sono letti dal classpath (i font con lo schema {@code classpath:}), che
- * funziona allo stesso modo da {@code target/classes}, dal jar eseguibile e dal war. Il motore non
- * apre altre risorse: le immagini dei layout sono URI {@code data:}, gestiti da FOP stesso.
+ * Fogli, font, icone e configurazione sono letti dal classpath (font e icone con lo schema {@code classpath:}),
+ * che funziona allo stesso modo da {@code target/classes}, dal jar eseguibile e dal war. Il motore non
+ * apre altre risorse: loghi e codici sono URI {@code data:}, gestiti da FOP stesso.
  */
 @Component
 public class MotoreFop {
@@ -190,7 +190,7 @@ public class MotoreFop {
 		}
 	}
 
-	/** Risorse di FOP (i font della configurazione) lette solo dal classpath. */
+	/** Risorse di FOP (i font della configurazione e le icone dei layout) lette solo dal classpath. */
 	private static final class ClasspathResourceResolver implements ResourceResolver {
 		@Override
 		public Resource getResource(URI uri) throws IOException {

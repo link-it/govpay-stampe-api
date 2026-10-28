@@ -115,6 +115,18 @@ K_FOP = {'TitilliumWeb-Regular.ttf': 1.772, 'TitilliumWeb-SemiBold.ttf': 1.772, 
          'RobotoMono-Italic.ttf': 1.551, 'RobotoMono-BoldItalic.ttf': 1.551}
 
 
+def interlinea_fissa(el):
+    """lineSpacingSize con interlinea Fixed, 0 con Single: il parametro interlineaFissa di TestoJasper."""
+    p = el.find(f'{J}textElement/{J}paragraph')
+    return float(p.get('lineSpacingSize')) if p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize') else 0.0
+
+
+def num_xpath(v):
+    """Numero come letterale XPath, senza perdere cifre: 16 e non 16.0."""
+    r = repr(float(v))
+    return r[:-2] if r.endswith('.0') else r
+
+
 def geometria_testo(el, blocco, n, altezza):
     """line-height e padding-top che riproducono in FOP la posizione delle righe di Jasper."""
     corpo = float(blocco['font-size'][:-2])
@@ -953,7 +965,7 @@ def testo(el, ox, oy, ctx, out, rientro):
     if not righe_xpath and not righe:
         a_runtime = testo_a_runtime(el, ctx)
         if a_runtime:
-            righe_xpath = "1 + string-length($testo-righe) - string-length(translate($testo-righe, '&#10;', ''))"
+            righe_xpath = 'tj:numeroRighe(string($testo-righe))'
     posizioni = a_capo.get(re_el.get('uuid')) if costante is not None else None
     if not righe:
         righe = sum(len(v) + 1 for v in posizioni.values()) if posizioni else 1
@@ -963,22 +975,21 @@ def testo(el, ox, oy, ctx, out, rientro):
     blocco.update(extra)
     variabile = ''
     if righe_xpath:
-        # numero di righe calcolato dal contenuto: interlinea e padding per ogni caso, scelti in XSLT
-        # interlinea e padding dipendono dal numero di righe: un caso per ogni numero possibile, almeno 5, fino
-        # alle righe che stanno nel riquadro (10 se il riquadro si allunga); oltre, l'ultimo caso
+        # numero di righe calcolato dal contenuto: interlinea e padding calcolati a runtime da TestoJasper.
+        # La geometria vale fino a un limite di righe, almeno 5, le righe che stanno nel riquadro (10 se il
+        # riquadro si allunga); oltre, resta quella del limite
         massimo_righe = righe_massime(el, blocco, altezza)
         ultimo = max(5, massimo_righe) if massimo_righe else (10 if el.get('isStretchWithOverflow') == 'true' else 5)
-        casi = {n: geometria_testo(el, blocco, n, altezza) for n in range(1, ultimo + 1)}
-        if sopra:
-            for g in casi.values():
-                g['padding-top'] = pt(round(float(g['padding-top'][:-2]) + sopra, 3))
+        te = el.find(f'{J}textElement')
+        verticale = (te.get('verticalAlignment') if te is not None else None) or 'Top'
+        font = f"'{blocco['font-family']}', {num_xpath(float(blocco['font-size'][:-2]))}, {num_xpath(interlinea_fissa(el))}"
         blocco.pop('line-height', None); blocco.pop('padding-top', None)
-        for nome_attr in ('line-height', 'padding-top'):
-            scelte = ''.join(f'<xsl:when test="$righe = {n}">{g[nome_attr]}</xsl:when>' for n, g in casi.items() if n < ultimo)
-            variabile += f'<xsl:attribute name="{nome_attr}"><xsl:choose>{scelte}<xsl:otherwise>{casi[ultimo][nome_attr]}</xsl:otherwise></xsl:choose></xsl:attribute>'
-        variabile = f'<xsl:variable name="righe" select="{righe_xpath}"/>' + variabile
+        variabile = (f'<xsl:variable name="righe" select="{righe_xpath}"/>'
+                     f'<xsl:attribute name="line-height"><xsl:value-of select="tj:interlinea($righe, {ultimo}, {font})"/></xsl:attribute>'
+                     f'<xsl:attribute name="padding-top"><xsl:value-of select="tj:paddingTesto($righe, {ultimo}, {font}, '
+                     f"'{verticale}', {num_xpath(altezza)}, {num_xpath(sopra)})\"/></xsl:attribute>")
     if a_runtime:
-        xp, con_tag, scelta = a_runtime
+        xp, con_tag, scelta, _ = a_runtime
         variabile = f'<xsl:variable name="testo-righe">{scelta}</xsl:variable>' + variabile
         if xp == '$valore':
             # espressione composta: con markup le righe sono nodi XSL-FO
@@ -1021,8 +1032,8 @@ def testo(el, ox, oy, ctx, out, rientro):
 
 def testo_a_runtime(el, ctx):
     """Per un testo variabile con gli a capo calcolati a runtime come in Jasper: (XPath del valore, condizione
-    XPath di valore con tag, istruzioni XSLT che producono il testo con gli a capo). None se il testo non e' di
-    questo tipo.
+    XPath di valore con tag, istruzioni XSLT che producono il testo con gli a capo, espressione XPath del testo
+    con gli a capo o None se servono le istruzioni). None se il testo non e' di questo tipo.
     - Senza markup: TestoJasper.righe sul valore, semplice o composto (testo_composto) in una variabile.
     - Con markup: TestoJasper.stile, che interpreta i tag come Jasper (anche gli a capo <br/>) e restituisce
       le righe come nodi XSL-FO."""
@@ -1055,23 +1066,20 @@ def testo_a_runtime(el, ctx):
         corsivo = 'true()' if blocco.get('font-style') == 'italic' else 'false()'
         chiamata = (f"tj:stile(string($valore), '{markup}', '{blocco['font-family']}', {grassetto}, {corsivo}, {ff[1]}, "
                     f"'{colore}', {round(larghezza, 3)}, {massimo}, {tronca})")
-        # con xsltproc (solo per le verifiche) la funzione Java non c'e': resta il testo con i tag
-        scelta = (f'<xsl:variable name="valore">{composto}</xsl:variable>'
-                  f'<xsl:choose><xsl:when test="function-available(\'tj:stile\')"><xsl:copy-of select="{chiamata}"/></xsl:when>'
-                  f'<xsl:otherwise><xsl:value-of select="$valore"/></xsl:otherwise></xsl:choose>')
-        return '$valore', 'false()', scelta
+        scelta = f'<xsl:variable name="valore">{composto}</xsl:variable><xsl:copy-of select="{chiamata}"/>'
+        return '$valore', 'false()', scelta, None
     if composto is not None:
         chiamata = f"tj:righe(string($valore), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
-        scelta = (f'<xsl:variable name="valore">{composto}</xsl:variable>'
-                  f'<xsl:choose><xsl:when test="function-available(\'tj:righe\')"><xsl:value-of select="{chiamata}"/></xsl:when>'
-                  f'<xsl:otherwise><xsl:value-of select="$valore"/></xsl:otherwise></xsl:choose>')
-        return '$valore', 'false()', scelta
-    # con xsltproc (solo per le verifiche) la funzione Java non c'e': il testo resta intero
+        scelta = f'<xsl:variable name="valore">{composto}</xsl:variable><xsl:value-of select="{chiamata}"/>'
+        return '$valore', 'false()', scelta, None
     chiamata = f"tj:righe(string({xp}), '{ff[0]}', {ff[1]}, {round(larghezza, 3)}, {massimo}, {tronca})"
-    con_tag = f"contains({xp}, '&lt;')" if markup != 'none' else 'false()'
-    scelta = (f'<xsl:choose><xsl:when test="function-available(\'tj:righe\') and not({con_tag})">'
-              f'<xsl:value-of select="{chiamata}"/></xsl:when><xsl:otherwise><xsl:value-of select="{xp}"/></xsl:otherwise></xsl:choose>')
-    return xp, con_tag, scelta
+    if markup == 'none':
+        return xp, 'false()', f'<xsl:value-of select="{chiamata}"/>', chiamata
+    # valore con tag: resta intero, e il blocco usa il template markup
+    con_tag = f"contains({xp}, '&lt;')"
+    scelta = (f'<xsl:choose><xsl:when test="{con_tag}"><xsl:value-of select="{xp}"/></xsl:when>'
+              f'<xsl:otherwise><xsl:value-of select="{chiamata}"/></xsl:otherwise></xsl:choose>')
+    return xp, con_tag, scelta, None
 
 
 def padding_verticale(el):
@@ -1095,19 +1103,15 @@ def allungamento_testo(el, ctx, cond):
     metriche = METRICHE_AWT.get(famiglia(font_attrs(el)['font-family']))
     if runtime is None or metriche is None:
         return None
-    corpo = float(font_attrs(el)['font-size'][:-2])
-    prima = (metriche[0] + metriche[1]) * corpo
-    p = el.find(f'{J}textElement/{J}paragraph')
-    fissa = p is not None and p.get('lineSpacing') == 'Fixed' and p.get('lineSpacingSize')
-    successive = float(p.get('lineSpacingSize')) + metriche[1] * corpo if fissa else prima
     sopra, sotto = padding_verticale(el)
     nome = 'allungamento-' + re_el.get('uuid')[:8]
-    righe = "(string-length($t) - string-length(translate($t, '&#10;', '')))"
+    parametri = (f"'{font_attrs(el)['font-family']}', {num_xpath(float(font_attrs(el)['font-size'][:-2]))}, "
+                 f"{num_xpath(interlinea_fissa(el))}, {num_xpath(sopra + sotto)}, {num_xpath(float(re_el.get('height')))}")
     fattore = f' * number({cond})' if cond else ''
-    dich = (f'<xsl:variable name="{nome}"><xsl:variable name="t">{runtime[2]}</xsl:variable>'
-            f'<xsl:variable name="d" select="ceiling({round(prima, 4)} + {righe} * {round(successive, 4)}) + {sopra + sotto:g} - {float(re_el.get("height")):g}"/>'
-            f'<xsl:value-of select="$d * number($d &gt; 0){fattore}"/></xsl:variable>')
-    return nome, dich
+    if runtime[3]:
+        return nome, f'<xsl:variable name="{nome}" select="tj:allungamento({runtime[3]}, {parametri}){fattore}"/>'
+    return nome, (f'<xsl:variable name="{nome}"><xsl:variable name="t">{runtime[2]}</xsl:variable>'
+                  f'<xsl:value-of select="tj:allungamento(string($t), {parametri}){fattore}"/></xsl:variable>')
 
 
 def righe_massime(el, blocco, altezza):

@@ -100,8 +100,9 @@ algoritmo di `SpezzaRighe.java`. Il numero di righe che ne risulta sceglie inter
   `i`, `span` e `br` come Jasper, spezza le righe con `LineBreakMeasurer` usando i font di ogni tratto
   (come il `ComplexTextLineWrapper` di Jasper) e restituisce le righe come nodi XSL-FO: testo e
   `fo:inline` per i tratti con uno stile diverso.
-- **Interlinea e padding:** dipendono dal numero di righe; il foglio ha un caso per ogni numero possibile,
-  almeno 5, fino alle righe che stanno nel riquadro (10 per i riquadri che si allungano).
+- **Interlinea e padding:** dipendono dal numero di righe e li calcolano a runtime `TestoJasper.interlinea`
+  e `TestoJasper.paddingTesto`, con la geometria descritta sopra. Oltre un limite di righe, almeno 5, le
+  righe che stanno nel riquadro (10 per i riquadri che si allungano), la geometria resta quella del limite.
 
 **Righe con stili diversi.** FOP allarga una riga quando un `fo:inline` usa un file di font con `capHeight`
 maggiore di quella del blocco: TitilliumWeb-Regular 692, TitilliumWeb-Bold 680. Ascendente e discendente
@@ -111,8 +112,8 @@ da `TestoJasper.stile` il blocco è quindi in TitilliumWeb normale, il Titillium
 e i tratti nel font del riquadro sono `fo:inline`: la posizione è la stessa del blocco nel font del riquadro.
 
 `MotoreFop` usa il processore XSLT del JDK (XSLTC), che accetta le funzioni di estensione, senza i limiti
-di lunghezza delle espressioni XPath: le posizioni calcolate li superano, e i fogli sono generati da qui. Con xsltproc,
-usato solo per ricavare il file FO delle verifiche, la funzione non c'è e il testo resta intero.
+di lunghezza delle espressioni XPath: le posizioni calcolate li superano, e i fogli sono generati da qui. Gli altri
+processori XSLT, per esempio xsltproc, non hanno le funzioni di estensione e non possono applicare i fogli.
 
 **Righe rimosse e posizione Float.** Jasper toglie un elemento con `isRemoveLineWhenBlank` vuoto, o non
 stampato per la sua condizione, insieme alla sua fascia verticale, se tutti gli elementi che la occupano
@@ -134,8 +135,8 @@ riquadro fino al testo e sposta in basso gli elementi `Float` sotto di lui, come
   della ricevuta: l'oggetto a 14 pt su 2 righe passa da 22 a 39 pt, una voce a 12 pt su 2 righe da 20 a 31 pt.
 - **Testi affiancati:** i testi le cui fasce si sovrappongono formano un gruppo che si allunga quanto il
   più alto. I gruppi uno sotto l'altro si sommano.
-- **Nel foglio:** l'allungamento di ogni testo è una variabile XSLT dichiarata in testa alla banda e
-  usata nel `top` degli elementi sotto.
+- **Nel foglio:** l'allungamento di ogni testo è una variabile XSLT dichiarata in testa alla banda,
+  calcolata da `TestoJasper.allungamento`, e usata nel `top` degli elementi sotto.
 
 **Report in flusso (`--flusso`).** Un report che va su più pagine, come la ricevuta con molte voci, si
 genera con le posizioni relative alla region-body, che ha i margini superiore e inferiore del report. I
@@ -189,8 +190,8 @@ python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input
   --classpath "$(mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout)" --escludi 480,250,100,22
 ```
 
-Il file FO (`layout.fo`) si ottiene dall'XML con `xsltproc src/main/resources/fop/avviso-semplice.xsl input.xml`
-(`avviso-postale.xsl` per gli avvisi con bollettino postale, `ricevuta.xsl` per la ricevuta).
+Il file FO (`layout.fo`) lo scrive `PrototipoFopTest` in `target/prototipo-fop/`, accanto al PDF di ogni
+caso, con il foglio indicato da `-Dprototipo.foglio`.
 
 **Bordi dei riquadri.** Jasper disegna la linea centrata sul bordo del riquadro. FOP disegna il bordo
 superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo stesso.

@@ -9,6 +9,8 @@ import java.awt.font.TextLayout;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.ArrayDeque;
@@ -62,7 +64,16 @@ public final class TestoJasper {
 			"Roboto", new String[] { "Roboto-Regular.ttf", null, null, null },
 			"Roboto-Bold", new String[] { "Roboto-Bold.ttf", null, null, null });
 
-	private static final Pattern TAG = Pattern.compile("<(/?)([a-zA-Z]+)([^>]*?)(/?)>");
+	/**
+	 * Geometria del testo per famiglia di font: ascendente e discendente delle metriche AWT usate da Jasper,
+	 * per unita' di corpo, e K di FOP, la distanza tra la prima riga e il bordo del blocco
+	 * ({@link #paddingTesto}). Uguali per tutte le varianti della famiglia.
+	 */
+	private static final Map<String, double[]> METRICHE = Map.of(
+			"TitilliumWeb", new double[] { 1.133, 0.388, 1.772 },
+			"RobotoMono", new double[] { 1.0479, 0.2711, 1.551 });
+
+	private static final Pattern TAG =Pattern.compile("<(/?)([a-zA-Z]+)([^>]*?)(/?)>");
 	private static final Pattern ATTRIBUTO = Pattern.compile("([a-zA-Z-]+)\\s*=\\s*\"([^\"]*)\"");
 	private static final Pattern ENTITA = Pattern.compile("&(#\\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos|nbsp);");
 
@@ -126,6 +137,106 @@ public final class TestoJasper {
 			}
 		}
 		return String.join("\n", righe);
+	}
+
+	/** Numero di righe di un testo con gli a capo gia' calcolati, separate da '\n'. */
+	public static double numeroRighe(String testo) {
+		return 1 + (double) testo.chars().filter(c -> c == '\n').count();
+	}
+
+	/**
+	 * Distanza tra le righe di un testo di Jasper, come line-height di FOP: con interlinea Single
+	 * (A + D) x corpo, con Fixed F + D x corpo + (A x corpo - F) / n, con A e D ascendente e discendente
+	 * AWT del font e n il numero di righe.
+	 *
+	 * @param righe numero di righe del testo
+	 * @param limiteRighe righe oltre le quali la geometria resta quella di {@code limiteRighe} righe
+	 * @param font font del riquadro, per esempio {@code TitilliumWeb-Bold}
+	 * @param corpo corpo in punti
+	 * @param interlineaFissa lineSpacingSize di Jasper con interlinea Fixed, 0 con Single
+	 * @return la distanza in punti, al millesimo, per esempio {@code 20.772pt}
+	 */
+	public static String interlinea(double righe, double limiteRighe, String font, double corpo, double interlineaFissa) {
+		return punti(passo(Math.min(righe, limiteRighe), font, corpo, interlineaFissa));
+	}
+
+	/**
+	 * Padding superiore del blocco che porta in FOP le righe di un testo dove le mette Jasper: Jasper parte dal
+	 * bordo superiore del riquadro (o centra, o allinea in fondo, l'altezza T = (A + D) x corpo + (n - 1) x
+	 * passo), FOP mette la prima riga a (passo - K x corpo) / 2 dal bordo del blocco, con K misurato
+	 * sull'inchiostro dei PDF ({@code pdf-riferimento/taratura}). Mai negativo, perche' FO non lo ammette.
+	 *
+	 * @param righe numero di righe del testo
+	 * @param limiteRighe righe oltre le quali la geometria resta quella di {@code limiteRighe} righe
+	 * @param font font del riquadro, per esempio {@code TitilliumWeb-Bold}
+	 * @param corpo corpo in punti
+	 * @param interlineaFissa lineSpacingSize di Jasper con interlinea Fixed, 0 con Single
+	 * @param allineamento allineamento verticale di Jasper: {@code Top}, {@code Middle} o {@code Bottom}
+	 * @param altezza altezza utile del riquadro in punti, senza i padding verticali
+	 * @param paddingSopra padding superiore del riquadro in punti
+	 * @return il padding in punti, al millesimo
+	 */
+	public static String paddingTesto(double righe, double limiteRighe, String font, double corpo, double interlineaFissa,
+			String allineamento, double altezza, double paddingSopra) {
+		double n = Math.min(righe, limiteRighe);
+		double[] m = metriche(font);
+		double a = m[0] * corpo;
+		double d = m[1] * corpo;
+		double passo = passo(n, font, corpo, interlineaFissa);
+		double totale = a + d + (n - 1) * passo;
+		double scarto = switch (allineamento) {
+			case "Middle" -> (altezza - totale) / 2;
+			case "Bottom" -> altezza - totale;
+			default -> 0.0;
+		};
+		double padding = millesimi(Math.max(scarto + (m[2] * corpo - passo) / 2, 0));
+		return punti(paddingSopra != 0 ? padding + paddingSopra : padding);
+	}
+
+	/**
+	 * Punti di cui Jasper allunga un riquadro che si allunga con il testo (isStretchWithOverflow): l'altezza
+	 * del testo, (A + D) x corpo per la prima riga e lo stesso, o F + D x corpo con interlinea Fixed, per le
+	 * successive, arrotondata per eccesso, piu' i padding verticali, meno l'altezza del riquadro. 0 se il testo
+	 * ci sta. Misurato sui PDF della ricevuta: oggetto 14 pt Fixed 12 su 2 righe, 39 pt (+17).
+	 *
+	 * @param testo testo con gli a capo gia' calcolati, separati da '\n'
+	 * @param font font del riquadro, per esempio {@code TitilliumWeb-Bold}
+	 * @param corpo corpo in punti
+	 * @param interlineaFissa lineSpacingSize di Jasper con interlinea Fixed, 0 con Single
+	 * @param paddingVerticale somma dei padding superiore e inferiore del riquadro in punti
+	 * @param altezza altezza del riquadro in punti
+	 */
+	public static double allungamento(String testo, String font, double corpo, double interlineaFissa, double paddingVerticale, double altezza) {
+		double[] m = metriche(font);
+		double prima = (m[0] + m[1]) * corpo;
+		double successive = interlineaFissa > 0 ? interlineaFissa + m[1] * corpo : prima;
+		double d = Math.ceil(prima + (numeroRighe(testo) - 1) * successive) + paddingVerticale - altezza;
+		return d > 0 ? d : 0;
+	}
+
+	private static double passo(double righe, String font, double corpo, double interlineaFissa) {
+		double[] m = metriche(font);
+		double a = m[0] * corpo;
+		double d = m[1] * corpo;
+		return interlineaFissa > 0 ? interlineaFissa + d + (a - interlineaFissa) / righe : a + d;
+	}
+
+	/** Ascendente e discendente AWT per unita' di corpo, come li usa Jasper, e K di FOP della famiglia del font. */
+	private static double[] metriche(String font) {
+		double[] m = METRICHE.get(font.split("-")[0]);
+		if (m == null) {
+			throw new IllegalArgumentException("Geometria del testo non tarata per il font " + font);
+		}
+		return m;
+	}
+
+	/** Arrotondamento al millesimo di punto, la precisione di FOP (millipunti), sul valore binario esatto. */
+	private static double millesimi(double v) {
+		return new BigDecimal(v).setScale(3, RoundingMode.HALF_EVEN).doubleValue();
+	}
+
+	private static String punti(double v) {
+		return BigDecimal.valueOf(millesimi(v)).stripTrailingZeros().toPlainString() + "pt";
 	}
 
 	/**

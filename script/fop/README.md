@@ -74,7 +74,8 @@ applicherebbe comunque il kerning delle tabelle GPOS: Jasper non ne usa.
 - **SVG:** ricevono tutto il riquadro come area di disegno e si centrano da soli, come in Jasper.
 - **Raster (loghi):** Jasper le scala per stare nel riquadro mantenendo le proporzioni, poi le sposta
   secondo `hAlign`/`vAlign` di uno spazio libero troncato a punti interi. Il renderer aggiunge all'XML le
-  dimensioni in pixel di ogni logo (`<logo>_px`) e il layout ripete lo stesso calcolo.
+  dimensioni in pixel di ogni logo (`<logo>_px`) e il template `logo` di `comune.xsl` ripete lo stesso
+  calcolo.
 - **Blocco contenitore:** ha corpo 0, perché FOP non allinei l'immagine alla linea di base del testo.
 
 **Righe con font diversi.** Se su una riga ci sono font con ascendenti diverse, per esempio Titillium e
@@ -88,8 +89,9 @@ riquadro. Le righe vengono poi scritte esplicitamente con `wrap-option="no-wrap"
 avvia una sola JVM per template e richiede `java` nel PATH.
 
 **A capo dei testi variabili.** I testi variabili (oggetto, nomi, indirizzi) vanno a capo a runtime come
-in Jasper: il foglio XSLT chiama `TestoJasper.righe`, una funzione di estensione Java con lo stesso
-algoritmo di `SpezzaRighe.java`. Il numero di righe che ne risulta sceglie interlinea e padding.
+in Jasper: il blocco del testo chiama il template `testo-a-capo` di `comune.xsl`, che usa
+`TestoJasper.righe`, una funzione di estensione Java con lo stesso algoritmo di `SpezzaRighe.java`. Il
+numero di righe che ne risulta sceglie interlinea e padding.
 - **Riquadri che non si allungano:** restano solo le righe che Jasper mostra. Ci stanno finché la prima
   riga, alta (A + D) × corpo, più le successive, alte `lineSpacingSize` + D × corpo con `Fixed`, stanno
   nell'altezza. La regola è ricavata dai PDF di riferimento: titolo 16 pt in 42 pt, 2 righe; oggetto del
@@ -124,8 +126,11 @@ sovrapposizione di 1 pt non conta: nell'avviso bilingue senza indirizzo del dest
 fascia degli indirizzi (136-167 pt) anche se le informazioni dell'ente, stampate, partono da 166 pt, e le
 sposta in su con il resto. Allo stesso modo un sottoreport si allunga fino al suo contenuto e sposta in
 basso gli elementi `Float` che lo seguono, ma non si accorcia sotto l'altezza dichiarata: `DoppioFormatoV2`,
-alto 211 pt in un riquadro di 212, non sposta in su gli elementi sotto. Il convertitore traduce
-entrambi in un'espressione XPath sul `top` degli elementi. Le bande mantengono la loro altezza, come si vede
+alto 211 pt in un riquadro di 212, non sposta in su gli elementi sotto. Nel foglio ogni gruppo di righe
+rimovibili è una variabile dichiarata in testa alla banda, che vale l'altezza della riga se il gruppo si
+toglie e 0 altrimenti, con un nome ricavato dai campi della condizione (`$senza-numero-rata`); lo stesso
+per l'allungamento dei sottoreport. Il `top` degli elementi sotto è la posizione di Jasper meno le righe
+rimosse e più gli allungamenti: `{232 - $senza-numero-rata + $allungamento-5289d111-gruppo}pt`. Le bande mantengono la loro altezza, come si vede
 nei PDF di riferimento dei sottoreport a colonne.
 
 **Testi che si allungano.** Un testo variabile con `isStretchWithOverflow`, che va a capo a runtime, alza il

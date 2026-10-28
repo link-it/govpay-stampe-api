@@ -9,6 +9,10 @@
 
 	<xsl:template name="RataMultipla">
 		<!-- banda detail, y=0.0 -->
+		<xsl:variable name="senza-nome-cognome-destinatario-e-altri" select="13 * number((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))"/>
+		<xsl:variable name="senza-colonne" select="10 * number((not(@colonne = '2')) and (not(@colonne = '3')))"/>
+		<xsl:variable name="allungamento-9af746ce" select="(ceiling(count(rata) div 2) * 165.0 - 10) * number((ceiling(count(rata) div 2) * 165.0 - 10) &gt; 0) * number(@colonne = '2')"/>
+		<xsl:variable name="allungamento-ce204b7a" select="(ceiling(count(rata) div 3) * 160.0 - 10) * number((ceiling(count(rata) div 3) * 160.0 - 10) &gt; 0) * number(@colonne = '3')"/>
 		<fo:block-container absolute-position="absolute" left="0pt" top="111pt" width="594pt" height="20pt" background-color="#EBEBEB">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="20pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">DATI PER IL PAGAMENTO</fo:block>
 		</fo:block-container>
@@ -19,44 +23,56 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="5pt" line-height="15.21pt" padding-top="1.255pt" wrap-option="no-wrap">AVVISO DI PAGAMENTO</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="490pt" top="20pt" width="85pt" height="85pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(/AvvisoPagamentoInput/logo_ente)"><xsl:choose>
-				<xsl:when test="normalize-space(/AvvisoPagamentoInput/logo_ente_px)">
-					<xsl:variable name="W" select="85.0"/><xsl:variable name="H" select="85.0"/>
-					<xsl:variable name="iw" select="number(substring-before(normalize-space(/AvvisoPagamentoInput/logo_ente_px), ' '))"/>
-					<xsl:variable name="ih" select="number(substring-after(normalize-space(/AvvisoPagamentoInput/logo_ente_px), ' '))"/>
-					<xsl:variable name="sc"><xsl:choose><xsl:when test="$W div $iw &lt; $H div $ih"><xsl:value-of select="$W div $iw"/></xsl:when><xsl:otherwise><xsl:value-of select="$H div $ih"/></xsl:otherwise></xsl:choose></xsl:variable>
-					<fo:block-container absolute-position="absolute" left="{floor($W - $iw * $sc)}pt" top="{0}pt" width="{$iw * $sc}pt" height="{$ih * $sc}pt">
-						<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="{$iw * $sc}pt" content-height="{$ih * $sc}pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="/AvvisoPagamentoInput/logo_ente"/></xsl:call-template>)</xsl:attribute></fo:external-graphic></fo:block>
-					</fo:block-container>
-				</xsl:when>
-				<xsl:otherwise><fo:external-graphic content-width="scale-to-fit" content-height="scale-to-fit" width="85pt" height="85pt" scaling="uniform"><xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="/AvvisoPagamentoInput/logo_ente"/></xsl:call-template>)</xsl:attribute></fo:external-graphic></xsl:otherwise>
-			</xsl:choose></xsl:if></fo:block>
+			<xsl:call-template name="logo">
+				<xsl:with-param name="logo" select="/AvvisoPagamentoInput/logo_ente"/>
+				<xsl:with-param name="px" select="/AvvisoPagamentoInput/logo_ente_px"/>
+				<xsl:with-param name="larghezza" select="85"/>
+				<xsl:with-param name="altezza" select="85"/>
+				<xsl:with-param name="orizzontale" select="'Right'"/>
+			</xsl:call-template>
 		</fo:block-container>
 		<xsl:if test="not(normalize-space(/AvvisoPagamentoInput/logo_ente_secondario))">
 			<fo:block-container absolute-position="absolute" left="20pt" top="58pt" width="458pt" height="42pt">
-				<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/oggetto_del_pagamento), 'TitilliumWeb-Bold.ttf', 16.0, 458.0, 2, true())"/></xsl:variable><xsl:variable name="righe" select="tj:numeroRighe(string($testo-righe))"/><xsl:attribute name="line-height"><xsl:value-of select="tj:interlinea($righe, 5, 'TitilliumWeb-Bold', 16, 11)"/></xsl:attribute><xsl:attribute name="padding-top"><xsl:value-of select="tj:paddingTesto($righe, 5, 'TitilliumWeb-Bold', 16, 11, 'Top', 42, 0)"/></xsl:attribute><xsl:value-of select="$testo-righe"/></fo:block>
+				<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" linefeed-treatment="preserve" wrap-option="no-wrap">
+					<xsl:call-template name="testo-a-capo">
+						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/oggetto_del_pagamento"/>
+						<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
+						<xsl:with-param name="corpo" select="16"/>
+						<xsl:with-param name="interlinea" select="11"/>
+						<xsl:with-param name="larghezza" select="458"/>
+						<xsl:with-param name="altezza" select="42"/>
+						<xsl:with-param name="maxRighe" select="2"/>
+						<xsl:with-param name="tronca" select="true()"/>
+					</xsl:call-template>
+				</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="394pt" top="20pt" width="85pt" height="85pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(/AvvisoPagamentoInput/logo_ente_secondario)"><xsl:choose>
-				<xsl:when test="normalize-space(/AvvisoPagamentoInput/logo_ente_secondario_px)">
-					<xsl:variable name="W" select="85.0"/><xsl:variable name="H" select="85.0"/>
-					<xsl:variable name="iw" select="number(substring-before(normalize-space(/AvvisoPagamentoInput/logo_ente_secondario_px), ' '))"/>
-					<xsl:variable name="ih" select="number(substring-after(normalize-space(/AvvisoPagamentoInput/logo_ente_secondario_px), ' '))"/>
-					<xsl:variable name="sc"><xsl:choose><xsl:when test="$W div $iw &lt; $H div $ih"><xsl:value-of select="$W div $iw"/></xsl:when><xsl:otherwise><xsl:value-of select="$H div $ih"/></xsl:otherwise></xsl:choose></xsl:variable>
-					<fo:block-container absolute-position="absolute" left="{floor($W - $iw * $sc)}pt" top="{0}pt" width="{$iw * $sc}pt" height="{$ih * $sc}pt">
-						<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="{$iw * $sc}pt" content-height="{$ih * $sc}pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="/AvvisoPagamentoInput/logo_ente_secondario"/></xsl:call-template>)</xsl:attribute></fo:external-graphic></fo:block>
-					</fo:block-container>
-				</xsl:when>
-				<xsl:otherwise><fo:external-graphic content-width="scale-to-fit" content-height="scale-to-fit" width="85pt" height="85pt" scaling="uniform"><xsl:attribute name="src">url(<xsl:call-template name="data-uri"><xsl:with-param name="valore" select="/AvvisoPagamentoInput/logo_ente_secondario"/></xsl:call-template>)</xsl:attribute></fo:external-graphic></xsl:otherwise>
-			</xsl:choose></xsl:if></fo:block>
+			<xsl:call-template name="logo">
+				<xsl:with-param name="logo" select="/AvvisoPagamentoInput/logo_ente_secondario"/>
+				<xsl:with-param name="px" select="/AvvisoPagamentoInput/logo_ente_secondario_px"/>
+				<xsl:with-param name="larghezza" select="85"/>
+				<xsl:with-param name="altezza" select="85"/>
+				<xsl:with-param name="orizzontale" select="'Right'"/>
+			</xsl:call-template>
 		</fo:block-container>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/logo_ente_secondario)">
 			<fo:block-container absolute-position="absolute" left="20pt" top="58pt" width="350pt" height="42pt">
-				<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:value-of select="tj:righe(string(/AvvisoPagamentoInput/oggetto_del_pagamento), 'TitilliumWeb-Bold.ttf', 16.0, 350.0, 2, true())"/></xsl:variable><xsl:variable name="righe" select="tj:numeroRighe(string($testo-righe))"/><xsl:attribute name="line-height"><xsl:value-of select="tj:interlinea($righe, 5, 'TitilliumWeb-Bold', 16, 11)"/></xsl:attribute><xsl:attribute name="padding-top"><xsl:value-of select="tj:paddingTesto($righe, 5, 'TitilliumWeb-Bold', 16, 11, 'Top', 42, 0)"/></xsl:attribute><xsl:value-of select="$testo-righe"/></fo:block>
+				<fo:block font-family="TitilliumWeb-Bold" font-size="16pt" linefeed-treatment="preserve" wrap-option="no-wrap">
+					<xsl:call-template name="testo-a-capo">
+						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/oggetto_del_pagamento"/>
+						<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
+						<xsl:with-param name="corpo" select="16"/>
+						<xsl:with-param name="interlinea" select="11"/>
+						<xsl:with-param name="larghezza" select="350"/>
+						<xsl:with-param name="altezza" select="42"/>
+						<xsl:with-param name="maxRighe" select="2"/>
+						<xsl:with-param name="tronca" select="true()"/>
+					</xsl:call-template>
+				</fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<fo:block-container absolute-position="absolute" left="54pt" top="{192.0 - (13 * number((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento)))))}pt" width="489pt" height="15pt">
+		<fo:block-container absolute-position="absolute" left="54pt" top="{192 - $senza-nome-cognome-destinatario-e-altri}pt" width="489pt" height="15pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Inquadra il <fo:inline font-weight="bold">codice QR</fo:inline> con la tua app o usa i dati sotto.</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="20pt" top="144pt" width="136pt" height="13pt">
@@ -64,7 +80,18 @@
 		</fo:block-container>
 		<xsl:if test="not((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))">
 			<fo:block-container absolute-position="absolute" left="20pt" top="157pt" width="136pt" height="13pt">
-				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:variable name="valore"><xsl:value-of select="/AvvisoPagamentoInput/nome_cognome_destinatario"/></xsl:variable><xsl:copy-of select="tj:stile(string($valore), 'styled', 'TitilliumWeb-Bold', false(), false(), 8.0, '', 136.0, 1, false())"/></xsl:variable><xsl:variable name="righe" select="tj:numeroRighe(string($testo-righe))"/><xsl:attribute name="line-height"><xsl:value-of select="tj:interlinea($righe, 5, 'TitilliumWeb-Bold', 8, 7)"/></xsl:attribute><xsl:attribute name="padding-top"><xsl:value-of select="tj:paddingTesto($righe, 5, 'TitilliumWeb-Bold', 8, 7, 'Top', 13, 0)"/></xsl:attribute><xsl:copy-of select="$testo-righe"/></fo:block>
+				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap">
+					<xsl:call-template name="testo-a-capo">
+						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/nome_cognome_destinatario"/>
+						<xsl:with-param name="markup" select="'styled'"/>
+						<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
+						<xsl:with-param name="corpo" select="8"/>
+						<xsl:with-param name="interlinea" select="7"/>
+						<xsl:with-param name="larghezza" select="136"/>
+						<xsl:with-param name="altezza" select="13"/>
+						<xsl:with-param name="maxRighe" select="1"/>
+					</xsl:call-template>
+				</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="156pt" top="144pt" width="164pt" height="13pt">
@@ -72,7 +99,18 @@
 		</fo:block-container>
 		<xsl:if test="not((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))">
 			<fo:block-container absolute-position="absolute" left="156pt" top="157pt" width="164pt" height="13pt">
-				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:variable name="valore"><xsl:value-of select="/AvvisoPagamentoInput/ente_creditore"/></xsl:variable><xsl:copy-of select="tj:stile(string($valore), 'styled', 'TitilliumWeb-Bold', false(), false(), 8.0, '', 164.0, 1, false())"/></xsl:variable><xsl:variable name="righe" select="tj:numeroRighe(string($testo-righe))"/><xsl:attribute name="line-height"><xsl:value-of select="tj:interlinea($righe, 5, 'TitilliumWeb-Bold', 8, 7)"/></xsl:attribute><xsl:attribute name="padding-top"><xsl:value-of select="tj:paddingTesto($righe, 5, 'TitilliumWeb-Bold', 8, 7, 'Top', 13, 0)"/></xsl:attribute><xsl:copy-of select="$testo-righe"/></fo:block>
+				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap">
+					<xsl:call-template name="testo-a-capo">
+						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/ente_creditore"/>
+						<xsl:with-param name="markup" select="'styled'"/>
+						<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
+						<xsl:with-param name="corpo" select="8"/>
+						<xsl:with-param name="interlinea" select="7"/>
+						<xsl:with-param name="larghezza" select="164"/>
+						<xsl:with-param name="altezza" select="13"/>
+						<xsl:with-param name="maxRighe" select="1"/>
+					</xsl:call-template>
+				</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="320pt" top="144pt" width="255pt" height="13pt">
@@ -80,16 +118,27 @@
 		</fo:block-container>
 		<xsl:if test="not((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))">
 			<fo:block-container absolute-position="absolute" left="320pt" top="157pt" width="255pt" height="13pt">
-				<fo:block font-family="TitilliumWeb" font-size="8pt" linefeed-treatment="preserve" wrap-option="no-wrap"><xsl:variable name="testo-righe"><xsl:variable name="valore"><xsl:value-of select="/AvvisoPagamentoInput/oggetto_del_pagamento"/></xsl:variable><xsl:copy-of select="tj:stile(string($valore), 'styled', 'TitilliumWeb-Bold', false(), false(), 8.0, '', 255.0, 1, false())"/></xsl:variable><xsl:variable name="righe" select="tj:numeroRighe(string($testo-righe))"/><xsl:attribute name="line-height"><xsl:value-of select="tj:interlinea($righe, 5, 'TitilliumWeb-Bold', 8, 7)"/></xsl:attribute><xsl:attribute name="padding-top"><xsl:value-of select="tj:paddingTesto($righe, 5, 'TitilliumWeb-Bold', 8, 7, 'Top', 13, 0)"/></xsl:attribute><xsl:copy-of select="$testo-righe"/></fo:block>
+				<fo:block font-family="TitilliumWeb" font-size="8pt" linefeed-treatment="preserve" wrap-option="no-wrap">
+					<xsl:call-template name="testo-a-capo">
+						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/oggetto_del_pagamento"/>
+						<xsl:with-param name="markup" select="'styled'"/>
+						<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
+						<xsl:with-param name="corpo" select="8"/>
+						<xsl:with-param name="interlinea" select="7"/>
+						<xsl:with-param name="larghezza" select="255"/>
+						<xsl:with-param name="altezza" select="13"/>
+						<xsl:with-param name="maxRighe" select="1"/>
+					</xsl:call-template>
+				</fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<fo:block-container absolute-position="absolute" left="20pt" top="{189.0 - (13 * number((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento)))))}pt" width="20pt" height="20pt">
+		<fo:block-container absolute-position="absolute" left="20pt" top="{189 - $senza-nome-cognome-destinatario-e-altri}pt" width="20pt" height="20pt">
 			<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="20pt" height="20pt"><fo:block font-size="0pt" line-height="0pt"><fo:instream-foreign-object content-width="20pt" content-height="20pt" scaling="uniform"><svg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='#000000'><path d='M0 0h24v24H0V0z' fill='none'/><path d='M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'/></svg></fo:instream-foreign-object></fo:block></fo:block-container></fo:block>
 		</fo:block-container>
 		<xsl:if test="@colonne = '2'">
-			<xsl:variable name="spostamento-9af746ce" select="13 * number((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))"/>
+			<xsl:variable name="spostamento-9af746ce" select="-$senza-nome-cognome-destinatario-e-altri"/>
 			<xsl:for-each select="rata">
-				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 2) * 297.0}pt" top="{221.0 - $spostamento-9af746ce + floor((position() - 1) div 2) * 165.0}pt" width="297pt" height="165pt">
+				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 2) * 297.0}pt" top="{221.0 + $spostamento-9af746ce + floor((position() - 1) div 2) * 165.0}pt" width="297pt" height="165pt">
 					<fo:block/>
 					<xsl:call-template name="DoppioFormato">
 						<xsl:with-param name="Multipla" select="'true'"/>
@@ -98,9 +147,9 @@
 			</xsl:for-each>
 		</xsl:if>
 		<xsl:if test="@colonne = '3'">
-			<xsl:variable name="spostamento-ce204b7a" select="13 * number((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))"/>
+			<xsl:variable name="spostamento-ce204b7a" select="-$senza-nome-cognome-destinatario-e-altri"/>
 			<xsl:for-each select="rata">
-				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 3) * 198.0}pt" top="{221.0 - $spostamento-ce204b7a + floor((position() - 1) div 3) * 160.0}pt" width="198pt" height="160pt">
+				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 3) * 198.0}pt" top="{221.0 + $spostamento-ce204b7a + floor((position() - 1) div 3) * 160.0}pt" width="198pt" height="160pt">
 					<fo:block/>
 					<xsl:call-template name="TriploFormato">
 						<xsl:with-param name="Multipla" select="'true'"/>

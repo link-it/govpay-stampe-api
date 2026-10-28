@@ -97,17 +97,20 @@ public final class TestoJasper {
 
 	/**
 	 * @param testo testo da spezzare (le righe gia' presenti, separate da '\n', restano)
-	 * @param fileFont file del font in {@code fonts/} nel classpath, per esempio {@code TitilliumWeb-Bold.ttf}
+	 * @param famiglia famiglia di font del riquadro, per esempio {@code TitilliumWeb-Bold}
+	 * @param grassetto se il riquadro e' in grassetto
+	 * @param corsivo se il riquadro e' in corsivo
 	 * @param corpo corpo in punti
 	 * @param larghezza larghezza utile del riquadro in punti
 	 * @param maxRighe righe che stanno nel riquadro, 0 senza limite
 	 * @param troncaCarattere se l'ultima riga visibile va riempita carattere per carattere
 	 */
-	public static String righe(String testo, String fileFont, double corpo, double larghezza, double maxRighe, boolean troncaCarattere) {
+	public static String righe(String testo, String famiglia, boolean grassetto, boolean corsivo, double corpo, double larghezza,
+			double maxRighe, boolean troncaCarattere) {
 		if (testo == null || testo.isEmpty()) {
 			return "";
 		}
-		Font font = FONT.computeIfAbsent(fileFont, TestoJasper::carica).deriveFont((float) corpo);
+		Font font = new Stile(famiglia, grassetto, corsivo, corpo, "").font();
 		float w = (float) larghezza;
 		int limite = (int) maxRighe;
 		List<String> righe = new ArrayList<>();

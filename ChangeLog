@@ -1,5 +1,12 @@
 2026-10-29  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] fontbox e pdfbox-io 3.0.8 (#37).
+	Le librerie PDFBox usate da FOP passano dalla 3.0.3 alla 3.0.8, per
+	chiudere la segnalazione OWASP di CVE-2026-33929. La vulnerabilita'
+	riguarda solo l'esempio ExtractEmbeddedFiles di pdfbox-examples, che
+	il progetto non usa. PDF identici a quelli di prima nei 71 casi di
+	riferimento.
+
 	* [Stampe] Layout XSL-FO modificabili a mano (#37).
 	I layout in src/main/resources/fop sono il sorgente delle stampe:
 	rimossi i template Jasper .jrxml e il convertitore che ne ricavava gli

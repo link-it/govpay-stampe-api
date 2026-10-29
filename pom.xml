@@ -47,6 +47,9 @@
 		<batik-bridge.version>1.19</batik-bridge.version>
 		<!-- Apache FOP: motore XSL-FO di stampa (#37), allineato a batik e xmlgraphics-commons -->
 		<fop.version>2.11</fop.version>
+		<!-- fontbox e pdfbox-io, transitive di FOP: 3.0.8 al posto della 3.0.3, la CPE apache:pdfbox fa
+		     segnalare a OWASP CVE-2026-33929, che riguarda solo l'esempio ExtractEmbeddedFiles di pdfbox-examples -->
+		<pdfbox.version>3.0.8</pdfbox.version>
 		<!-- com.google.zxing.javase -->
 		<com.google.zxing.javase.version>3.5.3</com.google.zxing.javase.version>
 
@@ -85,6 +88,21 @@
 			</dependencies>
 		</profile>
 	</profiles>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.pdfbox</groupId>
+				<artifactId>fontbox</artifactId>
+				<version>${pdfbox.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.pdfbox</groupId>
+				<artifactId>pdfbox-io</artifactId>
+				<version>${pdfbox.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 

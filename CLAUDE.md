@@ -43,13 +43,15 @@ mvn test -Dtest=UC_4_AvvisoStandardTest#UC_4_01_AvvisoSempliceRataUnicaOk
 
 ### API Layer
 - **OpenAPI spec**: `src/main/resources/govpay-stampe.yaml` defines the REST API
-- **Generated interfaces**: OpenAPI Generator creates `it.govpay.stampe.api.DefaultApi` at build time
-- **Controller**: `StampeController` implements `DefaultApi` with two endpoints:
-  - `POST /standard` - Standard payment notices (single/installment)
-  - `POST /cds_violation` - Traffic violation notices
+- **Generated interfaces**: OpenAPI Generator creates `it.govpay.stampe.api.PaymentNoticeApi` and `ReceiptApi` at build time
+- **Controllers** (endpoints at the context root, no servlet path):
+  - `PaymentNoticeController` implements `PaymentNoticeApi`:
+    - `POST /standard` - Standard payment notices (single/installment, postal, bilingual)
+    - `POST /cds_violation` - Traffic violation notices
+  - `ReceiptController` implements `ReceiptApi`: `POST /receipt` - Payment receipts
 
 ### Request Processing Flow
-1. `StampeController` receives JSON request
+1. `PaymentNoticeController` / `ReceiptController` receive the JSON request
 2. `SemanticValidator` validates business rules
 3. MapStruct mappers (`AvvisoPagamentoMapper`, `ViolazioneCdsMapper`, `AvvisoPagamentoBilingueMapper`) convert API beans to JAXB model objects
 4. Service layer generates PDF using Apache FOP (XSLT + XSL-FO)
@@ -102,7 +104,6 @@ Tests use Spring Boot Test with MockMvc. Test classes follow `UC_N_*` naming con
 ## Configuration
 
 Key properties in `application.properties`:
-- `server.port` - Default 10003
-- `spring.mvc.servlet.path` - API base path (default `/api/v1`)
+- No `server.port` or servlet path: standalone on 8080, endpoints at the root (`/standard`); as a war, under the context (e.g. `/govpay-stampe-api/standard`)
 - `stampe.time-zone` - Timezone for date formatting (default `Europe/Rome`)
 - Actuator health endpoints at `/actuator`

@@ -89,8 +89,8 @@ public class MotoreFop {
 		// JasperReports, non risolve i template con nome dei fogli inclusi, e una dipendenza che lo
 		// riportasse cambierebbe il processore senza che nessuno lo scelga
 		this.transformerFactory = TransformerFactory.newDefaultInstance();
-		// i fogli sono generati da jrxml2fo.py, non arrivano dall'esterno: le posizioni con righe rimosse
-		// e sottoreport allungati sono espressioni XPath piu' lunghe dei limiti di default del JDK
+		// i fogli sono interni, non arrivano dall'esterno: alcune espressioni XPath dei layout (condizioni delle
+		// righe rimosse, posizioni) superano i limiti di default del JDK
 		for (String limite : LIMITI_XPATH) {
 			this.transformerFactory.setAttribute(limite, 0);
 		}

@@ -35,7 +35,7 @@ import org.w3c.dom.NodeList;
  * A capo dei testi variabili come JasperReports (issue #37), per i layout XSL-FO: richiamata dai fogli
  * XSLT come funzione di estensione, restituisce le righe del testo separate da '\n'.
  * <p>
- * Le righe sono calcolate come in Jasper e come per i testi fissi in {@code script/fop/SpezzaRighe.java}:
+ * Le righe sono calcolate come in Jasper (e come gli a capo dei testi fissi dei layout):
  * {@link LineBreakMeasurer} con il FontRenderContext di Jasper (antialiasing e metriche frazionarie), gli
  * stessi file di font e la larghezza utile del riquadro. Un riquadro che non si allunga mostra al massimo
  * {@code maxRighe} righe: le altre sono scartate e, con {@code net.sf.jasperreports.text.truncate.at.char},
@@ -52,9 +52,9 @@ public final class TestoJasper {
 	private static final String NS_FO = "http://www.w3.org/1999/XSL/Format";
 
 	/**
-	 * File delle famiglie di font, come nell'estensione dei font di Jasper
-	 * ({@code fonts/fontsfamily1620136860820.xml}): normale, grassetto, corsivo, grassetto corsivo. Una famiglia
-	 * senza la variante usa la normale, e Jasper simula grassetto e corsivo senza cambiare la larghezza.
+	 * File delle famiglie di font, come nell'estensione dei font dei template Jasper: normale, grassetto,
+	 * corsivo, grassetto corsivo. Una famiglia senza la variante usa la normale, e Jasper simula grassetto e
+	 * corsivo senza cambiare la larghezza.
 	 */
 	private static final Map<String, String[]> FAMIGLIE = Map.of(
 			"TitilliumWeb", new String[] { "TitilliumWeb-Regular.ttf", "TitilliumWeb-SemiBold.ttf", "TitilliumWeb-Italic.ttf", "TitilliumWeb-SemiBoldItalic.ttf" },
@@ -269,8 +269,8 @@ public final class TestoJasper {
 	 * una riga quando un fo:inline usa un file di font con capHeight maggiore di quello del blocco (Regular 692,
 	 * Bold 680): la traduzione in TitilliumWeb dentro un riquadro TitilliumWeb-Bold abbassava la riga di 0,24 pt
 	 * e la successiva di 0,48 pt. Con il blocco in Regular, che ha la capHeight maggiore, i tratti nelle altre
-	 * varianti non spostano la riga, e la posizione e' la stessa del blocco nel font del riquadro. Il layout
-	 * generato da jrxml2fo.py usa lo stesso font per il blocco.
+	 * varianti non spostano la riga, e la posizione e' la stessa del blocco nel font del riquadro. Il blocco del
+	 * layout usa lo stesso font.
 	 */
 	private static Stile stileBlocco(Stile base) {
 		if (!base.famiglia().startsWith("TitilliumWeb")) {

@@ -391,7 +391,7 @@
 				</xsl:call-template>
 			</fo:block>
 		</fo:block-container>
-		<!-- ($F{numero_rata}.equals(null)?"Rata unica":$F{numero_rata}+"° RATA") + entro il / soglia -->
+		<!-- "Rata unica" senza numero_rata, altrimenti "N° RATA"; poi "entro il" + data oppure la soglia -->
 		<fo:block-container absolute-position="absolute" left="299pt" top="{419 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="296pt" height="20pt" background-color="#EBEBEB">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" text-align="end" start-indent="0pt" end-indent="20pt" line-height="15.21pt" padding-top="3.65pt"><xsl:choose><xsl:when test="normalize-space(rata/numero_rata)"><xsl:value-of select="rata/numero_rata"/>° RATA</xsl:when><xsl:otherwise>Rata unica</xsl:otherwise></xsl:choose><xsl:choose><xsl:when test="normalize-space(rata/giorni)"><xsl:value-of select="concat(' ', rata/tipo, ' ')"/><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="rata/giorni"/></xsl:call-template></xsl:when><xsl:when test="normalize-space(rata/data)"> entro il <xsl:value-of select="rata/data"/></xsl:when></xsl:choose></fo:block>
 		</fo:block-container>

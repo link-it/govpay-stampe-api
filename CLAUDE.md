@@ -70,7 +70,8 @@ Two JAXB model versions generated from XSD schemas:
 XSL-FO layouts in `src/main/resources/fop/`, rendered by `MotoreFop` (Apache FOP, JDK XSLT processor):
 - `avviso-semplice.xsl`, `avviso-postale.xsl`, `violazione-cds.xsl`, `ricevuta.xsl`, `avviso-bilingue.xsl` - Main sheets, one per print type
 - `RataUnica*.xsl`, `DoppiaRata*.xsl`, `TriplaRata*.xsl`, `*Postale.xsl`, `*V2.xsl` - Layout variants
-- The layouts are generated from the former Jasper sources `src/main/jasper/*.jrxml` by `script/fop/genera-xsl.sh` (do not edit by hand); see `script/fop/README.md`
+- `comune.xsl` - Shared templates (`testo-a-capo`, `logo`, ...); `icone/*.svg` - Icons; `TestoJasper` - XSLT extension functions (`tj:`) for line breaks and text geometry
+- The layouts were derived from the former Jasper templates and are now edited by hand; see `script/fop/README.md` for how to edit and verify them (`RegressioneLayoutTest`)
 
 ### Key Technologies
 - **MapStruct**: Bean mapping with custom qualifiers in `BaseAvvisoMapper`

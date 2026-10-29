@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 	Configurazione Apache FOP (issue #37). I font sono gli stessi .ttf usati da JasperReports
-	(src/main/resources/fonts), registrati con gli stessi nomi di famiglia del font extension Jasper
-	(fonts/fontsfamily1620136860820.xml), cosi' i layout usano i nomi dei template originali.
+	(src/main/resources/fonts), registrati con gli stessi nomi di famiglia del font extension Jasper,
+	cosi' i layout usano i nomi dei template originali.
 	I font sono indicati con lo schema classpath:, risolto dal motore (MotoreFop) dentro jar e war.
 -->
 <fop version="1.0">

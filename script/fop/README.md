@@ -1,50 +1,75 @@
-# Migrazione dei layout da JasperReports a XSL-FO
+# Layout XSL-FO degli avvisi
 
-Strumenti per convertire i template Jasper (`src/main/jasper/*.jrxml`) nei layout XSL-FO usati da
-Apache FOP (`src/main/resources/fop/*.xsl`), issue [#37](https://github.com/link-it/govpay-stampe-api/issues/37).
+Le stampe (avvisi, violazione CdS, ricevuta) sono layout XSL-FO in `src/main/resources/fop/`, resi in PDF
+da Apache FOP. Sostituiscono i template JasperReports, issue [#37](https://github.com/link-it/govpay-stampe-api/issues/37),
+e riproducono la loro impaginazione al punto.
 
-## Flusso
+## Struttura
 
-1. `jrxml2fo.py` converte un `.jrxml` nello scheletro di un template XSLT. In automatico, compresi gli
-   a capo dei testi fissi calcolati come in Jasper:
-   - posizioni e dimensioni degli elementi;
-   - sfondi, padding, font e allineamenti;
-   - testi fissi con markup, grafica SVG e loghi;
-   - espressioni semplici (`$P{x}`, `$F{y}`, controllo di null) e condizioni comuni, anche composte
-     con `&&`, e le variabili `totaleRate` e `soloSoglie`;
-   - sottoreport su sorgente XML (`subDataSource`): un riquadro per record, disposto nelle colonne del
-     sottoreport, con il template generato dallo stesso sottoreport; i parametri costanti (per esempio
-     `Multipla`) diventano `xsl:param` del template, da indicare con `--parametri`;
-   - `elementGroup`, trattati come contenuto della banda;
-   - textField con un testo costante (stringhe letterali concatenate), trattati come testi fissi;
-   - importi formattati con `DecimalFormat("#,###,##0.00")` (anche con un suffisso, per esempio " Euro"),
-     testi costanti concatenati a un campo e condizioni `$F{x}.equals("V")`;
-   - espressioni Java composte, come le etichette bilingue: un sottoinsieme di Java (stringhe, `+`,
-     ternari, `equals(null)`, `!`, `&&`, `||`, `toUpperCase()`, `DecimalFormat`) diventa un frammento
-     XSLT che produce la stessa stringa di Jasper, markup compreso. Come in Java, un valore assente
-     concatenato a una stringa diventa "null", che Jasper stampa.
+| File | Contenuto |
+| --- | --- |
+| `avviso-semplice.xsl`, `avviso-postale.xsl`, `violazione-cds.xsl`, `ricevuta.xsl`, `avviso-bilingue.xsl` | fogli principali, uno per tipo di stampa: pagina A4 e scelta del layout per ogni pagina dell'XML |
+| `RataUnica.xsl`, `DoppiaRata.xsl`, `TriplaRata.xsl`, `RataMultipla.xsl`, `*Postale.xsl`, `*V2.xsl`, `Sanzione.xsl`, `RicevutaMae*.xsl` | layout di una pagina, o del riquadro di una rata (`*Formato*`, `Bollettino*`); l'intestazione dice da dove sono chiamati e qual è il nodo di contesto |
+| `comune.xsl` | template condivisi: `testo-a-capo`, `logo`, `importo`, `data-uri`, `markup`, `parte-etichetta`, `giorni` |
+| `icone/*.svg` | icone (logo pagoPA, Poste, canali di pagamento, forbici, ...), lette da `classpath:/fop/icone/<nome>.svg` |
+| `fop.xconf` | configurazione di FOP: font e opzioni di impaginazione |
 
-   Le altre espressioni diventano commenti `TODO` con il testo Groovy originale.
+`TestoJasper` (`it.govpay.stampe.fop`) contiene le funzioni di estensione Java usate dai fogli con il prefisso
+`tj:`: a capo, interlinea, padding e allungamento dei testi, calcolati come in Jasper.
 
-   Opzioni per i sottoreport:
-   - `--param-campi JRXML`: i parametri sono i campi omonimi del report indicato, passati invariati lungo
-     i sottoreport. Per i layout bilingue `$P{codice_avviso_ita}` diventa
-     `/AvvisoPagamentoInput/etichette/italiano/codice_avviso`, come in `AvvisoPagamentoV2.jrxml`.
-   - `--nome`: nome del template XSLT. I report V2 hanno lo stesso nome interno dei v1 (`RataUnica`),
-     quindi il template prende il nome del file.
-2. Le parti che il convertitore non traduce si scrivono in `personalizzazioni/<Template>.xml`, legate
-   all'`uuid` dell'elemento nel `.jrxml`. Ogni voce è di uno di tre tipi:
-   - `<elemento>`: sostituisce il contenuto di un testo o di un'immagine;
-   - `<condizione>`: sostituisce la `printWhenExpression`;
-   - `attributi="nome=valore;…"`: cambia gli attributi del blocco. Tre nomi non sono attributi FO:
-     `righe=N` (righe di un testo variabile, per l'interlinea fissa), `righe-xpath=XPATH` (le stesse,
-     calcolate dal contenuto) e `vuoto=XPATH` (quando il testo è vuoto, per le righe rimosse).
-3. `genera-xsl.sh` rigenera tutti i layout migrati. I file in `src/main/resources/fop/` generati
-   da qui non vanno modificati a mano.
+I layout sono stati derivati dai template Jasper (`.jrxml`) con un convertitore, rimosso dopo l'ultima
+generazione. Sorgenti Jasper, convertitore (`script/fop/jrxml2fo.py`) e parti scritte a mano
+(`script/fop/personalizzazioni/`) sono nella storia git: l'ultima generazione è il commit `95fc24e`.
 
-Un layout è migrato quando il file generato non contiene più `TODO`.
+## Come modificare un layout
 
-## Taratura sui PDF di Jasper
+Ogni elemento è un `fo:block-container` in posizione assoluta, con `left`, `top`, `width` e `height` in
+punti, come nel template Jasper: dal bordo della pagina, oppure dal riquadro della rata per i layout delle
+rate.
+
+- **Testo fisso:** un `fo:block` con il testo. Gli a capo sono scritti esplicitamente, come li fa Jasper, con
+  `wrap-option="no-wrap"`: FOP spezzerebbe le righe in modo diverso. Per un testo nuovo che deve andare a
+  capo si può usare il template `testo-a-capo` con un valore costante (`select="'...'"`), che calcola gli a
+  capo a runtime.
+- **Testo variabile:** il blocco chiama `testo-a-capo` con il valore, il font e le dimensioni del riquadro;
+  i parametri sono descritti in `comune.xsl`. Il template calcola righe, interlinea e padding come Jasper.
+- **Logo:** template `logo`, con il logo, le sue dimensioni in pixel (`<logo>_px`), il riquadro e
+  l'allineamento.
+- **Icona:** `fo:external-graphic src="url(classpath:/fop/icone/<nome>.svg)"`. Un'icona nuova si aggiunge
+  in `icone/`.
+- **Righe rimosse e testi che si allungano:** le variabili in testa alla banda (`$senza-numero-rata`,
+  `$allungamento-oggetto-del-pagamento`, ...) valgono i punti di cui si spostano gli elementi sotto;
+  il `top` di un elemento è `{y - $senza-... + $allungamento-...}pt`. Un elemento nuovo sotto una riga
+  rimovibile, o sotto un testo che si allunga, deve sommare le stesse variabili degli elementi vicini.
+
+I fogli si possono applicare solo con il processore XSLT del JDK (XSLTC), quello di `MotoreFop`: le
+funzioni `tj:` sono estensioni Java, che xsltproc e gli altri processori non hanno.
+
+Dopo una modifica:
+1. `mvn test -Dtest=RegressioneLayoutTest`: i casi il cui PDF è cambiato falliscono e lasciano area tree e
+   PDF in `target/regressione-layout/` (vedi [Regressione dei layout](#regressione-dei-layout));
+2. si controllano i PDF dei casi cambiati, e solo quelli: un caso cambiato che non c'entra con la modifica
+   è un errore;
+3. se la modifica è voluta, si aggiornano gli hash con `-Dregressione.aggiorna=true` e si committano
+   insieme al layout.
+
+## Regressione dei layout
+
+`RegressioneLayoutTest` protegge i layout da modifiche non volute. Per ogni caso in
+`src/test/resources/regressione-layout/<foglio>/` stampa l'XML con `<foglio>.xsl` e confronta l'hash
+SHA-256 dell'area tree di FOP (la pagina impaginata: posizioni, testi, immagini) con quello in
+`attesi.properties`. Se l'hash cambia, area tree e PDF del caso vanno in `target/regressione-layout/`.
+
+- Gli XML vengono da `GeneraCasiRegressioneTest` (factory e mapper, come il controller), con i loghi
+  sostituiti da `@logo`; si rigenerano solo su richiesta, perché la factory usa codici avviso casuali:
+  `mvn test -Dtest=GeneraCasiRegressioneTest -Dregressione.genera=true`.
+- Dopo una modifica voluta del layout, si aggiornano gli hash:
+  `mvn test -Dtest=RegressioneLayoutTest -Dregressione.aggiorna=true`.
+
+Per i casi di riferimento fuori dal repository (sotto), `PrototipoFopTest` scrive PDF, documento XSL-FO e,
+con `-Dprototipo.areatree=true`, l'area tree di ogni caso in `target/prototipo-fop/`.
+
+## Geometria del testo
 
 La posizione del testo viene da un modello di Jasper e di FOP misurato su report di taratura. Le
 combinazioni sono quelle usate nei template: font, corpo da 6 a 24 pt, interlinea `Single` o `Fixed`,
@@ -63,51 +88,40 @@ markup, allineamento verticale. Report e misure sono in `pdf-riferimento/taratur
   - Le caselle delle parole di `pdftotext` non bastano: Jasper e FOP descrivono il font con ascendenti
     diverse, quindi due caselle allineate non garantiscono caratteri allineati.
 
-`jrxml2fo.py` imposta `line-height` uguale alla distanza di Jasper e un `padding-top` che riproduce
-l'allineamento in alto, al centro o in basso. Il numero di righe lo ricava dagli a capo per i testi
-fissi. Per i testi variabili lo legge da `righe=N` nelle personalizzazioni, e in sua assenza usa 1.
+I blocchi di testo hanno `line-height` uguale alla distanza di Jasper e un `padding-top` che riproduce
+l'allineamento in alto, al centro o in basso: costanti per i testi fissi, calcolati da
+`TestoJasper.interlinea` e `TestoJasper.paddingTesto` per i testi variabili.
 
 `fop.xconf` disattiva il kerning (`kerning="no"`) e l'elaborazione OpenType (`complex-scripts`), che
 applicherebbe comunque il kerning delle tabelle GPOS: Jasper non ne usa.
 
 **Immagini.**
 - **SVG:** ricevono tutto il riquadro come area di disegno e si centrano da soli, come in Jasper.
-  Le icone (logo pagoPA, Poste, canali di pagamento, forbici, ...) sono file in
-  `src/main/resources/fop/icone/`, letti con `fo:external-graphic` da `classpath:/fop/icone/<nome>.svg`;
-  il convertitore li scrive dal sorgente Jasper e li chiama per nome (`ICONE` in `jrxml2fo.py`).
 - **Raster (loghi):** Jasper le scala per stare nel riquadro mantenendo le proporzioni, poi le sposta
   secondo `hAlign`/`vAlign` di uno spazio libero troncato a punti interi. Il renderer aggiunge all'XML le
-  dimensioni in pixel di ogni logo (`<logo>_px`) e il template `logo` di `comune.xsl` ripete lo stesso
-  calcolo.
+  dimensioni in pixel di ogni logo (`<logo>_px`) e il template `logo` ripete lo stesso calcolo.
 - **Blocco contenitore:** ha corpo 0, perché FOP non allinei l'immagine alla linea di base del testo.
 
 **Righe con font diversi.** Se su una riga ci sono font con ascendenti diverse, per esempio Titillium e
-RobotoMono, FOP abbassa la linea di base rispetto a Jasper. Va compensato nella personalizzazione,
+RobotoMono, FOP abbassa la linea di base rispetto a Jasper. Va compensato nel `padding-top` del blocco,
 come per "Euro 122,50" in `RataUnica` (0,48 pt).
 
-**A capo dei testi fissi.** FOP spezza le righe con l'algoritmo di Knuth-Plass, che bilancia il paragrafo,
-mentre Jasper riempie ogni riga finché c'è spazio. Per i testi fissi `jrxml2fo.py` calcola gli a capo come
-Jasper con `SpezzaRighe.java`: `LineBreakMeasurer`, gli stessi file di font e la larghezza utile del
-riquadro. Le righe vengono poi scritte esplicitamente con `wrap-option="no-wrap"`. Il convertitore
-avvia una sola JVM per template e richiede `java` nel PATH.
-
-**A capo dei testi variabili.** I testi variabili (oggetto, nomi, indirizzi) vanno a capo a runtime come
-in Jasper: il blocco del testo chiama il template `testo-a-capo` di `comune.xsl`, che usa
-`TestoJasper.righe`, una funzione di estensione Java con lo stesso algoritmo di `SpezzaRighe.java`. Il
-numero di righe che ne risulta sceglie interlinea e padding.
+**A capo dei testi.** FOP spezza le righe con l'algoritmo di Knuth-Plass, che bilancia il paragrafo,
+mentre Jasper riempie ogni riga finché c'è spazio. Per questo i testi fissi hanno gli a capo scritti, e i
+testi variabili (oggetto, nomi, indirizzi) passano dal template `testo-a-capo`, che chiama
+`TestoJasper.righe`: `LineBreakMeasurer` con il `FontRenderContext` di Jasper, gli stessi file di font e la
+larghezza utile del riquadro.
 - **Riquadri che non si allungano:** restano solo le righe che Jasper mostra. Ci stanno finché la prima
   riga, alta (A + D) × corpo, più le successive, alte `lineSpacingSize` + D × corpo con `Fixed`, stanno
-  nell'altezza. La regola è ricavata dai PDF di riferimento: titolo 16 pt in 42 pt, 2 righe; oggetto del
-  bollettino 9 pt in 24 pt, 1 riga.
-- **Troncamento a carattere:** con `net.sf.jasperreports.text.truncate.at.char`, l'ultima riga visibile
-  è riempita carattere per carattere.
+  nell'altezza (parametro `maxRighe`). La regola è ricavata dai PDF di riferimento: titolo 16 pt in 42 pt,
+  2 righe; oggetto del bollettino 9 pt in 24 pt, 1 riga.
+- **Troncamento a carattere:** con `tronca`, l'ultima riga visibile è riempita carattere per carattere.
 - **Testi con markup:** passano da `TestoJasper.stile`. La funzione interpreta i tag `style`, `font`, `b`,
   `i`, `span` e `br` come Jasper, spezza le righe con `LineBreakMeasurer` usando i font di ogni tratto
   (come il `ComplexTextLineWrapper` di Jasper) e restituisce le righe come nodi XSL-FO: testo e
   `fo:inline` per i tratti con uno stile diverso.
-- **Interlinea e padding:** dipendono dal numero di righe e li calcolano a runtime `TestoJasper.interlinea`
-  e `TestoJasper.paddingTesto`, con la geometria descritta sopra. Oltre un limite di righe, almeno 5, le
-  righe che stanno nel riquadro (10 per i riquadri che si allungano), la geometria resta quella del limite.
+- **Interlinea e padding:** dipendono dal numero di righe. Oltre un limite di righe, almeno 5, le righe
+  che stanno nel riquadro (10 per i riquadri che si allungano), la geometria resta quella del limite.
 
 **Righe con stili diversi.** FOP allarga una riga quando un `fo:inline` usa un file di font con `capHeight`
 maggiore di quella del blocco: TitilliumWeb-Regular 692, TitilliumWeb-Bold 680. Ascendente e discendente
@@ -116,52 +130,51 @@ titolo TitilliumWeb-Bold abbassava la riga di 0,24 pt e la successiva di 0,48 pt
 da `TestoJasper.stile` il blocco è quindi in TitilliumWeb normale, il Titillium con la `capHeight` maggiore,
 e i tratti nel font del riquadro sono `fo:inline`: la posizione è la stessa del blocco nel font del riquadro.
 
-`MotoreFop` usa il processore XSLT del JDK (XSLTC), che accetta le funzioni di estensione, senza i limiti
-di lunghezza delle espressioni XPath: le posizioni calcolate li superano, e i fogli sono generati da qui. Gli altri
-processori XSLT, per esempio xsltproc, non hanno le funzioni di estensione e non possono applicare i fogli.
+**Righe rimosse.** Jasper toglie un elemento con `isRemoveLineWhenBlank` vuoto, o non stampato per la sua
+condizione, insieme alla sua fascia verticale, se tutti gli elementi che la occupano sono vuoti. Gli
+elementi rimovibili le cui fasce si sovrappongono formano un gruppo, che si toglie quando sono tutti vuoti.
+Gli elementi `Float` sotto salgono dell'altezza del più alto del gruppo: nella violazione CdS senza
+indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt) spostano il resto di 25 pt. Una sovrapposizione
+di 1 pt non conta: nell'avviso bilingue senza indirizzo del destinatario Jasper toglie la fascia degli
+indirizzi (136-167 pt) anche se le informazioni dell'ente, stampate, partono da 166 pt, e le sposta in su
+con il resto. Nel foglio ogni gruppo è una variabile in testa alla banda, che vale l'altezza della riga se
+il gruppo si toglie e 0 altrimenti, con un nome ricavato dai campi della condizione (`$senza-numero-rata`).
+Le bande mantengono la loro altezza, come si vede nei PDF di riferimento dei sottoreport a colonne.
 
-**Righe rimosse e posizione Float.** Jasper toglie un elemento con `isRemoveLineWhenBlank` vuoto, o non
-stampato per la sua condizione, insieme alla sua fascia verticale, se tutti gli elementi che la occupano
-sono vuoti. Gli elementi rimovibili le cui fasce si sovrappongono formano un gruppo, che si toglie quando
-sono tutti vuoti. Gli elementi `Float` sotto salgono dell'altezza del più alto del gruppo: nella violazione
-CdS senza indirizzo, settore ente (25 pt) e indirizzi (16 + 16 pt) spostano il resto di 25 pt. Una
-sovrapposizione di 1 pt non conta: nell'avviso bilingue senza indirizzo del destinatario Jasper toglie la
-fascia degli indirizzi (136-167 pt) anche se le informazioni dell'ente, stampate, partono da 166 pt, e le
-sposta in su con il resto. Allo stesso modo un sottoreport si allunga fino al suo contenuto e sposta in
+**Allungamenti.** Un riquadro di rate (sottoreport in Jasper) si allunga fino al suo contenuto e sposta in
 basso gli elementi `Float` che lo seguono, ma non si accorcia sotto l'altezza dichiarata: `DoppioFormatoV2`,
-alto 211 pt in un riquadro di 212, non sposta in su gli elementi sotto. Nel foglio ogni gruppo di righe
-rimovibili è una variabile dichiarata in testa alla banda, che vale l'altezza della riga se il gruppo si
-toglie e 0 altrimenti, con un nome ricavato dai campi della condizione (`$senza-numero-rata`); lo stesso
-per l'allungamento dei sottoreport. Il `top` degli elementi sotto è la posizione di Jasper meno le righe
-rimosse e più gli allungamenti: `{232 - $senza-numero-rata + $allungamento-5289d111-gruppo}pt`. Le bande mantengono la loro altezza, come si vede
-nei PDF di riferimento dei sottoreport a colonne.
-
-**Testi che si allungano.** Un testo variabile con `isStretchWithOverflow`, che va a capo a runtime, alza il
-riquadro fino al testo e sposta in basso gli elementi `Float` sotto di lui, come in Jasper.
+alto 211 pt in un riquadro di 212, non sposta in su gli elementi sotto. Un testo variabile con
+`isStretchWithOverflow` alza il riquadro fino al testo, come in Jasper.
 - **Altezza:** arrotondata per eccesso, più i padding verticali. La prima riga è alta (A + D) × corpo, le
   successive `lineSpacingSize` + D × corpo con `Fixed` e (A + D) × corpo con `Single`. Misurata sui PDF
   della ricevuta: l'oggetto a 14 pt su 2 righe passa da 22 a 39 pt, una voce a 12 pt su 2 righe da 20 a 31 pt.
 - **Testi affiancati:** i testi le cui fasce si sovrappongono formano un gruppo che si allunga quanto il
-  più alto. I gruppi uno sotto l'altro si sommano.
-- **Nel foglio:** l'allungamento di ogni testo è una variabile XSLT dichiarata in testa alla banda,
-  calcolata da `TestoJasper.allungamento`, e usata nel `top` degli elementi sotto.
+  più alto (`$allungamento-<campo>-e-affiancati`). I gruppi uno sotto l'altro si sommano.
+- **Nel foglio:** l'allungamento di ogni testo è una variabile in testa alla banda, calcolata da
+  `TestoJasper.allungamento`, e usata nel `top` degli elementi sotto.
 
-**Report in flusso (`--flusso`).** Un report che va su più pagine, come la ricevuta con molte voci, si
-genera con le posizioni relative alla region-body, che ha i margini superiore e inferiore del report. I
-sottoreport entrano nel flusso di FOP, dopo uno spazio alto quanto la loro posizione e dopo tutti gli
-elementi assoluti della banda, che altrimenti si ancorerebbero all'ultima pagina. Ogni record:
-- **Altezza:** quella dichiarata; ci va un record solo se c'è posto per questa altezza, altrimenti passa
+**Report in flusso.** La ricevuta, che con molte voci va su più pagine, ha le posizioni relative alla
+region-body, che ha i margini superiore e inferiore del report. Le voci entrano nel flusso di FOP, dopo
+uno spazio alto quanto la loro posizione e dopo tutti gli elementi assoluti della banda, che altrimenti si
+ancorerebbero all'ultima pagina. Ogni voce:
+- **Altezza:** quella dichiarata; ci va una voce solo se c'è posto per questa altezza, altrimenti passa
   alla pagina successiva, che riparte dal margine superiore.
-- **Allungamento:** viene dal template `<nome>-altezza` del sottoreport (generato con `--altezza-record`) ed
-  è uno spazio dopo il record, scartato a fine pagina. Nei PDF di riferimento una voce allungata che finisce
-  il testo sul margine inferiore chiude la pagina senza spostare la successiva.
-- **Spazio sotto il sottoreport:** quello della banda resta un blocco. Con le voci che riempiono la pagina
-  fino al margine, Jasper aggiunge una pagina vuota, e FOP fa lo stesso.
+- **Allungamento:** viene dal template `RicevutaMae_elenco_voci-altezza` ed è uno spazio dopo la voce,
+  scartato a fine pagina. Nei PDF di riferimento una voce allungata che finisce il testo sul margine
+  inferiore chiude la pagina senza spostare la successiva.
+- **Spazio sotto l'elenco:** quello della banda resta un blocco. Con le voci che riempiono la pagina fino
+  al margine, Jasper aggiunge una pagina vuota, e FOP fa lo stesso.
 
-Differenze note:
-- Record in flusso il cui testo allungato non sta nello spazio rimasto in fondo alla pagina: Jasper divide
-  il testo tra le due pagine, FOP lo lascia sporgere nel margine inferiore. Non succede con i casi di
-  riferimento.
+**Bordi dei riquadri.** Jasper disegna la linea centrata sul bordo del riquadro. FOP disegna il bordo
+superiore sotto il bordo, quindi la linea è posizionata sul bordo stesso.
+
+`MotoreFop` alza i limiti di lunghezza delle espressioni XPath del JDK: i fogli sono interni, non arrivano
+dall'esterno.
+
+Differenze note rispetto a Jasper:
+- Voce della ricevuta il cui testo allungato non sta nello spazio rimasto in fondo alla pagina: Jasper
+  divide il testo tra le due pagine, FOP lo lascia sporgere nel margine inferiore. Non succede con i casi
+  di riferimento.
 - Il grassetto applicato con `<b>` a `TitilliumWeb-Bold`, che non ha una variante bold, è simulato da
   Jasper con un contorno ai caratteri. FOP non lo simula e usa lo stesso file: il testo è meno marcato,
   ma con la stessa larghezza e nella stessa posizione (per esempio "pagopa.gov.it"). `TitilliumWeb-Black`
@@ -172,10 +185,13 @@ Differenze note:
 - Testo grigio grande, come la traduzione nel titolo a 16 pt: Jasper e FOP incorporano il font in modo
   diverso e i bordi dei glifi risultano lievemente diversi nel raster, con le posizioni identiche entro
   0,005 pt. Su "(de)" sono 6 pixel, oltre la soglia di 5 (`bilingue-unica-de`, `bilingue-postale-unica-DE`).
+- Il DataMatrix del bollettino è generato da zxing, mentre Jasper usa barcode4j. Ha la stessa dimensione
+  (48×48) e lo stesso contenuto, ma il disegno dei moduli è diverso perché le due librerie scelgono una
+  codifica interna diversa.
 
-## Criteri di accettazione
+## Confronto con Jasper
 
-Un layout migrato è accettato quando `verifica_pdf.py` passa su tutti i suoi casi di riferimento:
+`verifica_pdf.py` confronta il PDF FOP con quello Jasper dello stesso XML. Un caso è accettato quando:
 
 | Criterio | Soglia |
 | --- | --- |
@@ -185,13 +201,9 @@ Un layout migrato è accettato quando `verifica_pdf.py` passa su tutti i suoi ca
 | Immagini | riquadro dell'inchiostro entro 1 pt |
 | Pagine | stesso numero di pagine; gli altri criteri si applicano pagina per pagina |
 | QR code | tutti i `qr_code` dell'XML letti dal PDF FOP, dal riquadro esatto di ogni codice a 600 dpi; se zxing non lo legge, riprova con un margine bianco, a scale minori e con `PURE_BARCODE` |
-| DataMatrix (bollettino postale) | tutti i `data_matrix` dell'XML letti dal PDF FOP |
+| DataMatrix (bollettino postale) | tutti i `data_matrix` dell'XML letti dal PDF FOP: si confronta il contenuto, non il disegno |
 
 Differenze accettate in `RataUnica` e `RataUnicaPostale`: il grassetto simulato di "pagopa.gov.it" (`--escludi 480,250,100,22`).
-
-Il DataMatrix del bollettino è generato da zxing, mentre Jasper usa barcode4j. Ha la stessa dimensione
-(48×48) e lo stesso contenuto, ma il disegno dei moduli è diverso perché le due librerie scelgono una
-codifica interna diversa. Per questo si confronta il contenuto letto, non il disegno.
 
 ```bash
 python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input.xml \
@@ -201,28 +213,7 @@ python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input
 Il file FO (`layout.fo`) lo scrive `PrototipoFopTest` in `target/prototipo-fop/`, accanto al PDF di ogni
 caso, con il foglio indicato da `-Dprototipo.foglio`.
 
-**Bordi dei riquadri.** Jasper disegna la linea centrata sul bordo del riquadro. FOP disegna il bordo
-superiore sotto il bordo, quindi il convertitore posiziona la linea sul bordo stesso.
-
-## Motore nel servizio
-
-`MotoreFop` è il componente Spring che stampa con FOP:
-- **Bean, non XML:** riceve l'oggetto JAXB dell'avviso e lo passa all'XSLT con `JAXBSource`, senza serializzarlo.
-- **Dati calcolati:** prima della stampa `PreparazioneAvviso` valorizza i campi opzionali dell'XSD che XSLT non può calcolare:
-  - `qr_code_svg` e `data_matrix_svg` di ogni rata, nei modelli v1 e v2;
-  - `logo_ente_px` e `logo_ente_secondario_px`, `logo_pagopa_px` per la ricevuta.
-- **Cache:** `FopFactory` (configurazione e font) è unica; i fogli XSLT compilati sono in cache e si compilano all'avvio.
-- **Classpath:** fogli, configurazione e font vengono letti solo dal classpath (i font come `classpath:/fonts/...`), quindi funzionano da `target/classes`, dal jar eseguibile e dal war. Ogni altra risorsa esterna viene rifiutata.
-
-Tutti i tipi di stampa usano FOP: JasperReports e i `.jasper` sono stati rimossi, insieme alle proprietà
-`stampe.motore.*` che sceglievano il motore per tipo durante la migrazione. I layout `RidottoScontato`, e
-postale con pagine multiple, non sono stati migrati: il mapper non li produce.
-
-Test:
-- `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
-- `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine.
-
-## Casi di riferimento
+### Casi di riferimento
 
 I PDF Jasper dei layout a pagina singola vengono dalla testsuite del core (`pdf-riferimento/run-*`). Quelli
 multi-rata, la ricevuta e l'avviso bilingue, che il core non produce, sono stati generati con
@@ -234,11 +225,8 @@ violazione CdS, ricevuta, bilingue in tedesco e sloveno) come il controller e sa
 mvn test -Dtest=GeneraRiferimentiJasperTest -Driferimenti.uscita=$PWD/pdf-riferimento/jasper-multirata
 ```
 
-## Verifica
-
-`PrototipoFopTest` genera con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper, e
-accanto il documento XSL-FO prodotto con le funzioni Java.
-I casi restano fuori dal repository e si indicano da riga di comando:
+`PrototipoFopTest` genera con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper. I
+casi restano fuori dal repository e si indicano da riga di comando:
 
 ```bash
 mvn test -Dtest=PrototipoFopTest \
@@ -249,18 +237,21 @@ mvn test -Dtest=PrototipoFopTest -Dprototipo.run=$PWD/pdf-riferimento/run-202610
   -Dprototipo.casi=casi-prototipo-RataUnicaPostale.json -Dprototipo.foglio=avviso-postale.xsl
 ```
 
-## Regressione dei layout
+## Motore nel servizio
 
-`RegressioneLayoutTest` protegge i layout da modifiche non volute, anche senza i riferimenti Jasper. Per
-ogni caso in `src/test/resources/regressione-layout/<foglio>/` stampa l'XML con `<foglio>.xsl` e confronta
-l'hash SHA-256 dell'area tree di FOP (la pagina impaginata: posizioni, testi, immagini) con quello in
-`attesi.properties`. Se l'hash cambia, area tree e PDF del caso vanno in `target/regressione-layout/`.
+`MotoreFop` è il componente Spring che stampa con FOP:
+- **Bean, non XML:** riceve l'oggetto JAXB dell'avviso e lo passa all'XSLT con `JAXBSource`, senza serializzarlo.
+- **Dati calcolati:** prima della stampa `PreparazioneAvviso` valorizza i campi opzionali dell'XSD che XSLT non può calcolare:
+  - `qr_code_svg` e `data_matrix_svg` di ogni rata, nei modelli v1 e v2;
+  - `logo_ente_px` e `logo_ente_secondario_px`, `logo_pagopa_px` per la ricevuta.
+- **Cache:** `FopFactory` (configurazione, font e immagini) è unica; i fogli XSLT compilati sono in cache e si compilano all'avvio.
+- **Classpath:** fogli, configurazione, font e icone vengono letti solo dal classpath (font e icone come `classpath:/...`), quindi funzionano da `target/classes`, dal jar eseguibile e dal war. Ogni altra risorsa esterna viene rifiutata.
 
-- Gli XML vengono da `GeneraCasiRegressioneTest` (factory e mapper, come il controller), con i loghi
-  sostituiti da `@logo`; si rigenerano solo su richiesta, perché la factory usa codici avviso casuali:
-  `mvn test -Dtest=GeneraCasiRegressioneTest -Dregressione.genera=true`.
-- Dopo una modifica voluta del layout, si aggiornano gli hash:
-  `mvn test -Dtest=RegressioneLayoutTest -Dregressione.aggiorna=true`.
+I layout `RidottoScontato`, e postale con pagine multiple, non sono stati migrati da Jasper: il mapper
+non li produce.
 
-Per confrontare due versioni dei fogli su tutti i casi di riferimento, `PrototipoFopTest` scrive anche
-l'area tree con `-Dprototipo.areatree=true`.
+Test:
+- `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
+- `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine;
+- `TestoJasperGeometriaTest`: interlinea, padding e allungamento dei testi;
+- `RegressioneLayoutTest`: regressione dei layout.

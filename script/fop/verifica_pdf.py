@@ -18,7 +18,7 @@ Criteri di accettazione (ogni criterio deve passare, su ogni pagina):
 Le posizioni delle parole vengono da pdftotext, ma sono usate solo per trovare le righe: Jasper e
 FOP descrivono le metriche del font in modo diverso, quindi lo scarto si misura sull'inchiostro.
 Le zone delle immagini si ricavano dal file FO del layout: sono i block-container il cui blocco ha
-corpo 0, come li genera jrxml2fo.py per immagini, QR code e DataMatrix. Le posizioni sono sommate
+corpo 0, come nei layout per immagini, QR code e DataMatrix. Le posizioni sono sommate
 lungo i block-container annidati (le rate dei sottoreport) e ogni page-sequence e' una pagina.
 
 Uso:

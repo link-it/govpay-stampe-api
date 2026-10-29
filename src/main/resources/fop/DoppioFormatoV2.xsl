@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	GENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/DoppioFormatoV2.jrxml: non modificare a mano.
-	Rigenerare con script/fop/genera-xsl.sh.
+	Layout XSL-FO DoppioFormatoV2 (issue #37): riquadro di una rata su due colonne, avviso bilingue (da DoppiaRataV2.xsl).
+	Derivato dal template Jasper DoppioFormatoV2.jrxml. Posizioni in punti, come in Jasper (pagina o riquadro della rata):
+	vedi script/fop/README.md per come modificarlo e verificarlo.
+	Contesto dei percorsi relativi: l'elemento rata; i dati comuni sono sotto /AvvisoPagamentoInput.
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
 	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
 
 	<xsl:template name="DoppioFormatoV2">
-		<!-- banda detail, y=0.0 -->
+		<!-- banda detail del report Jasper, da y = 0 pt -->
 		<xsl:variable name="senza-importo" select="20 * number(not(normalize-space(format-number(number(importo), '#.##0,00', 'it'))))"/>
 		<xsl:variable name="senza-codice-avviso" select="16 * number(not(normalize-space(codice_avviso)))"/>
 		<fo:block-container absolute-position="absolute" left="11pt" top="15pt" width="94pt" height="94pt">

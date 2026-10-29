@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	GENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/TriplaRataPostale.jrxml: non modificare a mano.
-	Rigenerare con script/fop/genera-xsl.sh.
+	Layout XSL-FO TriplaRataPostale (issue #37): pagina dell'avviso con tre rate e i bollettini postali (da avviso-postale.xsl).
+	Derivato dal template Jasper TriplaRataPostale.jrxml. Posizioni in punti, come in Jasper (pagina o riquadro della rata):
+	vedi script/fop/README.md per come modificarlo e verificarlo.
+	Contesto dei percorsi relativi: l'elemento pagine/tripla; i dati comuni sono sotto /AvvisoPagamentoInput.
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
 	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
 
 	<xsl:template name="TriplaRataPostale">
-		<!-- banda detail, y=0.0 -->
-		<xsl:variable name="allungamento-58703e2b" select="(ceiling(count(rata) div 1) * 160.0 - 10) * number((ceiling(count(rata) div 1) * 160.0 - 10) &gt; 0)"/>
-		<xsl:variable name="allungamento-e58df264" select="(ceiling(count(rata) div 3) * 242.0 - 10) * number((ceiling(count(rata) div 3) * 242.0 - 10) &gt; 0)"/>
+		<!-- banda detail del report Jasper, da y = 0 pt -->
+		<xsl:variable name="allungamento-bollettino-tri-rata-postale" select="(ceiling(count(rata) div 1) * 160.0 - 10) * number((ceiling(count(rata) div 1) * 160.0 - 10) &gt; 0)"/>
+		<xsl:variable name="allungamento-triplo-formato-postale" select="(ceiling(count(rata) div 3) * 242.0 - 10) * number((ceiling(count(rata) div 3) * 242.0 - 10) &gt; 0)"/>
 		<fo:block-container absolute-position="absolute" left="20pt" top="20pt" width="34pt" height="34pt">
 			<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="34pt" content-height="34pt" scaling="non-uniform" src="url(classpath:/fop/icone/logo-pagopa.svg)"/></fo:block>
 		</fo:block-container>
@@ -42,9 +44,9 @@
 				</fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<xsl:variable name="spostamento-58703e2b" select="$allungamento-e58df264"/>
+		<xsl:variable name="spostamento-bollettino-tri-rata-postale" select="$allungamento-triplo-formato-postale"/>
 		<xsl:for-each select="rata">
-			<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 1) * 595.0}pt" top="{104.0 + $spostamento-58703e2b + floor((position() - 1) div 1) * 160.0}pt" width="595pt" height="160pt">
+			<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 1) * 595.0}pt" top="{104.0 + $spostamento-bollettino-tri-rata-postale + floor((position() - 1) div 1) * 160.0}pt" width="595pt" height="160pt">
 				<fo:block/>
 				<xsl:call-template name="BollettinoTriRataPostale">
 				</xsl:call-template>

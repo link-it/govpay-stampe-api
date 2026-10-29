@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	GENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/RataMultipla.jrxml: non modificare a mano.
-	Rigenerare con script/fop/genera-xsl.sh.
+	Layout XSL-FO RataMultipla (issue #37): pagina dell'avviso con piu' di tre rate, a due o tre colonne (da avviso-semplice.xsl).
+	Derivato dal template Jasper RataMultipla.jrxml. Posizioni in punti, come in Jasper (pagina o riquadro della rata):
+	vedi script/fop/README.md per come modificarlo e verificarlo.
+	Contesto dei percorsi relativi: l'elemento pagine/multipla; i dati comuni sono sotto /AvvisoPagamentoInput.
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
 	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
 
 	<xsl:template name="RataMultipla">
-		<!-- banda detail, y=0.0 -->
+		<!-- banda detail del report Jasper, da y = 0 pt -->
 		<xsl:variable name="senza-nome-cognome-destinatario-e-altri" select="13 * number((not(normalize-space(/AvvisoPagamentoInput/nome_cognome_destinatario))) and (not(normalize-space(/AvvisoPagamentoInput/ente_creditore))) and (not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento))))"/>
 		<xsl:variable name="senza-colonne" select="10 * number((not(@colonne = '2')) and (not(@colonne = '3')))"/>
-		<xsl:variable name="allungamento-9af746ce" select="(ceiling(count(rata) div 2) * 165.0 - 10) * number((ceiling(count(rata) div 2) * 165.0 - 10) &gt; 0) * number(@colonne = '2')"/>
-		<xsl:variable name="allungamento-ce204b7a" select="(ceiling(count(rata) div 3) * 160.0 - 10) * number((ceiling(count(rata) div 3) * 160.0 - 10) &gt; 0) * number(@colonne = '3')"/>
+		<xsl:variable name="allungamento-doppio-formato" select="(ceiling(count(rata) div 2) * 165.0 - 10) * number((ceiling(count(rata) div 2) * 165.0 - 10) &gt; 0) * number(@colonne = '2')"/>
+		<xsl:variable name="allungamento-triplo-formato" select="(ceiling(count(rata) div 3) * 160.0 - 10) * number((ceiling(count(rata) div 3) * 160.0 - 10) &gt; 0) * number(@colonne = '3')"/>
 		<fo:block-container absolute-position="absolute" left="0pt" top="111pt" width="594pt" height="20pt" background-color="#EBEBEB">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="20pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">DATI PER IL PAGAMENTO</fo:block>
 		</fo:block-container>
@@ -136,9 +138,9 @@
 			<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="20pt" height="20pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="20pt" content-height="20pt" scaling="uniform" src="url(classpath:/fop/icone/informazioni.svg)"/></fo:block></fo:block-container></fo:block>
 		</fo:block-container>
 		<xsl:if test="@colonne = '2'">
-			<xsl:variable name="spostamento-9af746ce" select="-$senza-nome-cognome-destinatario-e-altri"/>
+			<xsl:variable name="spostamento-doppio-formato" select="-$senza-nome-cognome-destinatario-e-altri"/>
 			<xsl:for-each select="rata">
-				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 2) * 297.0}pt" top="{221.0 + $spostamento-9af746ce + floor((position() - 1) div 2) * 165.0}pt" width="297pt" height="165pt">
+				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 2) * 297.0}pt" top="{221.0 + $spostamento-doppio-formato + floor((position() - 1) div 2) * 165.0}pt" width="297pt" height="165pt">
 					<fo:block/>
 					<xsl:call-template name="DoppioFormato">
 						<xsl:with-param name="Multipla" select="'true'"/>
@@ -147,9 +149,9 @@
 			</xsl:for-each>
 		</xsl:if>
 		<xsl:if test="@colonne = '3'">
-			<xsl:variable name="spostamento-ce204b7a" select="-$senza-nome-cognome-destinatario-e-altri"/>
+			<xsl:variable name="spostamento-triplo-formato" select="-$senza-nome-cognome-destinatario-e-altri"/>
 			<xsl:for-each select="rata">
-				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 3) * 198.0}pt" top="{221.0 + $spostamento-ce204b7a + floor((position() - 1) div 3) * 160.0}pt" width="198pt" height="160pt">
+				<fo:block-container absolute-position="absolute" left="{0.0 + ((position() - 1) mod 3) * 198.0}pt" top="{221.0 + $spostamento-triplo-formato + floor((position() - 1) div 3) * 160.0}pt" width="198pt" height="160pt">
 					<fo:block/>
 					<xsl:call-template name="TriploFormato">
 						<xsl:with-param name="Multipla" select="'true'"/>

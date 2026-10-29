@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	GENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/RicevutaMae_elenco_voci.jrxml: non modificare a mano.
-	Rigenerare con script/fop/genera-xsl.sh.
+	Layout XSL-FO RicevutaMae_elenco_voci (issue #37): voce della ricevuta telematica (da RicevutaMae.xsl).
+	Derivato dal template Jasper RicevutaMae_elenco_voci.jrxml. Posizioni in punti, come in Jasper (pagina o riquadro della rata):
+	vedi script/fop/README.md per come modificarlo e verificarlo.
+	Contesto dei percorsi relativi: l'elemento elenco_voci/voce; i dati comuni sono sotto /root.
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
 	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
 
 	<xsl:template name="RicevutaMae_elenco_voci">
-		<!-- banda detail, y=0.0 -->
-		<xsl:variable name="allungamento-c6344c19" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 234, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
-		<xsl:variable name="allungamento-e88f55a7" select="tj:allungamento(tj:righe(string(id_riscossione), 'TitilliumWeb', false(), false(), 12, 185, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
-		<xsl:variable name="allungamento-05b5be5f" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 419, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(not(/root/versione_oggetto = 'SANP_230'))"/>
-		<xsl:variable name="allungamento-c6344c19-gruppo" select="(number((number($allungamento-c6344c19 &gt; $allungamento-e88f55a7) * $allungamento-c6344c19 + number(not($allungamento-c6344c19 &gt; $allungamento-e88f55a7)) * $allungamento-e88f55a7) &gt; $allungamento-05b5be5f) * (number($allungamento-c6344c19 &gt; $allungamento-e88f55a7) * $allungamento-c6344c19 + number(not($allungamento-c6344c19 &gt; $allungamento-e88f55a7)) * $allungamento-e88f55a7) + number(not((number($allungamento-c6344c19 &gt; $allungamento-e88f55a7) * $allungamento-c6344c19 + number(not($allungamento-c6344c19 &gt; $allungamento-e88f55a7)) * $allungamento-e88f55a7) &gt; $allungamento-05b5be5f)) * $allungamento-05b5be5f)"/>
+		<!-- banda detail del report Jasper, da y = 0 pt -->
+		<xsl:variable name="allungamento-descrizione" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 234, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
+		<xsl:variable name="allungamento-id-riscossione" select="tj:allungamento(tj:righe(string(id_riscossione), 'TitilliumWeb', false(), false(), 12, 185, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
+		<xsl:variable name="allungamento-descrizione-2" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 419, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(not(/root/versione_oggetto = 'SANP_230'))"/>
+		<xsl:variable name="allungamento-descrizione-e-affiancati" select="(number((number($allungamento-descrizione &gt; $allungamento-id-riscossione) * $allungamento-descrizione + number(not($allungamento-descrizione &gt; $allungamento-id-riscossione)) * $allungamento-id-riscossione) &gt; $allungamento-descrizione-2) * (number($allungamento-descrizione &gt; $allungamento-id-riscossione) * $allungamento-descrizione + number(not($allungamento-descrizione &gt; $allungamento-id-riscossione)) * $allungamento-id-riscossione) + number(not((number($allungamento-descrizione &gt; $allungamento-id-riscossione) * $allungamento-descrizione + number(not($allungamento-descrizione &gt; $allungamento-id-riscossione)) * $allungamento-id-riscossione) &gt; $allungamento-descrizione-2)) * $allungamento-descrizione-2)"/>
 		<xsl:if test="/root/versione_oggetto = 'SANP_230'">
 			<fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="250pt" height="20pt">
 				<fo:block font-family="TitilliumWeb" font-size="12pt" start-indent="0pt" end-indent="16pt" linefeed-treatment="preserve" wrap-option="no-wrap">
@@ -71,11 +73,11 @@
 	</xsl:template>
 
 	<xsl:template name="RicevutaMae_elenco_voci-altezza">
-		<xsl:variable name="allungamento-c6344c19" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 234, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
-		<xsl:variable name="allungamento-e88f55a7" select="tj:allungamento(tj:righe(string(id_riscossione), 'TitilliumWeb', false(), false(), 12, 185, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
-		<xsl:variable name="allungamento-05b5be5f" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 419, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(not(/root/versione_oggetto = 'SANP_230'))"/>
-		<xsl:variable name="allungamento-c6344c19-gruppo" select="(number((number($allungamento-c6344c19 &gt; $allungamento-e88f55a7) * $allungamento-c6344c19 + number(not($allungamento-c6344c19 &gt; $allungamento-e88f55a7)) * $allungamento-e88f55a7) &gt; $allungamento-05b5be5f) * (number($allungamento-c6344c19 &gt; $allungamento-e88f55a7) * $allungamento-c6344c19 + number(not($allungamento-c6344c19 &gt; $allungamento-e88f55a7)) * $allungamento-e88f55a7) + number(not((number($allungamento-c6344c19 &gt; $allungamento-e88f55a7) * $allungamento-c6344c19 + number(not($allungamento-c6344c19 &gt; $allungamento-e88f55a7)) * $allungamento-e88f55a7) &gt; $allungamento-05b5be5f)) * $allungamento-05b5be5f)"/>
-		<xsl:value-of select="27 + $allungamento-c6344c19-gruppo"/>
+		<xsl:variable name="allungamento-descrizione" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 234, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
+		<xsl:variable name="allungamento-id-riscossione" select="tj:allungamento(tj:righe(string(id_riscossione), 'TitilliumWeb', false(), false(), 12, 185, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(/root/versione_oggetto = 'SANP_230')"/>
+		<xsl:variable name="allungamento-descrizione-2" select="tj:allungamento(tj:righe(string(descrizione), 'TitilliumWeb', false(), false(), 12, 419, 0, false()), 'TitilliumWeb', 12, 8, 0, 20) * number(not(/root/versione_oggetto = 'SANP_230'))"/>
+		<xsl:variable name="allungamento-descrizione-e-affiancati" select="(number((number($allungamento-descrizione &gt; $allungamento-id-riscossione) * $allungamento-descrizione + number(not($allungamento-descrizione &gt; $allungamento-id-riscossione)) * $allungamento-id-riscossione) &gt; $allungamento-descrizione-2) * (number($allungamento-descrizione &gt; $allungamento-id-riscossione) * $allungamento-descrizione + number(not($allungamento-descrizione &gt; $allungamento-id-riscossione)) * $allungamento-id-riscossione) + number(not((number($allungamento-descrizione &gt; $allungamento-id-riscossione) * $allungamento-descrizione + number(not($allungamento-descrizione &gt; $allungamento-id-riscossione)) * $allungamento-id-riscossione) &gt; $allungamento-descrizione-2)) * $allungamento-descrizione-2)"/>
+		<xsl:value-of select="27 + $allungamento-descrizione-e-affiancati"/>
 	</xsl:template>
 
 </xsl:stylesheet>

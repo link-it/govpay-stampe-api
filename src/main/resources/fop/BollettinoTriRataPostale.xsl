@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	GENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/BollettinoTriRataPostale.jrxml: non modificare a mano.
-	Le parti scritte a mano sono in script/fop/personalizzazioni/BollettinoTriRataPostale.xml.
-	Rigenerare con script/fop/genera-xsl.sh.
+	Layout XSL-FO BollettinoTriRataPostale (issue #37): bollettino postale di una rata, pagina a tre rate (da TriplaRataPostale.xsl).
+	Derivato dal template Jasper BollettinoTriRataPostale.jrxml. Posizioni in punti, come in Jasper (pagina o riquadro della rata):
+	vedi script/fop/README.md per come modificarlo e verificarlo.
+	Contesto dei percorsi relativi: l'elemento rata; i dati comuni sono sotto /AvvisoPagamentoInput.
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
 	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
 
 	<xsl:template name="BollettinoTriRataPostale">
-		<!-- banda detail, y=0.0 -->
+		<!-- banda detail del report Jasper, da y = 0 pt -->
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="543pt" top="0pt" width="30pt" height="30pt">
 				<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="30pt" height="23.182pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="30pt" content-height="23.182pt" scaling="uniform" src="url(classpath:/fop/icone/forbici.svg)"/></fo:block></fo:block-container></fo:block>
@@ -45,6 +46,7 @@
 				<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="100pt" height="75pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="100pt" content-height="75pt" scaling="uniform" src="url(classpath:/fop/icone/logo-poste-italiane.svg)"/></fo:block></fo:block-container></fo:block>
 			</fo:block-container>
 		</xsl:if>
+		<!-- "sul C/C n." + numero di conto in RobotoMono grassetto: riga con due font -->
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="199pt" top="41pt" width="216pt" height="19pt">
 				<fo:block font-family="TitilliumWeb" font-size="12pt" text-align="justify" line-height="18.252pt" padding-top="1.4pt">sul C/C n. <fo:inline font-weight="bold" font-family="RobotoMono"><xsl:value-of select="numero_cc_postale"/></fo:inline></fo:block>
@@ -161,6 +163,7 @@
 				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="10.62pt" padding-top="1.778pt" wrap-option="no-wrap">Bollettino Postale pagabile in tutti gli <fo:block/>Uffici Postali e sui canali fisici o digitali <fo:block/>abilitati di Poste Italiane e dell’Ente <fo:block/>Creditore</fo:block>
 			</fo:block-container>
 		</xsl:if>
+		<!-- "Euro " (12 pt) + importo in RobotoMono grassetto: riga con due font, padding ridotto di 0,48 pt -->
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="426pt" top="41pt" width="169pt" height="19pt">
 				<fo:block font-family="TitilliumWeb" font-size="12pt" text-align="end" end-indent="20pt" line-height="18.252pt" padding-top="1.774pt">Euro <fo:inline font-weight="bold" font-family="RobotoMono"><xsl:call-template name="importo"><xsl:with-param name="valore" select="importo"/></xsl:call-template></fo:inline></fo:block>
@@ -181,6 +184,7 @@
 				<fo:block font-family="TitilliumWeb" font-size="8pt" text-align="center" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Tipo</fo:block>
 			</fo:block-container>
 		</xsl:if>
+		<!-- "RATA UNICA " / "Rata N" + (" entro il " + data | " " + tipo + " " + giorni): spazi come in Jasper -->
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="361pt" top="14pt" width="234pt" height="19pt" background-color="#EBEBEB">
 				<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" text-align="end" start-indent="0pt" end-indent="20pt" line-height="15.21pt" padding-top="3.15pt" white-space-collapse="false"><xsl:choose><xsl:when test="normalize-space(numero_rata)">Rata <xsl:value-of select="numero_rata"/></xsl:when><xsl:otherwise>RATA UNICA </xsl:otherwise></xsl:choose><xsl:choose><xsl:when test="normalize-space(giorni)"><xsl:value-of select="concat(' ', tipo, ' ')"/><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="giorni"/></xsl:call-template></xsl:when><xsl:when test="normalize-space(data)"> entro il <xsl:value-of select="data"/></xsl:when></xsl:choose></fo:block>

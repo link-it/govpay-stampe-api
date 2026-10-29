@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	GENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/DoppioFormato.jrxml: non modificare a mano.
-	Le parti scritte a mano sono in script/fop/personalizzazioni/DoppioFormato.xml.
-	Rigenerare con script/fop/genera-xsl.sh.
+	Layout XSL-FO DoppioFormato (issue #37): riquadro di una rata su due colonne (da DoppiaRata.xsl e RataMultipla.xsl).
+	Derivato dal template Jasper DoppioFormato.jrxml. Posizioni in punti, come in Jasper (pagina o riquadro della rata):
+	vedi script/fop/README.md per come modificarlo e verificarlo.
+	Contesto dei percorsi relativi: l'elemento rata; i dati comuni sono sotto /AvvisoPagamentoInput.
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
@@ -10,9 +11,10 @@
 
 	<xsl:template name="DoppioFormato">
 		<xsl:param name="Multipla" select="'false'"/>
-		<!-- banda detail, y=0.0 -->
+		<!-- banda detail del report Jasper, da y = 0 pt -->
 		<xsl:variable name="senza-numero-rata" select="20 * number(not(normalize-space(numero_rata)))"/>
 		<xsl:variable name="senza-cf-ente-e-altri" select="20 * number((not(normalize-space(/AvvisoPagamentoInput/cf_ente))) and (not(normalize-space(/AvvisoPagamentoInput/cbill))))"/>
+		<!-- intestazione "Rata N", vuota senza numero_rata: Jasper la rimuove (isRemoveLineWhenBlank) e il resto della rata sale -->
 		<xsl:if test="not(not(normalize-space(numero_rata)))">
 			<fo:block-container absolute-position="absolute" left="10pt" top="0pt" width="275pt" height="20pt" background-color="#EBEBEB">
 				<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="10pt" end-indent="0pt" line-height="15.21pt" padding-top="3.65pt"><xsl:if test="normalize-space(numero_rata)">Rata <xsl:value-of select="numero_rata"/></xsl:if></fo:block>
@@ -79,19 +81,22 @@
 				</fo:block>
 			</fo:block-container>
 		</xsl:if>
+		<!-- importo formattato -->
 		<fo:block-container absolute-position="absolute" left="0pt" top="{38 - $senza-numero-rata}pt" width="182pt" height="20pt">
 			<fo:block font-family="RobotoMono" font-size="12pt" font-weight="bold" start-indent="20pt" line-height="15.828pt" padding-top="1.392pt"><xsl:call-template name="importo"><xsl:with-param name="valore" select="importo"/></xsl:call-template></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="0pt" top="{26 - $senza-numero-rata}pt" width="182pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="20pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Euro</fo:block>
 		</fo:block-container>
+		<!-- scadenza oppure giorni della soglia -->
 		<fo:block-container absolute-position="absolute" left="0pt" top="{70 - $senza-numero-rata}pt" width="182pt" height="20pt">
 			<fo:block font-family="RobotoMono" font-size="12pt" font-weight="bold" start-indent="20pt" line-height="15.828pt" padding-top="1.392pt"><xsl:choose><xsl:when test="normalize-space(giorni)"><xsl:call-template name="giorni"><xsl:with-param name="giorni" select="giorni"/></xsl:call-template></xsl:when><xsl:otherwise><xsl:value-of select="data"/></xsl:otherwise></xsl:choose></fo:block>
 		</fo:block-container>
+		<!-- etichetta: "Entro il" oppure il tipo della soglia -->
 		<fo:block-container absolute-position="absolute" left="0pt" top="{58 - $senza-numero-rata}pt" width="182pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="20pt" line-height="12.168pt" padding-top="1.004pt"><xsl:choose><xsl:when test="normalize-space(giorni)"><xsl:value-of select="tipo"/></xsl:when><xsl:when test="normalize-space(data)">Entro il</xsl:when></xsl:choose></fo:block>
 		</fo:block-container>
-		<!-- banda detail, y=165.0 -->
+		<!-- banda detail del report Jasper, da y = 165 pt -->
 		<xsl:variable name="senza-ente-creditore" select="13 * number(not(normalize-space(/AvvisoPagamentoInput/ente_creditore)))"/>
 		<xsl:variable name="senza-oggetto-del-pagamento" select="13 * number(not(normalize-space(/AvvisoPagamentoInput/oggetto_del_pagamento)))"/>
 		<xsl:if test="not($Multipla = 'true')">

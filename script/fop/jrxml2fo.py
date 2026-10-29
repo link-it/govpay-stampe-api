@@ -46,7 +46,7 @@ ALLINEAMENTO = {'Left': 'start', 'Center': 'center', 'Right': 'end', 'Justified'
 VERTICALE = {'Top': 'before', 'Middle': 'center', 'Bottom': 'after'}
 
 todo = []
-personalizzazioni = {'elemento': {}, 'condizione': {}, 'attributi': {}}
+personalizzazioni = {'elemento': {}, 'condizione': {}, 'attributi': {}, 'commento': {}, 'intestazione': ''}
 
 
 def coppie(testo):
@@ -58,6 +58,18 @@ def coppie(testo):
 def carica_personalizzazioni(path):
     # lettura testuale: i frammenti vanno copiati cosi' come sono scritti, con i prefissi xsl: e fo:
     testo = open(path, encoding='utf-8').read()
+    # i commenti vanno nel foglio: quello iniziale nell'intestazione, gli altri sopra il primo elemento che segue
+    m = re.search(r'<!--(.*?)-->', testo, re.S)
+    if m:
+        personalizzazioni['intestazione'] = m.group(1)
+    corpo_xml = testo[testo.index('<personalizzazioni'):]
+    for commento_xml, uuid in re.findall(r'<!--((?:(?!-->).)*)-->\s*<(?:elemento|condizione) uuid="([^"]+)"', corpo_xml, re.S):
+        c = re.sub(r'\s+', ' ', commento_xml).strip()
+        # i rimandi agli uuid dei sorgenti Jasper non servono piu' nel foglio
+        c = re.sub(r"\s*\(come [^()]*\b[0-9a-f]{8}\b[^()]*\)", '', c)
+        c = re.sub(r",?\s*come (?:l'elemento )?[0-9a-f]{8}\b.*$", '', c)
+        c = re.sub(r'\$V\{totaleRate\}(?: = \$P\{totale_rate\})? = ', 'numero di rate, ', c)
+        personalizzazioni['commento'][uuid] = c
     testo = re.sub(r'<!--.*?-->', '', testo, flags=re.S)
     # <elemento uuid="..." attributi="..."/> senza contenuto: cambia solo gli attributi del blocco
     for uuid, extra in re.findall(r'<elemento uuid="([^"]+)"([^>]*?)/>', testo):
@@ -765,6 +777,48 @@ def svg_da_batik(espr):
     return s
 
 
+# Descrizione di ogni layout, per l'intestazione del foglio
+DESCRIZIONI = {
+    'RataUnica': "pagina dell'avviso con la rata unica, senza bollettino postale (da avviso-semplice.xsl)",
+    'DoppiaRata': "pagina dell'avviso con due rate, senza bollettino postale (da avviso-semplice.xsl)",
+    'TriplaRata': "pagina dell'avviso con tre rate, senza bollettino postale (da avviso-semplice.xsl)",
+    'RataMultipla': "pagina dell'avviso con piu' di tre rate, a due o tre colonne (da avviso-semplice.xsl)",
+    'DoppioFormato': 'riquadro di una rata su due colonne (da DoppiaRata.xsl e RataMultipla.xsl)',
+    'TriploFormato': 'riquadro di una rata su tre colonne (da TriplaRata.xsl e RataMultipla.xsl)',
+    'RataUnicaPostale': "pagina dell'avviso con la rata unica e il bollettino postale (da avviso-postale.xsl)",
+    'DoppiaRataPostale': "pagina dell'avviso con due rate e i bollettini postali (da avviso-postale.xsl)",
+    'TriplaRataPostale': "pagina dell'avviso con tre rate e i bollettini postali (da avviso-postale.xsl)",
+    'DoppioFormatoPostale': 'riquadro di una rata su due colonne, avviso postale (da DoppiaRataPostale.xsl)',
+    'TriploFormatoPostale': 'riquadro di una rata su tre colonne, avviso postale (da TriplaRataPostale.xsl)',
+    'BollettinoRataPostale': 'bollettino postale di una rata (da DoppiaRataPostale.xsl)',
+    'BollettinoTriRataPostale': 'bollettino postale di una rata, pagina a tre rate (da TriplaRataPostale.xsl)',
+    'Sanzione': 'pagina della violazione del codice della strada, importo ridotto e scontato (da violazione-cds.xsl)',
+    'RicevutaMae': 'ricevuta telematica, in flusso su piu\' pagine (da ricevuta.xsl)',
+    'RicevutaMae_elenco_voci': 'voce della ricevuta telematica (da RicevutaMae.xsl)',
+    'RataUnicaV2': "pagina dell'avviso bilingue con la rata unica, con o senza bollettino postale (da avviso-bilingue.xsl)",
+    'DoppiaRataV2': "pagina dell'avviso bilingue con due rate (da avviso-bilingue.xsl)",
+    'DoppioFormatoV2': 'riquadro di una rata su due colonne, avviso bilingue (da DoppiaRataV2.xsl)',
+    'BollettinoRataV2': 'bollettino postale di una rata, avviso bilingue (da DoppiaRataV2.xsl)',
+}
+
+# Elemento di contesto dei percorsi relativi di ogni layout, e note per l'intestazione
+CONTESTI = {
+    'RataUnica': 'pagine/singola', 'RataUnicaPostale': 'pagine/singola', 'RataUnicaV2': 'pagine/singola', 'Sanzione': 'pagine/singola',
+    'DoppiaRata': 'pagine/doppia', 'DoppiaRataPostale': 'pagine/doppia', 'DoppiaRataV2': 'pagine/doppia',
+    'TriplaRata': 'pagine/tripla', 'TriplaRataPostale': 'pagine/tripla', 'RataMultipla': 'pagine/multipla',
+    'DoppioFormato': 'rata', 'TriploFormato': 'rata', 'DoppioFormatoPostale': 'rata', 'TriploFormatoPostale': 'rata',
+    'DoppioFormatoV2': 'rata', 'BollettinoRataPostale': 'rata', 'BollettinoTriRataPostale': 'rata', 'BollettinoRataV2': 'rata',
+    'RicevutaMae': '/root', 'RicevutaMae_elenco_voci': 'elenco_voci/voce',
+}
+NOTE = {
+    'Sanzione': ['Le etichette scadenza_ridotto e scadenza_scontato hanno la forma "*parte 1*parte 2".'],
+    'DoppioFormatoPostale': [
+        'Testi su due righe con corpi diversi (etichetta a 8 pt, valore in RobotoMono 12 pt): due blocchi, con il',
+        'riquadro del testo di ciascuno dove Jasper mette la riga; la prima riga di Jasper e\' alta quanto',
+        'l\'ascendente del suo corpo piu\' la discendente del font del paragrafo (12 pt).'],
+}
+
+
 # Icone SVG dei template Jasper, scritte come file in src/main/resources/fop/icone/ e lette da FOP con
 # fo:external-graphic: nome del file per SHA-1 (primi 12 caratteri) del testo SVG
 ICONE = {
@@ -850,6 +904,20 @@ def nome_variabile(nome):
     return n
 
 
+def campo_xpath(espr):
+    """Ultimo passo del primo percorso XPath dell'espressione, come parte di un nome: oggetto-del-pagamento."""
+    for t in re.findall(r'[A-Za-z_][\w./-]*(?![\w./-]*\()', re.sub(r"'[^']*'", '', espr or '')):
+        campo = t.rstrip('/').split('/')[-1]
+        if campo not in ('and', 'or', 'div', 'mod', 'select', 'name', 'test', 'xsl', 'value-of'):
+            return campo.replace('_', '-')
+    return None
+
+
+def nome_sottoreport(nome):
+    """DoppioFormatoPostale -> doppio-formato-postale."""
+    return re.sub(r'(?<!^)(?=[A-Z])', '-', nome).lower()
+
+
 def nome_riga(c, re_el):
     """Nome della variabile di un gruppo di righe rimovibili, dai campi della condizione: senza-<campo> quando
     il gruppo si toglie per campi vuoti, con -e-altri se i campi sono piu' di uno."""
@@ -915,7 +983,7 @@ def analizza_banda(banda, ctx):
             contenuto = f'ceiling(count({selezione}) div {colonne}) * {altezza}'
             dichiarata = pt(num(re_el, "height"))[:-2]
             x = f'({contenuto} - {dichiarata})'
-            nome = nome_variabile('allungamento-' + re_el.get('uuid')[:8])
+            nome = nome_variabile('allungamento-' + nome_sottoreport(dati[0]))
             DICHIARAZIONI.append(f'<xsl:variable name="{nome}" select="{x} * number({x} &gt; 0)' + (f' * number({c})' if c else '') + '"/>')
             allungati.append((num(re_el, 'y') + num(re_el, 'height'), f'${nome}', re_el))
     # testi che si allungano: raggruppati quando le loro fasce verticali si sovrappongono, perche' per gli
@@ -927,7 +995,6 @@ def analizza_banda(banda, ctx):
         c = (personalizzazioni['condizione'].get(re_el.get('uuid')) or condizione(pw, ctx)) if pw else None
         if (v := allungamento_testo(el, ctx, c)) is not None:
             DICHIARAZIONI.append(v[1])
-            NOMI.add(v[0])
             testi.append((num(re_el, 'y'), num(re_el, 'y') + num(re_el, 'height'), f'${v[0]}', re_el))
     gruppi_testi = []
     for t in sorted(testi, key=lambda t: t[0]):
@@ -941,7 +1008,8 @@ def analizza_banda(banda, ctx):
             # massimo in XPath 1.0
             espr = f'(number({espr} &gt; {t[2]}) * {espr} + number(not({espr} &gt; {t[2]})) * {t[2]})'
         if len(g) > 1:
-            nome = nome_variabile('allungamento-' + g[0][3].get('uuid')[:8] + '-gruppo')
+            # testi affiancati: si allungano quanto il piu' alto
+            nome = nome_variabile(g[0][2][1:] + '-e-affiancati')
             DICHIARAZIONI.append(f'<xsl:variable name="{nome}" select="{espr}"/>')
             espr = f'${nome}'
         allungati.append((max(t[1] for t in g), espr, None))
@@ -1194,7 +1262,8 @@ def allungamento_testo(el, ctx, cond):
     if runtime is None or metriche is None:
         return None
     sopra, sotto = padding_verticale(el)
-    nome = 'allungamento-' + re_el.get('uuid')[:8]
+    campo = campo_xpath(runtime['testo']) or campo_xpath(re.sub(r'^.*?select="', '', runtime['istruzioni'] or '', count=1))
+    nome = nome_variabile('allungamento-' + (campo or re_el.get('uuid')[:8]))
     parametri = (f"'{font_attrs(el)['font-family']}', {num_xpath(float(font_attrs(el)['font-size'][:-2]))}, "
                  f"{num_xpath(interlinea_fissa(el))}, {num_xpath(sopra + sotto)}, {num_xpath(float(re_el.get('height')))}")
     fattore = f' * number({cond})' if cond else ''
@@ -1381,7 +1450,7 @@ def sottoreport(el, ox, oy, ctx, out, rientro):
     sopra = ''
     if SPOSTAMENTO:
         # lo spostamento si calcola nel contesto del report, prima di entrare nei record
-        variabile = 'spostamento-' + re_el.get('uuid', 'sottoreport')[:8]
+        variabile = nome_variabile('spostamento-' + nome_sottoreport(nome))
         out.append(f'{rientro}<xsl:variable name="{variabile}" select="{spostamento_xpath(SPOSTAMENTO)}"/>')
         sopra = f' + ${variabile}'
     if FLUSSO:
@@ -1497,6 +1566,8 @@ def elementi(contenitore_xml, ox, oy, ctx, out, rientro, ereditato=None):
             c = f'not({RIMOVIBILI[id(re_el)]})'
         else:
             c = None
+        if re_el.get('uuid') in personalizzazioni['commento']:
+            out.append(f"{rientro}<!-- {personalizzazioni['commento'][re_el.get('uuid')]} -->")
         if c:
             out.append(f'{rientro}<xsl:if test="{c}">')
             r2 = rientro + '\t'
@@ -1581,7 +1652,7 @@ def main():
     for banda in BANDE:
         for sezione in r.findall(f'{J}{banda}'):
             for b in sezione.iter(f'{J}band'):
-                out.append(f'\t\t<!-- banda {banda}, y={oy - a.offset_y - (0 if a.flusso else float(r.get("topMargin", 0)))} -->')
+                out.append(f'\t\t<!-- banda {banda} del report Jasper, da y = {num_xpath(oy - a.offset_y - (0 if a.flusso else float(r.get("topMargin", 0))))} pt -->')
                 pw = b.findtext(f'{J}printWhenExpression')
                 c = condizione(pw, ctx) if pw else None
                 DICHIARAZIONI.clear()
@@ -1608,11 +1679,15 @@ def main():
 
     print('<?xml version="1.0" encoding="UTF-8"?>')
     sorgente = a.jrxml.split('/')[-1]
+    nome_layout = sorgente[:-len('.jrxml')]
     print('<!--')
-    print(f'\tGENERATO da script/fop/jrxml2fo.py dal sorgente src/main/jasper/{sorgente}: non modificare a mano.')
-    if a.personalizzazioni:
-        print(f'\tLe parti scritte a mano sono in {a.personalizzazioni}.')
-    print('\tRigenerare con script/fop/genera-xsl.sh.')
+    print(f'\tLayout XSL-FO {nome_layout} (issue #37): {DESCRIZIONI[nome_layout]}.')
+    print(f'\tDerivato dal template Jasper {sorgente}. Posizioni in punti, come in Jasper (pagina o riquadro della rata):')
+    print('\tvedi script/fop/README.md per come modificarlo e verificarlo.')
+    radice = a.param_xpath or '/AvvisoPagamentoInput'
+    print(f"\tContesto dei percorsi relativi: l'elemento {CONTESTI[nome_layout]}; i dati comuni sono sotto {radice}.")
+    for riga in NOTE.get(nome_layout, []):
+        print(f'\t{riga}')
     print('-->')
     print('<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"')
     print('\txmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"')

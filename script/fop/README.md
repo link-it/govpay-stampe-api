@@ -10,7 +10,7 @@ e riproducono la loro impaginazione al punto.
 | --- | --- |
 | `avviso-semplice.xsl`, `avviso-postale.xsl`, `violazione-cds.xsl`, `ricevuta.xsl`, `avviso-bilingue.xsl` | fogli principali, uno per tipo di stampa: pagina A4 e scelta del layout per ogni pagina dell'XML |
 | `RataUnica.xsl`, `DoppiaRata.xsl`, `TriplaRata.xsl`, `RataMultipla.xsl`, `*Postale.xsl`, `*V2.xsl`, `Sanzione.xsl`, `RicevutaMae*.xsl` | layout di una pagina, o del riquadro di una rata (`*Formato*`, `Bollettino*`); l'intestazione dice da dove sono chiamati e qual è il nodo di contesto |
-| `comune.xsl` | template condivisi: `testo-a-capo`, `logo`, `importo`, `data-uri`, `markup`, `parte-etichetta`, `giorni` |
+| `comune.xsl` | template condivisi: `intestazione-pagopa`, `testo-a-capo`, `logo`, `importo`, `data-uri`, `markup`, `parte-etichetta`, `giorni` |
 | `icone/*.svg` | icone (logo pagoPA, Poste, canali di pagamento, forbici, ...), lette da `classpath:/fop/icone/<nome>.svg` |
 | `fop.xconf` | configurazione di FOP: font e opzioni di impaginazione |
 

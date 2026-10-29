@@ -15,6 +15,16 @@
 		<xsl:value-of select="format-number(number($valore), '#.##0,00', 'it')"/>
 	</xsl:template>
 
+	<!-- Intestazione degli avvisi: logo pagoPA e "AVVISO DI PAGAMENTO", in alto a sinistra della pagina -->
+	<xsl:template name="intestazione-pagopa">
+		<fo:block-container absolute-position="absolute" left="20pt" top="20pt" width="34pt" height="34pt">
+			<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="34pt" content-height="34pt" scaling="non-uniform" src="url(classpath:/fop/icone/logo-pagopa.svg)"/></fo:block>
+		</fo:block-container>
+		<fo:block-container absolute-position="absolute" left="54pt" top="24pt" width="150pt" height="16pt">
+			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="5pt" line-height="15.21pt" padding-top="1.255pt" wrap-option="no-wrap">AVVISO DI PAGAMENTO</fo:block>
+		</fo:block-container>
+	</xsl:template>
+
 	<!--
 		Testo variabile che va a capo come in Jasper, con le funzioni di TestoJasper. Si chiama dentro il fo:block
 		del riquadro, con linefeed-treatment="preserve" e wrap-option="no-wrap": scrive line-height e padding-top

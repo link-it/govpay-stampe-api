@@ -41,12 +41,7 @@
 		<fo:block-container absolute-position="absolute" left="299pt" top="{253 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="295pt" height="20pt" background-color="#EBEBEB">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="8pt" end-indent="20pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">DOVE PAGARE?</fo:block>
 		</fo:block-container>
-		<fo:block-container absolute-position="absolute" left="20pt" top="20pt" width="34pt" height="34pt">
-			<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="34pt" content-height="34pt" scaling="non-uniform" src="url(classpath:/fop/icone/logo-pagopa.svg)"/></fo:block>
-		</fo:block-container>
-		<fo:block-container absolute-position="absolute" left="54pt" top="24pt" width="150pt" height="16pt">
-			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="5pt" line-height="15.21pt" padding-top="1.255pt" wrap-option="no-wrap">AVVISO DI PAGAMENTO</fo:block>
-		</fo:block-container>
+		<xsl:call-template name="intestazione-pagopa"/>
 		<fo:block-container absolute-position="absolute" left="490pt" top="20pt" width="85pt" height="85pt">
 			<xsl:call-template name="logo">
 				<xsl:with-param name="logo" select="/AvvisoPagamentoInput/logo_ente"/>

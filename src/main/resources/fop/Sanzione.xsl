@@ -307,15 +307,10 @@
 		<fo:block-container absolute-position="absolute" left="298pt" top="{231 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="296pt" height="18pt" background-color="#EBEBEB">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="8pt" end-indent="20pt" line-height="15.21pt" padding-top="2.65pt" wrap-option="no-wrap">DOVE PAGARE?</fo:block>
 		</fo:block-container>
-		<fo:block-container absolute-position="absolute" left="54pt" top="24pt" width="150pt" height="16pt">
-			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="5pt" line-height="15.21pt" padding-top="1.255pt" wrap-option="no-wrap">AVVISO DI PAGAMENTO</fo:block>
-		</fo:block-container>
+		<xsl:call-template name="intestazione-pagopa"/>
 		<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
 		<fo:block-container absolute-position="absolute" left="298pt" top="{271 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="235pt" height="44pt">
 			<fo:block font-family="TitilliumWeb" font-size="9pt" start-indent="8pt" line-height="11.591pt" padding-top="2.179pt"><xsl:if test="normalize-space(/ViolazioneInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /ViolazioneInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</fo:block>
-		</fo:block-container>
-		<fo:block-container absolute-position="absolute" left="20pt" top="20pt" width="34pt" height="34pt">
-			<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="34pt" content-height="34pt" scaling="non-uniform" src="url(classpath:/fop/icone/logo-pagopa.svg)"/></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="20pt" top="{377 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="11pt" height="11pt">
 			<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="11pt" height="11pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="11pt" content-height="11pt" scaling="uniform" src="url(classpath:/fop/icone/nota.svg)"/></fo:block></fo:block-container></fo:block>

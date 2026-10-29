@@ -1,3 +1,18 @@
+2026-10-29  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Layout XSL-FO modificabili a mano (#37).
+	I layout in src/main/resources/fop sono il sorgente delle stampe:
+	rimossi i template Jasper .jrxml e il convertitore che ne ricavava gli
+	XSL. Interlinea, padding e allungamento dei testi sono calcolati dalle
+	funzioni di TestoFop (prima TestoJasper); testi a capo, loghi e
+	intestazione pagoPA sono template condivisi di comune.xsl; le icone
+	SVG sono file in fop/icone; le righe rimosse e gli allungamenti sono
+	variabili con nome. Fogli da 966 a 522 KB, PDF identici a quelli
+	di prima nei 71 casi di riferimento. Nuovo test RegressioneLayoutTest:
+	29 stampe di prova confrontate con l'area tree attesa di FOP.
+	JasperConfig rinominato JaxbConfig. Guida ai layout in
+	script/fop/README.md.
+
 2026-10-26  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Stampa con Apache FOP, rimosso JasperReports (#37).

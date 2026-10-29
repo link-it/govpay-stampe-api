@@ -14,7 +14,7 @@ e riproducono la loro impaginazione al punto.
 | `icone/*.svg` | icone (logo pagoPA, Poste, canali di pagamento, forbici, ...), lette da `classpath:/fop/icone/<nome>.svg` |
 | `fop.xconf` | configurazione di FOP: font e opzioni di impaginazione |
 
-`TestoJasper` (`it.govpay.stampe.fop`) contiene le funzioni di estensione Java usate dai fogli con il prefisso
+`TestoFop` (`it.govpay.stampe.fop`) contiene le funzioni di estensione Java usate dai fogli con il prefisso
 `tj:`: a capo, interlinea, padding e allungamento dei testi, calcolati come in Jasper.
 
 I layout sono stati derivati dai template Jasper (`.jrxml`) con un convertitore, rimosso dopo l'ultima
@@ -90,7 +90,7 @@ markup, allineamento verticale. Report e misure sono in `pdf-riferimento/taratur
 
 I blocchi di testo hanno `line-height` uguale alla distanza di Jasper e un `padding-top` che riproduce
 l'allineamento in alto, al centro o in basso: costanti per i testi fissi, calcolati da
-`TestoJasper.interlinea` e `TestoJasper.paddingTesto` per i testi variabili.
+`TestoFop.interlinea` e `TestoFop.paddingTesto` per i testi variabili.
 
 `fop.xconf` disattiva il kerning (`kerning="no"`) e l'elaborazione OpenType (`complex-scripts`), che
 applicherebbe comunque il kerning delle tabelle GPOS: Jasper non ne usa.
@@ -109,14 +109,14 @@ come per "Euro 122,50" in `RataUnica` (0,48 pt).
 **A capo dei testi.** FOP spezza le righe con l'algoritmo di Knuth-Plass, che bilancia il paragrafo,
 mentre Jasper riempie ogni riga finché c'è spazio. Per questo i testi fissi hanno gli a capo scritti, e i
 testi variabili (oggetto, nomi, indirizzi) passano dal template `testo-a-capo`, che chiama
-`TestoJasper.righe`: `LineBreakMeasurer` con il `FontRenderContext` di Jasper, gli stessi file di font e la
+`TestoFop.righe`: `LineBreakMeasurer` con il `FontRenderContext` di Jasper, gli stessi file di font e la
 larghezza utile del riquadro.
 - **Riquadri che non si allungano:** restano solo le righe che Jasper mostra. Ci stanno finché la prima
   riga, alta (A + D) × corpo, più le successive, alte `lineSpacingSize` + D × corpo con `Fixed`, stanno
   nell'altezza (parametro `maxRighe`). La regola è ricavata dai PDF di riferimento: titolo 16 pt in 42 pt,
   2 righe; oggetto del bollettino 9 pt in 24 pt, 1 riga.
 - **Troncamento a carattere:** con `tronca`, l'ultima riga visibile è riempita carattere per carattere.
-- **Testi con markup:** passano da `TestoJasper.stile`. La funzione interpreta i tag `style`, `font`, `b`,
+- **Testi con markup:** passano da `TestoFop.stile`. La funzione interpreta i tag `style`, `font`, `b`,
   `i`, `span` e `br` come Jasper, spezza le righe con `LineBreakMeasurer` usando i font di ogni tratto
   (come il `ComplexTextLineWrapper` di Jasper) e restituisce le righe come nodi XSL-FO: testo e
   `fo:inline` per i tratti con uno stile diverso.
@@ -127,7 +127,7 @@ larghezza utile del riquadro.
 maggiore di quella del blocco: TitilliumWeb-Regular 692, TitilliumWeb-Bold 680. Ascendente e discendente
 sono gli stessi, e il `line-height` dell'inline non conta. La traduzione grigia in TitilliumWeb dentro un
 titolo TitilliumWeb-Bold abbassava la riga di 0,24 pt e la successiva di 0,48 pt. Per i testi che passano
-da `TestoJasper.stile` il blocco è quindi in TitilliumWeb normale, il Titillium con la `capHeight` maggiore,
+da `TestoFop.stile` il blocco è quindi in TitilliumWeb normale, il Titillium con la `capHeight` maggiore,
 e i tratti nel font del riquadro sono `fo:inline`: la posizione è la stessa del blocco nel font del riquadro.
 
 **Righe rimosse.** Jasper toglie un elemento con `isRemoveLineWhenBlank` vuoto, o non stampato per la sua
@@ -151,7 +151,7 @@ alto 211 pt in un riquadro di 212, non sposta in su gli elementi sotto. Un testo
 - **Testi affiancati:** i testi le cui fasce si sovrappongono formano un gruppo che si allunga quanto il
   più alto (`$allungamento-<campo>-e-affiancati`). I gruppi uno sotto l'altro si sommano.
 - **Nel foglio:** l'allungamento di ogni testo è una variabile in testa alla banda, calcolata da
-  `TestoJasper.allungamento`, e usata nel `top` degli elementi sotto.
+  `TestoFop.allungamento`, e usata nel `top` degli elementi sotto.
 
 **Report in flusso.** La ricevuta, che con molte voci va su più pagine, ha le posizioni relative alla
 region-body, che ha i margini superiore e inferiore del report. Le voci entrano nel flusso di FOP, dopo
@@ -253,5 +253,5 @@ non li produce.
 Test:
 - `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
 - `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine;
-- `TestoJasperGeometriaTest`: interlinea, padding e allungamento dei testi;
+- `TestoFopGeometriaTest`: interlinea, padding e allungamento dei testi;
 - `RegressioneLayoutTest`: regressione dei layout.

@@ -7,7 +7,7 @@
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg"
-	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
+	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoFop" exclude-result-prefixes="tj">
 
 	<xsl:template name="DoppiaRataV2">
 		<!-- banda detail del report Jasper, da y = 0 pt -->

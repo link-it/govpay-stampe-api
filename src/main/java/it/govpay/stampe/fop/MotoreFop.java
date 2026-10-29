@@ -142,7 +142,7 @@ public class MotoreFop {
 
 	/**
 	 * Per le verifiche: il documento XSL-FO prodotto dal foglio. Solo il processore XSLT del motore ha le
-	 * funzioni di estensione Java dei fogli ({@link TestoJasper}).
+	 * funzioni di estensione Java dei fogli ({@link TestoFop}).
 	 */
 	String fo(String foglio, JAXBContext contesto, Object avviso) {
 		try {

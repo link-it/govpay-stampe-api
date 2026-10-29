@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
 @Configuration
-public class JasperConfig {
+public class JaxbConfig {
 
 	@Bean
 	public Jaxb2Marshaller jaxb2MarshallerAvvisoPagamento() {

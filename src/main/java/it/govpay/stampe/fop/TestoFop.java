@@ -45,7 +45,7 @@ import org.w3c.dom.NodeList;
  * esempio l'etichetta italiana seguita dalla traduzione in grigio e in un corpo minore degli avvisi
  * bilingue: interpreta i tag come Jasper e spezza le righe sul testo con i font di ogni tratto.
  */
-public final class TestoJasper {
+public final class TestoFop {
 
 	private static final FontRenderContext FRC = new FontRenderContext(null, true, true);
 	private static final Map<String, Font> FONT = new ConcurrentHashMap<>();
@@ -84,7 +84,7 @@ public final class TestoJasper {
 			String[] file = FAMIGLIE.getOrDefault(this.famiglia, FAMIGLIE.get("TitilliumWeb"));
 			int variante = (this.grassetto ? 1 : 0) + (this.corsivo ? 2 : 0);
 			String scelto = file[variante] != null ? file[variante] : file[this.grassetto ? 1 : 0] != null ? file[this.grassetto ? 1 : 0] : file[0];
-			return FONT.computeIfAbsent(scelto, TestoJasper::carica).deriveFont((float) this.corpo);
+			return FONT.computeIfAbsent(scelto, TestoFop::carica).deriveFont((float) this.corpo);
 		}
 	}
 
@@ -92,7 +92,7 @@ public final class TestoJasper {
 	private record Tratto(String testo, Stile stile) {
 	}
 
-	private TestoJasper() {
+	private TestoFop() {
 	}
 
 	/**

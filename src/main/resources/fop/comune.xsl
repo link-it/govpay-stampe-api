@@ -5,7 +5,7 @@
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:fo="http://www.w3.org/1999/XSL/Format"
-	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoJasper" exclude-result-prefixes="tj">
+	xmlns:tj="http://xml.apache.org/xalan/java/it.govpay.stampe.fop.TestoFop" exclude-result-prefixes="tj">
 
 	<!-- Formato numerico italiano, come DecimalFormat("#,###,##0.00", Locale.ITALY) dei template Jasper -->
 	<xsl:decimal-format name="it" decimal-separator="," grouping-separator="."/>
@@ -26,10 +26,10 @@
 	</xsl:template>
 
 	<!--
-		Testo variabile che va a capo come in Jasper, con le funzioni di TestoJasper. Si chiama dentro il fo:block
+		Testo variabile che va a capo come in Jasper, con le funzioni di TestoFop. Si chiama dentro il fo:block
 		del riquadro, con linefeed-treatment="preserve" e wrap-option="no-wrap": scrive line-height e padding-top
 		del blocco, che dipendono dal numero di righe, e poi le righe.
-		- testo: il valore; markup: none, styled o html (con markup le righe sono nodi XSL-FO, da TestoJasper.stile);
+		- testo: il valore; markup: none, styled o html (con markup le righe sono nodi XSL-FO, da TestoFop.stile);
 		- font, grassetto, corsivo, corpo, colore: il font del riquadro Jasper;
 		- interlinea: lineSpacingSize con interlinea Fixed, 0 con Single;
 		- larghezza: larghezza utile; altezza: altezza utile, senza i padding verticali; paddingSopra: padding superiore;

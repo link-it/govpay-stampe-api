@@ -60,24 +60,7 @@ curl http://localhost:10003/actuator/health
 
 ## Riferimento Configurazione
 
-### Variabili d'Ambiente
-
-| Variabile | Richiesta | Predefinito | Descrizione |
-|----------|----------|---------|-------------|
-| `SERVER_PORT` | No | `10003` | Porta di ascolto API |
-| `STAMPE_TIME_ZONE` | No | `Europe/Rome` | Timezone per formattazione date |
-| `GOVPAY_STAMPE_JVM_MAX_RAM_PERCENTAGE` | No | `80` | Percentuale massima RAM per JVM |
-| `GOVPAY_STAMPE_JVM_INITIAL_RAM_PERCENTAGE` | No | - | Percentuale iniziale RAM per JVM |
-| `GOVPAY_STAMPE_JVM_MIN_RAM_PERCENTAGE` | No | - | Percentuale minima RAM per JVM |
-| `GOVPAY_STAMPE_JVM_MAX_METASPACE_SIZE` | No | - | Dimensione massima Metaspace |
-| `GOVPAY_STAMPE_JVM_MAX_DIRECT_MEMORY_SIZE` | No | - | Dimensione massima memoria diretta |
-| `JAVA_OPTS` | No | - | Opzioni aggiuntive JVM |
-
-### Impostazioni Predefinite
-
-Queste sono incorporate nell'immagine Docker:
-- Timezone: `Europe/Rome`
-- File di log: `/var/log/govpay-stampe/govpay-stampe-api.log`
+L'elenco completo delle variabili d'ambiente dell'immagine, con i default, è nel [README](../README.md#esecuzione-con-docker).
 
 ## Endpoint API
 

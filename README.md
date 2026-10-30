@@ -50,10 +50,10 @@ mvn clean install -P jar     # fat jar, per esecuzione standalone e container
 mvn clean install -P war     # war, per il deploy su application server
 ```
 
-Il profilo sceglie il packaging (`jar` è quello di default); il risultato è in `target/govpay-stampe-api.jar` o `target/govpay-stampe-api.war`. La build genera le interfacce delle API dalla specifica OpenAPI e i modelli JAXB dagli XSD in `src/main/resources/xsd`, esegue i test e l'analisi OWASP Dependency-Check delle dipendenze. L'analisi è configurata due volte, nel `pom.xml` del progetto (proprietà `owasp`) e in `govpay-bom` (proprietà `owasp.phase`): per escluderla, per esempio in sviluppo, vanno disattivate entrambe:
+Il profilo sceglie il packaging (`jar` è quello di default); il risultato è in `target/govpay-stampe-api.jar` o `target/govpay-stampe-api.war`. La build genera le interfacce delle API dalla specifica OpenAPI e i modelli JAXB dagli XSD in `src/main/resources/xsd`, esegue i test e l'analisi OWASP Dependency-Check delle dipendenze, configurata in `govpay-bom` (i falsi positivi del progetto sono in `src/main/resources/owasp/falsePositives`). Per escludere l'analisi, per esempio in sviluppo:
 
 ```bash
-mvn clean install -P jar -Dowasp=none -Dowasp.phase=none
+mvn clean install -P jar -Dowasp.phase=none
 ```
 
 ## Configurazione

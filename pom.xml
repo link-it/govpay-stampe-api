@@ -25,14 +25,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<!-- Versioni Plugin Maven -->
-		<maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
-		<maven.install.plugin.version>2.5.2</maven.install.plugin.version>
-		<exec.maven.plugin.versione>1.6.0</exec.maven.plugin.versione>
-
-		<!-- Swagger-codegen (versione gestita dal BOM, qui mantenuta esplicita per il plugin) -->
-		<openapi.tool.codegen.version>6.6.0</openapi.tool.codegen.version>
-
 		<!-- annotazione bean generati notnull -->
 		<jsr305.version>3.0.2</jsr305.version>
 

@@ -24,7 +24,7 @@ Operazioni esposte (specifica in [src/main/resources/govpay-stampe.yaml](src/mai
 | `createCdsViolationNotice` | `POST /cds_violation` | Avviso per violazione del Codice della Strada, con importo ridotto e scontato |
 | `createReceipt` | `POST /receipt` | Ricevuta di pagamento pagoPA |
 
-Le operazioni rispondono `201` con il PDF (`application/pdf`, nome del file in `Content-Disposition`) oppure con un errore in formato `application/problem+json` (`400` per dati non validi). La specifica OpenAPI generata dal servizio è pubblicata su `/v3/api-docs`, con la Swagger UI su `/swagger-ui/index.html`.
+Le operazioni rispondono `201` con il PDF (`application/pdf`, nome del file in `Content-Disposition`) oppure con un errore in formato `application/problem+json`: `400` per dati non validi, `404` per un path inesistente, `405` per un metodo diverso da `POST`, `415` per un `Content-Type` diverso da `application/json`, `503` per un errore interno nella generazione del PDF. La specifica OpenAPI generata dal servizio è pubblicata su `/v3/api-docs`, con la Swagger UI su `/swagger-ui/index.html`.
 
 Il servizio non applica autenticazione: va esposto solo sulla rete interna dei componenti GovPay.
 

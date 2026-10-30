@@ -76,7 +76,7 @@ class UC_1_ViolazioneCdsFailTest {
 		MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
 				.content(body)
 				.contentType(MediaType.TEXT_HTML))
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isUnsupportedMediaType())
 				.andReturn();
 
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
@@ -84,10 +84,10 @@ class UC_1_ViolazioneCdsFailTest {
         assertNotNull(problem.getString("type"));
         assertNotNull(problem.getString("title"));
         assertNotNull(problem.getString("detail"));
-        assertEquals(400, problem.getInt("status"));
-        assertEquals("Bad Request", problem.getString("title"));
+        assertEquals(415, problem.getInt("status"));
+        assertEquals("Unsupported Media Type", problem.getString("title"));
         assertTrue(problem.getString("detail").contains("Content-Type 'text/html' is not supported"));
-        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-415-unsupported-media-type", problem.getString("type"));
 		
 	}
 	

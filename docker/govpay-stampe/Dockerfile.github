@@ -57,9 +57,7 @@ RUN chown -R govpay:0 /usr/local/bin/entrypoint.sh ${GOVPAY_STAMPE_HOME} ${GOVPA
 USER govpay
 
 ENV STAMPE_TIME_ZONE=Europe/Rome \
-    LOGGING_FILE_NAME=${GOVPAY_STAMPE_LOGDIR}/govpay-stampe-api.log \
-    LOGGING_DIRECTORYPATH=${GOVPAY_STAMPE_LOGDIR} \
-    LOGGING_FILEPREFIX=govpay-stampe-api
+    LOGGING_FILE_NAME=${GOVPAY_STAMPE_LOGDIR}/govpay-stampe-api.log
 
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

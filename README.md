@@ -71,10 +71,11 @@ Le proprietà si impostano in `application.properties`, da riga di comando (`-D<
 | `spring.mvc.date-format` | `yyyy-MM-dd` | Formato delle date nei parametri |
 | `spring.mvc.datetime-format` | `yyyy-MM-dd'T'HH:mm:ssZZZ` | Formato di data e ora nei parametri |
 | `spring.mvc.throw-exception-if-no-handler-found` | `true` | Risponde con un errore applicativo sui path inesistenti |
-| `spring.jackson.default-property-inclusion` | `non_null` | Senza effetto: il mapper JSON configurato in `Application` include anche i campi nulli nelle risposte |
 | `server.error.whitelabel.enabled` | `true` | Pagina di errore di default di Spring Boot |
 | `spring.main.banner-mode` | `off` | Banner di Spring Boot all'avvio |
 | `springdoc.api-docs.enabled` | `true` | Pubblica la specifica OpenAPI su `/v3/api-docs` e la Swagger UI |
+
+Le risposte JSON (gli errori) includono anche i campi nulli: lo stabilisce il mapper configurato in `Application`, non `spring.jackson.default-property-inclusion`.
 
 Le etichette stampate negli avvisi, per lingua, sono in [src/main/resources/avvisi.properties](src/main/resources/avvisi.properties).
 

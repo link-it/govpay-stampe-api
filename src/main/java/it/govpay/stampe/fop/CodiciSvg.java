@@ -5,41 +5,68 @@ import java.util.Base64;
 import java.util.Map;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.Dimension;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.datamatrix.DataMatrixWriter;
 import com.google.zxing.datamatrix.encoder.SymbolShapeHint;
-import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.google.zxing.qrcode.encoder.ByteMatrix;
+import com.google.zxing.qrcode.encoder.Encoder;
 
 /**
  * QR code e DataMatrix dell'avviso come SVG vettoriale, da passare al layout XSL-FO (issue #37).
+ * Entrambi senza zona di rispetto: il layout stampa il simbolo a 25 mm di lato e lascia bianco attorno.
  * <ul>
- * <li>QR code: matrice calcolata come nei template Jasper
- * ({@code new QRCodeWriter().encode(qr_code, QR_CODE, 300, 300)}), con la stessa zona di rispetto:
- * stessa geometria una volta scalata nel riquadro.</li>
- * <li>DataMatrix del bollettino postale: simbolo quadrato senza zona di rispetto, che riempie il
- * riquadro come il componente barcode4j di Jasper. Dimensione del simbolo e contenuto coincidono;
- * la disposizione dei moduli puo' differire, perche' zxing e barcode4j scelgono codifiche diverse
- * per gli stessi dati.</li>
+ * <li>QR code: versione 4 (33x33 moduli), correzione d'errore M, come da specifica pagoPA dell'avviso
+ * (dati per il pagamento, codice QR). Un contenuto che non entra nella versione 4 usa la versione minima
+ * sufficiente, sempre con correzione M.</li>
+ * <li>DataMatrix del bollettino postale: ECC 200 quadrato 52x52, come da "Manuale della stampa in proprio"
+ * di Poste Italiane (Bollettino Postale PA).</li>
  * </ul>
  * Le righe identiche e consecutive sono fuse in un unico rettangolo, per tenere l'SVG compatto.
  */
 public final class CodiciSvg {
 
-	static final int DIMENSIONE_QR = 300;
+	static final int VERSIONE_QR = 4;
+	static final int MODULI_DATA_MATRIX = 52;
 
 	private CodiciSvg() {
 	}
 
 	public static String qrCodeDataUri(String contenuto) throws WriterException {
-		return dataUri(svg(new QRCodeWriter().encode(contenuto, BarcodeFormat.QR_CODE, DIMENSIONE_QR, DIMENSIONE_QR)));
+		return dataUri(svg(qrCode(contenuto)));
+	}
+
+	static BitMatrix qrCode(String contenuto) throws WriterException {
+		ByteMatrix m;
+		try {
+			m = Encoder.encode(contenuto, ErrorCorrectionLevel.M, Map.of(EncodeHintType.QR_VERSION, VERSIONE_QR)).getMatrix();
+		} catch (WriterException e) {
+			// contenuto oltre la capacita' della versione 4: GovPay non lo produce, ma la stampa non deve fallire
+			m = Encoder.encode(contenuto, ErrorCorrectionLevel.M).getMatrix();
+		}
+		BitMatrix b = new BitMatrix(m.getWidth(), m.getHeight());
+		for (int y = 0; y < m.getHeight(); y++) {
+			for (int x = 0; x < m.getWidth(); x++) {
+				if (m.get(x, y) == 1) {
+					b.set(x, y);
+				}
+			}
+		}
+		return b;
 	}
 
 	public static String dataMatrixDataUri(String contenuto) {
-		BitMatrix m = new DataMatrixWriter().encode(contenuto, BarcodeFormat.DATA_MATRIX, 0, 0,
-				Map.of(EncodeHintType.DATA_MATRIX_SHAPE, SymbolShapeHint.FORCE_SQUARE));
-		return dataUri(svg(m));
+		return dataUri(svg(dataMatrix(contenuto)));
+	}
+
+	@SuppressWarnings("deprecation") // MIN_SIZE e' l'unico modo di zxing per chiedere un formato minimo
+	static BitMatrix dataMatrix(String contenuto) {
+		Dimension formato = new Dimension(MODULI_DATA_MATRIX, MODULI_DATA_MATRIX);
+		return new DataMatrixWriter().encode(contenuto, BarcodeFormat.DATA_MATRIX, 0, 0,
+				Map.of(EncodeHintType.DATA_MATRIX_SHAPE, SymbolShapeHint.FORCE_SQUARE, EncodeHintType.MIN_SIZE, formato));
 	}
 
 	static String svg(BitMatrix m) {

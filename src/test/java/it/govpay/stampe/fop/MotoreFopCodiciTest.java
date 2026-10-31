@@ -22,6 +22,8 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.MultiFormatReader;
+import com.google.zxing.Result;
+import com.google.zxing.ResultMetadataType;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 
@@ -38,7 +40,8 @@ import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 /**
  * QR code e DataMatrix dell'avviso postale a rata unica stampato con FOP (issue #37): la pagina e'
  * resa come immagine dal motore e i codici, letti nei riquadri del layout RataUnicaPostale, devono
- * contenere i dati dell'avviso.
+ * contenere i dati dell'avviso ed essere nel formato della specifica pagoPA (QR versione 4, 33x33,
+ * correzione M) e del manuale Poste (DataMatrix 52x52).
  */
 @SpringBootTest(classes = Application.class)
 @ActiveProfiles("test")
@@ -79,11 +82,16 @@ class MotoreFopCodiciTest {
 		BufferedImage pagina = ImageIO.read(new ByteArrayInputStream(png));
 
 		// riquadri del layout RataUnicaPostale in punti (x, y, lato), con un margine bianco intorno
-		assertEquals(rata.getQrCode().trim(), leggi(pagina, 9, 445, 105, BarcodeFormat.QR_CODE));
-		assertEquals(rata.getDataMatrix(), leggi(pagina, 490, 711, 85, BarcodeFormat.DATA_MATRIX));
+		Result qr = leggi(pagina, 9, 445, 105, BarcodeFormat.QR_CODE);
+		assertEquals(rata.getQrCode().trim(), qr.getText());
+		assertEquals("M", qr.getResultMetadata().get(ResultMetadataType.ERROR_CORRECTION_LEVEL));
+		assertEquals(rata.getDataMatrix(), leggi(pagina, 487, 711, 85, BarcodeFormat.DATA_MATRIX).getText());
+
+		assertEquals(33, CodiciSvg.qrCode(rata.getQrCode().trim()).getWidth());
+		assertEquals(52, CodiciSvg.dataMatrix(rata.getDataMatrix()).getWidth());
 	}
 
-	private static String leggi(BufferedImage pagina, int x, int y, int lato, BarcodeFormat formato) throws Exception {
+	private static Result leggi(BufferedImage pagina, int x, int y, int lato, BarcodeFormat formato) throws Exception {
 		double s = DPI / 72.0;
 		int m = 10;
 		int x0 = (int) Math.max(0, (x - m) * s);
@@ -93,6 +101,6 @@ class MotoreFopCodiciTest {
 		BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(riquadro)));
 		return new MultiFormatReader().decode(bitmap, Map.of(
 				DecodeHintType.POSSIBLE_FORMATS, java.util.List.of(formato),
-				DecodeHintType.TRY_HARDER, Boolean.TRUE)).getText();
+				DecodeHintType.TRY_HARDER, Boolean.TRUE));
 	}
 }

@@ -118,6 +118,30 @@
 		</xsl:choose></xsl:if></fo:block>
 	</xsl:template>
 
+	<!-- Autorizzazione Poste alla stampa del bollettino: testo grigio al 70% di densita' (specifica pagoPA, Bollettino Postale PA) -->
+	<xsl:variable name="colore-autorizzazione" select="'#4D4D4D'"/>
+
+	<!-- Lato stampato di QR code e DataMatrix, senza zona di rispetto: 25 mm (specifica pagoPA, manuale Poste) -->
+	<xsl:variable name="lato-codice" select="70.866"/>
+	<!-- Ascissa del DataMatrix: bordo destro a 13 mm dal bordo della pagina (595 - 36,85 - 70,866 pt), come chiede Poste -->
+	<xsl:variable name="x-data-matrix" select="487.28"/>
+
+	<!--
+		QR code o DataMatrix (SVG di CodiciSvg) di lato $lato-codice dentro il riquadro quadrato del layout, di lato
+		riquadro: centrato, oppure a sinistra pt dal bordo sinistro del riquadro. Il bianco attorno fa da zona di rispetto.
+		Codice vuoto: niente.
+	-->
+	<xsl:template name="codice">
+		<xsl:param name="svg"/>
+		<xsl:param name="riquadro"/>
+		<xsl:param name="sinistra" select="($riquadro - $lato-codice) div 2"/>
+		<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space($svg)">
+			<fo:block-container absolute-position="absolute" left="{$sinistra}pt" top="{($riquadro - $lato-codice) div 2}pt" width="{$lato-codice}pt" height="{$lato-codice}pt">
+				<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="{$lato-codice}pt" content-height="{$lato-codice}pt" scaling="non-uniform" src="url({$svg})"/></fo:block>
+			</fo:block-container>
+		</xsl:if></fo:block>
+	</xsl:template>
+
 	<!--
 		Markup html/styled di Jasper in un valore dinamico (per esempio info_ente, che il mapper
 		compone con <br/>): gestiti gli a capo <br/> e <br>, e il grassetto <b>...</b>.

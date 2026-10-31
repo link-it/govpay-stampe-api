@@ -180,7 +180,7 @@
 		</xsl:if>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="490pt" top="{711 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="85pt" height="85pt">
-				<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/data_matrix_svg)"><fo:external-graphic content-width="85pt" content-height="85pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/data_matrix_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+				<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/data_matrix_svg"/><xsl:with-param name="riquadro" select="85"/><xsl:with-param name="sinistra" select="$x-data-matrix - 490"/></xsl:call-template>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
@@ -394,7 +394,7 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="20pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">DATI PER IL PAGAMENTO</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="9pt" top="{445 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="105pt" height="105pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/qr_code_svg)"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/qr_code_svg"/><xsl:with-param name="riquadro" select="105"/></xsl:call-template>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="299pt" top="{281 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="213pt" height="20pt">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="8pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">PAGA CON L'APP IO</fo:block>
@@ -509,13 +509,13 @@
 		</fo:block-container>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="20pt" top="{783 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="137pt" height="12pt">
-				<fo:block font-family="TitilliumWeb" font-size="6pt" color="#CCCCCC" linefeed-treatment="preserve" wrap-option="no-wrap">
+				<fo:block font-family="TitilliumWeb" font-size="6pt" color="{$colore-autorizzazione}" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="rata/autorizzazione"/>
 						<xsl:with-param name="markup" select="'styled'"/>
 						<xsl:with-param name="font" select="'TitilliumWeb'"/>
 						<xsl:with-param name="corpo" select="6"/>
-						<xsl:with-param name="colore" select="'#CCCCCC'"/>
+						<xsl:with-param name="colore" select="$colore-autorizzazione"/>
 						<xsl:with-param name="larghezza" select="137"/>
 						<xsl:with-param name="altezza" select="12"/>
 						<xsl:with-param name="maxRighe" select="1"/>

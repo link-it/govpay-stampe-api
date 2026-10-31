@@ -219,7 +219,7 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="20pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">DATI PER IL PAGAMENTO</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="9pt" top="{445 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="105pt" height="105pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/qr_code_svg)"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/qr_code_svg"/><xsl:with-param name="riquadro" select="105"/></xsl:call-template>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="299pt" top="{289 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="213pt" height="20pt">
 			<fo:block font-family="TitilliumWeb-Bold" font-size="12pt" start-indent="8pt" line-height="18.252pt" padding-top="2.38pt" wrap-option="no-wrap">PAGA CON L'APP IO</fo:block>

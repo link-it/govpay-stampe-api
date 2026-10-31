@@ -127,7 +127,7 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="20pt" line-height="15.21pt" padding-top="2.65pt" wrap-option="no-wrap">IMPORTO RIDOTTO</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="8pt" top="{667 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="116pt" height="116pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/qr_code_2_svg)"><fo:external-graphic content-width="116pt" content-height="116pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_2_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/qr_code_2_svg"/><xsl:with-param name="riquadro" select="116"/></xsl:call-template>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="190pt" top="{755 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="255pt" height="24pt">
 			<fo:block font-family="TitilliumWeb" font-size="9pt" linefeed-treatment="preserve" wrap-option="no-wrap">
@@ -191,7 +191,7 @@
 			</fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="8pt" top="{489 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="116pt" height="116pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/qr_code_svg)"><fo:external-graphic content-width="116pt" content-height="116pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/qr_code_svg"/><xsl:with-param name="riquadro" select="116"/></xsl:call-template>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="190pt" top="{545 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="255pt" height="18pt">
 			<fo:block font-family="TitilliumWeb" font-size="9pt" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap">

@@ -14,7 +14,7 @@
 		<xsl:variable name="senza-importo" select="20 * number(not(normalize-space(format-number(number(importo), '#.##0,00', 'it'))))"/>
 		<xsl:variable name="senza-codice-avviso" select="16 * number(not(normalize-space(codice_avviso)))"/>
 		<fo:block-container absolute-position="absolute" left="11pt" top="15pt" width="94pt" height="94pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(qr_code_svg)"><fo:external-graphic content-width="94pt" content-height="94pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="qr_code_svg"/><xsl:with-param name="riquadro" select="94"/></xsl:call-template>
 		</fo:block-container>
 		<xsl:if test="normalize-space(numero_rata)">
 			<fo:block-container absolute-position="absolute" left="0pt" top="3pt" width="160pt" height="18pt">

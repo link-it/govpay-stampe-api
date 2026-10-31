@@ -185,9 +185,20 @@ Differenze note rispetto a Jasper:
 - Testo grigio grande, come la traduzione nel titolo a 16 pt: Jasper e FOP incorporano il font in modo
   diverso e i bordi dei glifi risultano lievemente diversi nel raster, con le posizioni identiche entro
   0,005 pt. Su "(de)" sono 6 pixel, oltre la soglia di 5 (`bilingue-unica-de`, `bilingue-postale-unica-DE`).
-- Il DataMatrix del bollettino è generato da zxing, mentre Jasper usa barcode4j. Ha la stessa dimensione
-  (48×48) e lo stesso contenuto, ma il disegno dei moduli è diverso perché le due librerie scelgono una
-  codifica interna diversa.
+- QR code e DataMatrix non sono più quelli di Jasper (fase 5 della #37): hanno lo stesso contenuto, ma
+  formato e misure della specifica (vedi "Codici" sotto). Il confronto con Jasper ne legge il contenuto,
+  non il disegno. Anche il testo dell'autorizzazione Poste è più scuro (70% invece di `#CCCCCC`).
+
+## Codici
+
+QR code e DataMatrix li disegna `CodiciSvg` (SVG senza zona di rispetto) e li stampa il template `codice`
+di `comune.xsl`, a 25 mm di lato (`$lato-codice`) dentro il riquadro del layout:
+- QR code: versione 4 (33×33 moduli), correzione M, centrato nel riquadro (specifica pagoPA, "Codice QR");
+- DataMatrix: ECC 200 52×52, con il bordo destro a 13 mm dal bordo della pagina (`$x-data-matrix`) come
+  chiede il "Manuale della stampa in proprio" di Poste (Bollettino Postale PA);
+- testo dell'autorizzazione Poste in `$colore-autorizzazione`, grigio al 70%.
+
+Il riquadro del layout deve lasciare attorno al codice almeno 3 mm di bianco (zona di rispetto).
 
 ## Confronto con Jasper
 
@@ -252,6 +263,6 @@ non li produce.
 
 Test:
 - `UC_12_MotoreFopTest`: motore usato, riconosciuto dal Producer del PDF;
-- `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine;
+- `MotoreFopCodiciTest`: QR code e DataMatrix letti dalla pagina resa da FOP come immagine, con formato (versione, correzione, moduli);
 - `TestoFopGeometriaTest`: interlinea, padding e allungamento dei testi;
 - `RegressioneLayoutTest`: regressione dei layout.

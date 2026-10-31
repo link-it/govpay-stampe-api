@@ -62,7 +62,7 @@
 		</fo:block-container>
 		<xsl:if test="normalize-space(rata/qr_code)">
 			<fo:block-container absolute-position="absolute" left="11pt" top="{451 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="88pt" height="88pt">
-				<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/qr_code_svg)"><fo:external-graphic content-width="88pt" content-height="88pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+				<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/qr_code_svg"/><xsl:with-param name="riquadro" select="88"/></xsl:call-template>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="490pt" top="21pt" width="85pt" height="85pt">
@@ -524,14 +524,15 @@
 			<fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="35pt" content-height="35pt" scaling="non-uniform" src="url(classpath:/fop/icone/canali-fisici.svg)"/></fo:block>
 		</fo:block-container>
 		<xsl:if test="(not(not(normalize-space(rata/qr_code)))) and (not(not(normalize-space(/AvvisoPagamentoInput/poste))))">
-			<fo:block-container absolute-position="absolute" left="345pt" top="{781 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="137pt" height="16pt">
+			<!-- codice fiscale dell'ente, allineato a destra: largo 133 pt (non 137) per stare a 3 mm dal DataMatrix -->
+			<fo:block-container absolute-position="absolute" left="345pt" top="{781 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="133pt" height="16pt">
 				<fo:block font-family="TitilliumWeb" font-size="10pt" text-align="end" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/cf_ente"/>
 						<xsl:with-param name="markup" select="'styled'"/>
 						<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
 						<xsl:with-param name="corpo" select="10"/>
-						<xsl:with-param name="larghezza" select="137"/>
+						<xsl:with-param name="larghezza" select="133"/>
 						<xsl:with-param name="altezza" select="16"/>
 						<xsl:with-param name="maxRighe" select="1"/>
 					</xsl:call-template>
@@ -595,13 +596,13 @@
 		</xsl:if>
 		<xsl:if test="(not(not(normalize-space(rata/qr_code)))) and (not(not(normalize-space(/AvvisoPagamentoInput/poste))))">
 			<fo:block-container absolute-position="absolute" left="20pt" top="{785 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="137pt" height="10pt">
-				<fo:block font-family="TitilliumWeb" font-size="6pt" color="#CCCCCC" linefeed-treatment="preserve" wrap-option="no-wrap">
+				<fo:block font-family="TitilliumWeb" font-size="6pt" color="{$colore-autorizzazione}" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="rata/autorizzazione"/>
 						<xsl:with-param name="markup" select="'styled'"/>
 						<xsl:with-param name="font" select="'TitilliumWeb'"/>
 						<xsl:with-param name="corpo" select="6"/>
-						<xsl:with-param name="colore" select="'#CCCCCC'"/>
+						<xsl:with-param name="colore" select="$colore-autorizzazione"/>
 						<xsl:with-param name="larghezza" select="137"/>
 						<xsl:with-param name="altezza" select="10"/>
 						<xsl:with-param name="maxRighe" select="1"/>
@@ -617,7 +618,7 @@
 		</xsl:if>
 		<xsl:if test="(not(not(normalize-space(rata/qr_code)))) and (not(not(normalize-space(/AvvisoPagamentoInput/poste))))">
 			<fo:block-container absolute-position="absolute" left="495pt" top="{713 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="80pt" height="80pt">
-				<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(rata/data_matrix_svg)"><fo:external-graphic content-width="80pt" content-height="80pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="rata/data_matrix_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+				<xsl:call-template name="codice"><xsl:with-param name="svg" select="rata/data_matrix_svg"/><xsl:with-param name="riquadro" select="80"/><xsl:with-param name="sinistra" select="$x-data-matrix - 495"/></xsl:call-template>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="(not(not(normalize-space(rata/qr_code)))) and (not(not(normalize-space(/AvvisoPagamentoInput/poste))))">
@@ -893,7 +894,7 @@
 			</fo:block>
 		</fo:block-container>
 		<xsl:if test="(not(not(normalize-space(rata/qr_code)))) and (not(not(normalize-space(/AvvisoPagamentoInput/poste))))">
-			<fo:block-container absolute-position="absolute" left="345pt" top="{767 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="137pt" height="14pt">
+			<fo:block-container absolute-position="absolute" left="345pt" top="{767 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="133pt" height="14pt">
 				<fo:block font-family="TitilliumWeb" font-size="9pt" text-align="end" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/etichette/italiano/codice_fiscale_ente"/>

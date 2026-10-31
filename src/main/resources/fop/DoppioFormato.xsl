@@ -21,7 +21,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="189pt" top="{20 - $senza-numero-rata}pt" width="96pt" height="96pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(qr_code_svg)"><fo:external-graphic content-width="96pt" content-height="96pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="qr_code_svg"/><xsl:with-param name="riquadro" select="96"/></xsl:call-template>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="0pt" top="{90 - $senza-numero-rata}pt" width="182pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="20pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Codice Avviso</fo:block>

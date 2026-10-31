@@ -73,7 +73,7 @@
 		</xsl:if>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/poste)">
 			<fo:block-container absolute-position="absolute" left="495pt" top="115pt" width="80pt" height="80pt">
-				<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(data_matrix_svg)"><fo:external-graphic content-width="80pt" content-height="80pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="data_matrix_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+				<xsl:call-template name="codice"><xsl:with-param name="svg" select="data_matrix_svg"/><xsl:with-param name="riquadro" select="80"/><xsl:with-param name="sinistra" select="$x-data-matrix - 495"/></xsl:call-template>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/poste)">
@@ -265,13 +265,13 @@
 		</xsl:if>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/poste)">
 			<fo:block-container absolute-position="absolute" left="20pt" top="189pt" width="137pt" height="10pt">
-				<fo:block font-family="TitilliumWeb" font-size="6pt" color="#CCCCCC" linefeed-treatment="preserve" wrap-option="no-wrap">
+				<fo:block font-family="TitilliumWeb" font-size="6pt" color="{$colore-autorizzazione}" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="autorizzazione"/>
 						<xsl:with-param name="markup" select="'styled'"/>
 						<xsl:with-param name="font" select="'TitilliumWeb'"/>
 						<xsl:with-param name="corpo" select="6"/>
-						<xsl:with-param name="colore" select="'#CCCCCC'"/>
+						<xsl:with-param name="colore" select="$colore-autorizzazione"/>
 						<xsl:with-param name="larghezza" select="137"/>
 						<xsl:with-param name="altezza" select="10"/>
 						<xsl:with-param name="maxRighe" select="1"/>

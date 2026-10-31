@@ -375,7 +375,7 @@
 		</xsl:if>
 		<xsl:if test="normalize-space(unica/importo)">
 			<fo:block-container absolute-position="absolute" left="9pt" top="{420 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="105pt" height="105pt">
-				<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(unica/qr_code_svg)"><fo:external-graphic content-width="105pt" content-height="105pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="unica/qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+				<xsl:call-template name="codice"><xsl:with-param name="svg" select="unica/qr_code_svg"/><xsl:with-param name="riquadro" select="105"/></xsl:call-template>
 			</fo:block-container>
 		</xsl:if>
 		<xsl:if test="not(count(//rata/giorni) &gt; 0)">

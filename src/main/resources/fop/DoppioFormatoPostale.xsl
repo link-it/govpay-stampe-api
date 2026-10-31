@@ -27,7 +27,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="189pt" top="{20 - $senza-numero-rata}pt" width="96pt" height="96pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(qr_code_svg)"><fo:external-graphic content-width="96pt" content-height="96pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="qr_code_svg"/><xsl:with-param name="riquadro" select="96"/></xsl:call-template>
 		</fo:block-container>
 		<!-- "Euro" (8 pt) e importo in RobotoMono grassetto -->
 		<fo:block-container absolute-position="absolute" left="0pt" top="{26 - $senza-numero-rata}pt" width="178pt" height="32pt">

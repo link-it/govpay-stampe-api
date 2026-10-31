@@ -11,6 +11,8 @@
 
 	<xsl:template name="TriploFormatoPostale">
 		<!-- banda detail del report Jasper, da y = 0 pt -->
+		<!-- righe sotto il QR (codice avviso, codice fiscale, CBILL) abbassate perche' il QR da 25 mm abbia almeno 3 mm di bianco sotto -->
+		<xsl:variable name="spazio-qr" select="3"/>
 		<xsl:variable name="senza-numero-rata" select="20 * number(not(normalize-space(numero_rata)))"/>
 		<xsl:variable name="senza-cf-ente-e-altri" select="19 * number((not(normalize-space(/AvvisoPagamentoInput/cf_ente))) and (not(normalize-space(/AvvisoPagamentoInput/cbill))))"/>
 		<xsl:variable name="senza-ente-creditore" select="13 * number(not(normalize-space(/AvvisoPagamentoInput/ente_creditore)))"/>
@@ -66,7 +68,7 @@
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="102pt" top="{21 - $senza-numero-rata}pt" width="85pt" height="85pt">
-			<fo:block font-size="0pt" line-height="0pt"><xsl:if test="normalize-space(qr_code_svg)"><fo:external-graphic content-width="85pt" content-height="85pt" scaling="non-uniform"><xsl:attribute name="src">url(<xsl:value-of select="qr_code_svg"/>)</xsl:attribute></fo:external-graphic></xsl:if></fo:block>
+			<xsl:call-template name="codice"><xsl:with-param name="svg" select="qr_code_svg"/><xsl:with-param name="riquadro" select="85"/></xsl:call-template>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="0pt" top="{223 - $senza-numero-rata - $senza-cf-ente-e-altri - $senza-ente-creditore - $senza-oggetto-del-pagamento}pt" width="205pt" height="15pt">
 			<fo:block font-family="TitilliumWeb" font-size="7pt" start-indent="20pt" line-height="10.647pt" padding-top="3.055pt" wrap-option="no-wrap">Inquadra il <fo:inline font-weight="bold">codice QR</fo:inline> con la tua app o usa i dati sopra.</fo:block>
@@ -74,7 +76,7 @@
 		<fo:block-container absolute-position="absolute" left="0pt" top="{89 - $senza-numero-rata}pt" width="194pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="20pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Codice Avviso</fo:block>
 		</fo:block-container>
-		<fo:block-container absolute-position="absolute" left="0pt" top="{102 - $senza-numero-rata}pt" width="194pt" height="19pt">
+		<fo:block-container absolute-position="absolute" left="0pt" top="{102 + $spazio-qr - $senza-numero-rata}pt" width="194pt" height="19pt">
 			<fo:block font-family="RobotoMono" font-size="12pt" font-weight="bold" start-indent="20pt" linefeed-treatment="preserve" wrap-option="no-wrap">
 				<xsl:call-template name="testo-a-capo">
 					<xsl:with-param name="testo" select="codice_avviso"/>
@@ -89,11 +91,11 @@
 				</xsl:call-template>
 			</fo:block>
 		</fo:block-container>
-		<fo:block-container absolute-position="absolute" left="0pt" top="{121 - $senza-numero-rata}pt" width="108pt" height="13pt">
+		<fo:block-container absolute-position="absolute" left="0pt" top="{121 + $spazio-qr - $senza-numero-rata}pt" width="108pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="20pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. Fiscale Ente</fo:block>
 		</fo:block-container>
 		<xsl:if test="not((not(normalize-space(/AvvisoPagamentoInput/cf_ente))) and (not(normalize-space(/AvvisoPagamentoInput/cbill))))">
-			<fo:block-container absolute-position="absolute" left="0pt" top="{133 - $senza-numero-rata}pt" width="108pt" height="19pt">
+			<fo:block-container absolute-position="absolute" left="0pt" top="{133 + $spazio-qr - $senza-numero-rata}pt" width="108pt" height="19pt">
 				<fo:block font-family="RobotoMono" font-size="12pt" font-weight="bold" start-indent="20pt" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/cf_ente"/>
@@ -109,11 +111,11 @@
 				</fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<fo:block-container absolute-position="absolute" left="110pt" top="{121 - $senza-numero-rata}pt" width="86pt" height="13pt">
+		<fo:block-container absolute-position="absolute" left="110pt" top="{121 + $spazio-qr - $senza-numero-rata}pt" width="86pt" height="13pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. CBILL</fo:block>
 		</fo:block-container>
 		<xsl:if test="not((not(normalize-space(/AvvisoPagamentoInput/cf_ente))) and (not(normalize-space(/AvvisoPagamentoInput/cbill))))">
-			<fo:block-container absolute-position="absolute" left="110pt" top="{133 - $senza-numero-rata}pt" width="86pt" height="19pt">
+			<fo:block-container absolute-position="absolute" left="110pt" top="{133 + $spazio-qr - $senza-numero-rata}pt" width="86pt" height="19pt">
 				<fo:block font-family="RobotoMono" font-size="12pt" font-weight="bold" start-indent="0pt" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo" select="/AvvisoPagamentoInput/cbill"/>

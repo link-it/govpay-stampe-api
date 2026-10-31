@@ -1,3 +1,17 @@
+2026-10-30  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] QR code e DataMatrix secondo le specifiche pagoPA e Poste (#37).
+	Il QR code e' in versione 4 (33x33 moduli) con correzione d'errore M,
+	il DataMatrix del bollettino postale e' 52x52, entrambi stampati a 25 mm
+	di lato; il DataMatrix sta a 13 mm dal bordo destro della pagina. Il
+	testo dell'autorizzazione Poste e' grigio al 70%. Prima il QR era in
+	versione 3 con correzione L e il DataMatrix 48x48 di 28-30 mm, come
+	con JasperReports. Per lasciare 3 mm di bianco attorno ai codici,
+	nelle rate a tre le righe sotto il QR scendono di 3 pt e nel
+	bollettino bilingue a rata unica il codice fiscale dell'ente e' piu'
+	stretto di 4 pt. Contenuto dei codici invariato; il resto delle stampe
+	e' identico.
+
 2026-10-29  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] fontbox e pdfbox-io 3.0.8 (#37).

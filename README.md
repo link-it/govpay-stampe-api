@@ -4,109 +4,189 @@
 
 # GovPay - Porta di accesso al sistema pagoPA - Stampe Api
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=link-it_govpay-gde-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=link-it_govpay-gde-api)
-[![Docker Hub](https://img.shields.io/docker/v/linkitaly/govpay-gde-api?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/linkitaly/govpay-gde-api)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://raw.githubusercontent.com/link-it/govpay-gde-api/main/LICENSE)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=link-it_govpay-stampe-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=link-it_govpay-stampe-api)
+[![Docker Hub](https://img.shields.io/docker/v/linkitaly/govpay-stampe-api?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/linkitaly/govpay-stampe-api)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://raw.githubusercontent.com/link-it/govpay-stampe-api/main/LICENSE)
+[![Spring Boot](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2Flink-it%2Fgovpay-bom%2Fmain%2Fpom.xml&query=%2F%2F*%5Blocal-name()%3D'spring-boot.version'%5D&label=Spring%20Boot&color=brightgreen)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
+
+API REST che genera in PDF gli avvisi di pagamento pagoPA e le ricevute di pagamento, a partire dai dati ricevuti nella richiesta.
 
 ## Sommario
 
-Servizio per la stampa degli Avvisi pagoPA e delle ricevute di pagamento
+Il servizio riceve in JSON i dati di un avviso o di una ricevuta e restituisce il PDF prodotto con i modelli JasperReports inclusi nel jar. Non ha base dati e non conserva nulla: ogni richiesta è indipendente.
 
-## Istruzioni di compilazione
+Operazioni esposte (specifica in [src/main/resources/govpay-stampe.yaml](src/main/resources/govpay-stampe.yaml)):
 
-Il progetto utilizza librerie Spring Boot versione 3.5.9 e JDK 21.
+| Operazione | Metodo e path | Descrizione |
+|------------|---------------|-------------|
+| `createPaymentNotice` | `POST /standard` | Avviso di pagamento: rata unica, rate multiple, con o senza bollettino postale, monolingue o bilingue |
+| `createCdsViolationNotice` | `POST /cds_violation` | Avviso per violazione del Codice della Strada, con importo ridotto e scontato |
+| `createReceipt` | `POST /receipt` | Ricevuta di pagamento pagoPA |
 
-Per la compilazione eseguire il seguente comando, verranno eseguiti anche i test.
+Le operazioni rispondono `201` con il PDF (`application/pdf`, nome del file in `Content-Disposition`) oppure con un errore in formato `application/problem+json`: `400` per dati non validi, `404` per un path inesistente, `405` per un metodo diverso da `POST`, `415` per un `Content-Type` diverso da `application/json`, `503` per un errore interno nella generazione del PDF. La specifica OpenAPI generata dal servizio è pubblicata su `/v3/api-docs`, con la Swagger UI su `/swagger-ui/index.html`.
 
-``` bash
-mvn clean install -P [jar|war]
+Il servizio non applica autenticazione: va esposto solo sulla rete interna dei componenti GovPay.
+
+## Integrazione con GovPay
+
+| Componente | Quando serve | Obbligatorio | Ruolo |
+|------------|--------------|--------------|-------|
+| [govpay-bom](https://github.com/link-it/govpay-bom) | build | sì | Parent Maven: versioni delle dipendenze e dei plugin |
+| [govpay-common](https://github.com/link-it/govpay-common) | build | sì | Libreria comune: transaction id e correlation id nei log e negli header di risposta. Le autoconfigurazioni di DataSource e JPA che la libreria porta con sé sono escluse: il servizio non usa il database di GovPay |
+| [govpay-console-api](https://github.com/link-it/govpay-console-api) | runtime | no | Chiama il servizio per i PDF di avvisi e ricevute mostrati nella console (`app.stampe.base-url`) |
+| [govpay-pendenze-api](https://github.com/link-it/govpay-pendenze-api) | runtime | no | Chiama il servizio per la stampa degli avvisi delle pendenze (`app.stampe.base-url`) |
+| [govpay-portal-api](https://github.com/link-it/govpay-portal-api) | runtime | no | Chiama il servizio per i PDF di avvisi e ricevute del portale di pagamento (`govpay.stampe.base-url`) |
+| [govpay-tracciati-batch](https://github.com/link-it/govpay-tracciati-batch) | runtime | no | Chiama il servizio (`POST /standard`) per gli avvisi dei tracciati di caricamento pendenze (`govpay.tracciati.stampe.base-url`) |
+
+I componenti chiamanti contengono una copia di `govpay-stampe.yaml` da cui generano il client: una modifica incompatibile del contratto va riportata anche lì.
+
+## Compilazione
+
+Requisiti: JDK 21 e Maven 3.8.1 o successivo.
+
+```bash
+mvn clean install -P jar     # fat jar, per esecuzione standalone e container
+mvn clean install -P war     # war, per il deploy su application server
 ```
 
-Il profilo permette di selezionare il packaging dei progetti (jar o war).
+Il profilo sceglie il packaging (`jar` è quello di default); il risultato è in `target/govpay-stampe-api.jar` o `target/govpay-stampe-api.war`. La build genera le interfacce delle API dalla specifica OpenAPI e i modelli JAXB dagli XSD in `src/main/resources/xsd`, esegue i test e l'analisi OWASP Dependency-Check delle dipendenze, configurata in `govpay-bom` (i falsi positivi del progetto sono in `src/main/resources/owasp/falsePositives`). Per escludere l'analisi, per esempio in sviluppo:
 
-Per l'avvio dell'applicativo come standalone eseguire:
-
-``` bash
-mvn spring-boot:run
+```bash
+mvn clean install -P jar -Dowasp.phase=none
 ```
 
-Per sovrascrivere le proprietà definite nel file `application.properties` utilizzare il seguente sistema:
+## Configurazione
 
-``` bash
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dserver.port=[NUOVO_VALORE] ..."
+Le proprietà si impostano in `application.properties`, da riga di comando (`-D<proprietà>=<valore>`) o con le variabili d'ambiente equivalenti di Spring Boot (es. `stampe.time-zone` → `STAMPE_TIMEZONE` o `STAMPE_TIME_ZONE`). Con l'immagine Docker si usano le variabili descritte in [Esecuzione con Docker](#esecuzione-con-docker).
+
+### Server e API
+
+| Proprietà | Default | Descrizione |
+|-----------|---------|-------------|
+| `server.port` | `8080` (`10003` nel container) | Porta HTTP del servizio |
+| `spring.mvc.servlet.path` | `/` | Base path delle API |
+| `stampe.time-zone` | `Europe/Rome` | Fuso orario usato per le date nel JSON |
+| `stampe.debugInputJasper` | `false` | Scrive nel log, a livello `DEBUG`, l'XML passato ai modelli JasperReports: contiene i dati personali del debitore, da usare solo in diagnosi |
+| `spring.mvc.date-format` | `yyyy-MM-dd` | Formato delle date nei parametri |
+| `spring.mvc.datetime-format` | `yyyy-MM-dd'T'HH:mm:ssZZZ` | Formato di data e ora nei parametri |
+| `spring.mvc.throw-exception-if-no-handler-found` | `true` | Risponde con un errore applicativo sui path inesistenti |
+| `server.error.whitelabel.enabled` | `true` | Pagina di errore di default di Spring Boot |
+| `spring.main.banner-mode` | `off` | Banner di Spring Boot all'avvio |
+| `springdoc.api-docs.enabled` | `true` | Pubblica la specifica OpenAPI su `/v3/api-docs` e la Swagger UI |
+
+Le risposte JSON (gli errori) includono anche i campi nulli: lo stabilisce il mapper configurato in `Application`, non `spring.jackson.default-property-inclusion`.
+
+Le etichette stampate negli avvisi, per lingua, sono in [src/main/resources/avvisi.properties](src/main/resources/avvisi.properties).
+
+### Logging
+
+| Proprietà | Default | Descrizione |
+|-----------|---------|-------------|
+| `logging.file.name` | - (solo console) | File di log; nel container `/var/log/govpay-stampe/govpay-stampe-api.log` |
+| `logging.level.it.govpay` | `INFO` | Livello di log dei package GovPay |
+| `logging.pattern.level` | `%5p [%X{transactionId:-},%X{correlationId:-}]` | Aggiunge a ogni riga transaction id e correlation id |
+| `govpay.logging.tracciatura.enabled` | `true` | Filtro di govpay-common che genera il transaction id, legge il correlation id dagli header `X-Correlation-ID` o `X-Request-ID` (o lo genera) e li restituisce in risposta. Le altre proprietà `govpay.logging.tracciatura.*` sono descritte nel [README di govpay-common](https://github.com/link-it/govpay-common#tracciatura-e-livelli-di-log) |
+| `govpay.logging.livelli-dinamici.enabled` | `false` | Livelli di log letti da database: non attivi, il servizio non usa la tabella di configurazione di GovPay |
+
+### Monitoraggio
+
+| Proprietà | Default | Descrizione |
+|-----------|---------|-------------|
+| `management.server.port` | porta del servizio | Porta dedicata agli endpoint actuator |
+| `management.endpoints.web.base-path` | `/actuator` | Base path degli endpoint actuator |
+| `management.endpoints.web.exposure.include` | `health,prometheus` (variabile `MANAGEMENT_ENDPOINTS`) | Endpoint actuator esposti |
+| `management.endpoint.health.probes.enabled` | `true` | Gruppi `liveness` e `readiness` dell'health check |
+| `management.health.livenessState.enabled` | `true` | Stato di liveness |
+| `management.health.readinessState.enabled` | `true` | Stato di readiness |
+| `management.metrics.distribution.percentiles-histogram.http.server.requests` | `true` | Istogrammi delle latenze, per aggregare i percentili tra più istanze |
+| `management.metrics.distribution.slo.http.server.requests` | `100ms,500ms,1s,2s,5s` | Soglie esplicite di latenza, compresa quella SLA pagoPA di 2s |
+| `management.metrics.tags.application` | `govpay-stampe-api` | Tag che identifica il servizio nelle metriche |
+
+## Esecuzione
+
+### Jar standalone
+
+Il servizio non usa database e non richiede driver JDBC:
+
+```bash
+java -Dserver.port=10003 -jar target/govpay-stampe-api.jar
 ```
 
-# Configurazione
+### War su application server
 
-All'interno del file `application.properties` sono definite le seguenti proprietà:
+Il war si installa su un servlet container Jakarta EE 11 (es. Tomcat 11) e risponde sotto il context path del deploy, es. `/govpay-stampe-api/standard`. Dove trovarlo:
 
-``` bash
-# ----------- SPRING SERVLET ------------
+| Origine | Dove si trova |
+|---------|---------------|
+| Release (tag) | Allegato alla [release GitHub](https://github.com/link-it/govpay-stampe-api/releases) come `govpay-stampe-api-<tag>.war`, insieme al jar |
+| Qualsiasi build | Artifact `govpay-stampe-api` della run di GitHub Actions (retention 90 giorni) |
+| Build locale | `mvn clean install -P war`, in `target/govpay-stampe-api.war` |
 
-server.port=[Porta su cui esporre il servizio in caso di avvio come applicazione standalone]
+L'immagine di sviluppo `linkitaly/govpay-stampe-api-dev` contiene solo il jar.
 
-spring.mvc.servlet.path=[Basepath servizi]
+## Esecuzione con Docker
 
-# Abilitazione Endpoint /actuator/health/liveness
-management.endpoints.web.base-path=[Basepath dove esporre i servizi di stato applicazione]
+L'immagine è pubblicata su Docker Hub come [linkitaly/govpay-stampe-api](https://hub.docker.com/r/linkitaly/govpay-stampe-api) (release) e `linkitaly/govpay-stampe-api-dev` (sviluppo, a ogni push su `main`). Il servizio risponde sulla porta `10003`; il log è scritto anche in `/var/log/govpay-stampe/govpay-stampe-api.log`.
 
-# -------------- BUSINESS LOGIC PROPERTIES  ----------------
-
-stampe.time-zone=[TimeZone dell'applicazione]
-
+```bash
+docker run -d --name govpay-stampe-api -p 10003:10003 linkitaly/govpay-stampe-api
 ```
 
-L'applicazione e' configurata per loggare su standardOutput e' possibile sovrascrivere la configurazione di default utilizzando il meccanismo di override delle properties di spring.
+Variabili d'ambiente dell'immagine, oltre alle proprietà Spring Boot in forma di variabile (es. `LOGGING_LEVEL_IT_GOVPAY=DEBUG`):
 
-# Configurazione porta Actuator / Prometheus
+| Variabile | Obbligatoria | Default | Descrizione |
+|-----------|--------------|---------|-------------|
+| `SERVER_PORT` | no | `10003` | Porta HTTP del servizio |
+| `STAMPE_TIME_ZONE` | no | `Europe/Rome` | Fuso orario delle date nel JSON (`stampe.time-zone`) |
+| `MANAGEMENT_SERVER_PORT` | no | porta del servizio | Porta dedicata agli endpoint actuator |
+| `MANAGEMENT_ENDPOINTS` | no | `health,prometheus` | Endpoint actuator esposti |
+| `GOVPAY_STAMPE_JVM_MAX_RAM_PERCENTAGE` | no | `80` | `-XX:MaxRAMPercentage` della JVM |
+| `GOVPAY_STAMPE_JVM_INITIAL_RAM_PERCENTAGE` | no | - | `-XX:InitialRAMPercentage` della JVM |
+| `GOVPAY_STAMPE_JVM_MIN_RAM_PERCENTAGE` | no | - | `-XX:MinRAMPercentage` della JVM |
+| `GOVPAY_STAMPE_JVM_MAX_METASPACE_SIZE` | no | - | `-XX:MaxMetaspaceSize` della JVM |
+| `GOVPAY_STAMPE_JVM_MAX_DIRECT_MEMORY_SIZE` | no | - | `-XX:MaxDirectMemorySize` della JVM |
+| `JAVA_OPTS` | no | - | Opzioni aggiuntive della JVM |
+| `TZ` | no | `Europe/Rome` | Fuso orario del sistema operativo del container |
 
-Gli endpoint `/actuator/health` e `/actuator/prometheus` rispondono di default sulla **stessa porta**
-dell'applicazione (`server.port`). Per esporli su una porta dedicata impostare:
+Costruzione dell'immagine in locale, scansione delle vulnerabilità e pacchetti inclusi sono descritti in [docker/DOCKER.md](docker/DOCKER.md) e [docker/SCANSIONE.md](docker/SCANSIONE.md).
 
-``` bash
-management.server.port=[Porta dedicata per gli endpoint actuator]
+## Monitoraggio
+
+Gli endpoint actuator rispondono di default sulla porta del servizio:
+
+```bash
+curl http://localhost:10003/actuator/health       # stato, con i gruppi liveness e readiness per le probe
+curl http://localhost:10003/actuator/prometheus   # metriche in formato Prometheus
 ```
 
-oppure, in ambiente Docker, la variabile d'ambiente equivalente:
+Per spostarli su una porta dedicata impostare `management.server.port` (nel container `MANAGEMENT_SERVER_PORT`). L'endpoint `loggers`, che permette di cambiare i livelli di log a caldo, non è esposto di default perché il servizio non ha autenticazione: abilitarlo solo insieme a una porta dedicata e non raggiungibile dall'esterno, per esempio `MANAGEMENT_SERVER_PORT=9090` e `MANAGEMENT_ENDPOINTS=health,prometheus,loggers`.
 
-``` bash
-MANAGEMENT_SERVER_PORT=[Porta dedicata per gli endpoint actuator]
+## Avvisi di pagamento
+
+Il servizio produce le seguenti categorie di [avvisi pagoPA](https://developer.pagopa.it/pago-pa/guides/avviso-pagamento), ciascuna con e senza bollettino postale:
+
+- rata unica;
+- rate multiple, anche in numero elevato;
+- violazione del Codice della Strada;
+- avvisi bilingue.
+
+### Logo dell'ente
+
+I campi dei loghi (`first_logo`, `second_logo`, e nelle ricevute `creditor_logo`, `pagopa_logo`) sono di tipo binario: il valore JSON è la codifica base64 della stringa data URI dell'immagine (`data:image/png;base64,iVBORw0KGg...`), cioè la data URI codificata una seconda volta in base64. Negli esempi che seguono il valore è abbreviato in `base64encodedimage`.
+
+### Lingue
+
+Il campo `language` accetta `it`, `en`, `de`, `fr`, `sl`, ma le etichette sono presenti in [avvisi.properties](src/main/resources/avvisi.properties) solo per `it`, `de` e `sl`: con `en` o `fr` gli avvisi bilingue e quelli per violazione del Codice della Strada rispondono `400` (`Label non disponibili per la lingua`). L'avviso standard monolingue non usa le etichette di `avvisi.properties`.
+
+### Avviso standard
+
 ```
-
-Se non valorizzata, gli endpoint restano sulla porta applicativa.
-
-# Formato Logo 
-
-Il logo dell'ente creditore deve essere fornito come stringa nel formato `data:image/png;base64,iVBORw0KGg......` codificato in base 64.
-
-# Avvisi di Pagamento supportati
-
-L'applicazione consente di creare i pdf per le seguenti categorie di [Avvisi PagoPA](https://developer.pagopa.it/pago-pa/guides/avviso-pagamento)
-
-- Rata Unica
-- Rate Multiple
-- Avvisi con molte rate
-- Violazione Cds
-- Avvisi Bilingue
-
-Per ognuna delle opzioni precedenti sono disponibili le versioni con e senza bollettino postale.
-
-## Avviso standard
-
-In questa sezione verranno riportati alcuni esempi di richiesta per la generazione degli avvisi standard.
-
-Il servizio e' disponibile alla url:
-
-``` html
 POST /standard
-
-{
-	json avviso
-}
+Content-Type: application/json
 ```
 
-### Avviso semplice con rata unica
+#### Avviso semplice con rata unica
 
 Gli avvisi semplici vengono creati senza la sezione bollettino postale indicando `postal=false`.
 La rata unica si definisce valorizzando l'oggetto `full`:
@@ -140,9 +220,9 @@ La rata unica si definisce valorizzando l'oggetto `full`:
 }
 ```
 
-### Avviso semplice con rate multiple
+#### Avviso semplice con rate multiple
 
-La rate si definiscono valorizzando la lista `instalments`, per ogni rata dovra' essere indicato il numero della rata all'interno del campo obbligatorio `instalment_number`, di seguito un esempio di avviso con due rate:
+Le rate si definiscono valorizzando la lista `instalments`; per ogni rata va indicato il numero nel campo obbligatorio `instalment_number`. Esempio con due rate:
 
 ``` json
 {
@@ -183,13 +263,9 @@ La rate si definiscono valorizzando la lista `instalments`, per ogni rata dovra'
 }
 ```
 
-### Avviso semplice bilingue
+#### Avviso semplice bilingue
 
-Per creare un avviso bilingue si deve definire l'elemento `second_language` indicando la seconda lingua desiderata, e il titolo dell'avviso tradotto.
-
-*N.B.*
-Il campo obbligatorio `bilinguism` viene attualmente ignorato e l'avviso viene sempre stampato bilingue.
-
+Per creare un avviso bilingue si valorizza l'elemento `second_language` con la seconda lingua (`de` o `sl`, vedi [Lingue](#lingue)) e il titolo tradotto. Il campo obbligatorio `bilinguism` è ignorato: con `second_language` l'avviso è sempre bilingue.
 
 ``` json
 {
@@ -218,19 +294,19 @@ Il campo obbligatorio `bilinguism` viene attualmente ignorato e l'avviso viene s
     "qrcode": "PAGOPA|002|123456789012345678|01234567890|10050"
   },
   "second_language": {
-    "title": "Payment notice",
+    "title": "Plačilni nalog",
     "language": "sl",
     "bilinguism": true
   }
 }
 ```
 
-### Avviso Postale
+#### Avviso postale
 
-Per la stampa degli avvisi postali e' necessario valorizzare il campo `postal=true` e indicare i seguenti dati aggiuntivi:
+Per gli avvisi con bollettino postale si imposta `postal=true` e si indicano i dati aggiuntivi:
 
-- `creditor.postal_auth_message`: autorizzazione alla stampa in proprio dei bollettini postali
-- `full.iban` o `instalment.iban`: informazioni relative all'iban di accredito postale da utilizzare, si utilizzando per la generazione del data matrix: `iban_code` codice iban di accredito, `owner_business_name` nome del proprietario dell'iban di accredito se diverso da `creditor.business_name`, `postal_auth_message` se diversa da quella indicata in `creditor.postal_auth_message`.
+- `creditor.postal_auth_message`: autorizzazione alla stampa in proprio dei bollettini postali;
+- `full.iban` o `instalments[].iban`: conto di accredito postale, usato per il data matrix: `iban_code` (IBAN di accredito), `owner_business_name` (intestatario, se diverso da `creditor.business_name`), `postal_auth_message` (se diverso da quello in `creditor.postal_auth_message`).
 
 ``` json
 {
@@ -291,19 +367,19 @@ Per la stampa degli avvisi postali e' necessario valorizzare il campo `postal=tr
 }
 ```
 
+#### Altri campi dell'avviso standard
+
+- `informativa_importo`: sostituisce il testo standard della nota sull'importo; con stringa vuota la nota viene omessa. Per gli avvisi bilingue la traduzione va in `second_language.informativa_importo`.
+- `reduced_payments`: importi in forma ridotta legati a una soglia temporale (`threshold_type` `ENTRO` o `OLTRE`, `threshold_days`), oltre ai campi di `full`.
+
 ### Violazione del Codice della Strada
 
-Il servizio e' disponibile alla url:
-
-``` html
+```
 POST /cds_violation
-
-{
-	json avviso
-}
+Content-Type: application/json
 ```
 
-L'avviso per la Violazione del Codice della strada deve contenere due importi ridotto e scontato da indicare negli oggetti `discounted_amount` e `reduced_amount`, sono disponibili tutte le opzioni valide per gli avvisi standard.
+L'avviso contiene due importi, scontato e ridotto, negli oggetti `discounted_amount` e `reduced_amount`; valgono le altre opzioni degli avvisi standard, compreso il bollettino postale.
 
 ``` json
 {
@@ -351,23 +427,14 @@ L'avviso per la Violazione del Codice della strada deve contenere due importi ri
 }
 ```
 
-## Ricevute di Pagamento
+## Ricevute di pagamento
 
-L'applicazione consente di generare i PDF delle ricevute di pagamento pagoPA.
-
-Il servizio e' disponibile alla url:
-
-``` html
+```
 POST /receipt
-
-{
-	json ricevuta
-}
+Content-Type: application/json
 ```
 
-### Ricevuta standard
-
-Di seguito un esempio di richiesta per la generazione di una ricevuta di pagamento:
+Esempio di richiesta:
 
 ``` json
 {
@@ -380,8 +447,8 @@ Di seguito un esempio di richiesta per la generazione di una ricevuta di pagamen
     "location": "00100 Roma (RM)"
   },
   "payer": {
-    "fiscal_code": "RSSMRA80A01H501U",
-    "full_name": "Mario Rossi",
+    "fiscal_code": "AAAAAA00A00A000A",
+    "full_name": "Nomen Nescio",
     "address": "Viale dei Giardini, 00",
     "location": "00000 Roma (RM)"
   },
@@ -415,64 +482,39 @@ Di seguito un esempio di richiesta per la generazione di una ricevuta di pagamen
 
 | Campo | Descrizione | Obbligatorio |
 |-------|-------------|--------------|
-| `creditor_logo` | Logo dell'ente creditore in formato base64 | Si |
-| `pagopa_logo` | Logo pagoPA in formato base64 | Si |
-| `organization` | Dati dell'ente creditore | Si |
-| `organization.fiscal_code` | Codice fiscale dell'ente (11 caratteri) | Si |
-| `organization.business_name` | Denominazione dell'ente | Si |
-| `organization.address` | Indirizzo dell'ente | No |
-| `organization.location` | Localita' dell'ente | No |
-| `payer` | Dati del soggetto pagatore | Si |
-| `payer.fiscal_code` | Codice fiscale del pagatore | Si |
-| `payer.full_name` | Nome completo del pagatore | Si |
-| `payer.address` | Indirizzo del pagatore | No |
-| `payer.location` | Localita' del pagatore | No |
-| `payment_subject` | Causale del pagamento | Si |
-| `psp` | Nome del PSP che ha elaborato il pagamento | Si |
-| `amount` | Importo totale pagato | Si |
-| `operation_date` | Data e ora dell'operazione | Si |
-| `application_date` | Data di applicazione | Si |
-| `status` | Stato della ricevuta | Si |
-| `creditor_reference_id` | Identificativo Univoco Versamento (IUV) | Si |
-| `receipt_id` | Codice Contesto Pagamento (CCP) | Si |
-| `object_version` | Versione del tracciato pagoPA | Si |
-| `items` | Lista delle voci di pagamento | Si |
-| `items[].description` | Descrizione della voce | Si |
-| `items[].iur` | Identificativo Univoco Riscossione | Si |
-| `items[].amount` | Importo della voce | Si |
-| `items[].status` | Stato della voce | Si |
+| `creditor_logo` | Logo dell'ente creditore (vedi [Logo dell'ente](#logo-dellente)) | sì |
+| `pagopa_logo` | Logo pagoPA (vedi [Logo dell'ente](#logo-dellente)) | sì |
+| `organization` | Dati dell'ente creditore | sì |
+| `organization.fiscal_code` | Codice fiscale dell'ente | sì |
+| `organization.business_name` | Denominazione dell'ente | sì |
+| `organization.address` | Indirizzo dell'ente | sì |
+| `organization.location` | Località dell'ente | sì |
+| `payer` | Dati del soggetto pagatore | sì |
+| `payer.fiscal_code` | Codice fiscale del pagatore | sì |
+| `payer.full_name` | Nome completo del pagatore | sì |
+| `payer.address` | Indirizzo del pagatore | sì |
+| `payer.location` | Località del pagatore | sì |
+| `payment_subject` | Causale del pagamento | sì |
+| `psp` | Nome del PSP che ha elaborato il pagamento | sì |
+| `amount` | Importo totale pagato | sì |
+| `operation_date` | Data e ora dell'operazione | sì |
+| `application_date` | Data di applicazione | sì |
+| `status` | Stato della ricevuta | sì |
+| `creditor_reference_id` | Identificativo Univoco Versamento (IUV) | sì |
+| `receipt_id` | Codice Contesto Pagamento (CCP) | sì |
+| `object_version` | Versione del tracciato pagoPA | sì |
+| `items` | Lista delle voci di pagamento | sì |
+| `items[].description` | Descrizione della voce | sì |
+| `items[].iur` | Identificativo Univoco Riscossione | sì |
+| `items[].amount` | Importo della voce | sì |
+| `items[].status` | Stato della voce | sì |
 
-### Valori enum
+Valori ammessi:
 
-**status** (stato ricevuta):
-- `EXECUTED`: Eseguito
-- `NOT_EXECUTED`: Non eseguito
-- `PARTIALLY_EXECUTED`: Parzialmente eseguito
-- `EXPIRED`: Decorrenza termini
-- `PARTIALLY_EXPIRED`: Decorrenza termini parziale
+- `status` (stato della ricevuta): `EXECUTED` (eseguito), `NOT_EXECUTED` (non eseguito), `PARTIALLY_EXECUTED` (parzialmente eseguito), `EXPIRED` (decorrenza termini), `PARTIALLY_EXPIRED` (decorrenza termini parziale);
+- `items[].status` (stato della voce): `EXECUTED`, `NOT_EXECUTED`;
+- `object_version` (versione del tracciato): `SANP_240_V2`, `SANP_240`, `SANP_230`.
 
-**items[].status** (stato voce):
-- `EXECUTED`: Eseguito
-- `NOT_EXECUTED`: Non eseguito
+## Licenza
 
-**object_version** (versione tracciato):
-- `SANP_240_V2`: Versione 2.4.0 v2
-- `SANP_240`: Versione 2.4.0
-- `SANP_230`: Versione 2.3.0
-
-## Configurazione logging
-
-La configurazione del logging è gestita tramite le proprietà definite in `application.properties`:
-
-``` bash
-logging.file.name=[Path completo del file di log]
-logging.level.it.govpay=[Livello di log: DEBUG, INFO, WARN, ERROR]
-```
-
-## Docker
-
-L'immagine Docker è disponibile su Docker Hub: [linkitaly/govpay-stampe-api](https://hub.docker.com/r/linkitaly/govpay-stampe-api)
-
-``` bash
-docker pull linkitaly/govpay-stampe-api:latest
-```
+GovPay Stampe Api è distribuito con licenza [GNU General Public License v3.0](LICENSE).

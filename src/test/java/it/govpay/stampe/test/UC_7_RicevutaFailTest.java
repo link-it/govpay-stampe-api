@@ -82,7 +82,7 @@ class UC_7_RicevutaFailTest {
 		MvcResult result = this.mockMvc.perform(post(Costanti.RECEIPT_PATH)
 				.content(body)
 				.contentType(MediaType.TEXT_HTML))
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isUnsupportedMediaType())
 				.andReturn();
 
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
@@ -90,10 +90,10 @@ class UC_7_RicevutaFailTest {
 		assertNotNull(problem.getString("type"));
 		assertNotNull(problem.getString("title"));
 		assertNotNull(problem.getString("detail"));
-		assertEquals(400, problem.getInt("status"));
-		assertEquals("Bad Request", problem.getString("title"));
+		assertEquals(415, problem.getInt("status"));
+		assertEquals("Unsupported Media Type", problem.getString("title"));
 		assertTrue(problem.getString("detail").contains("Content-Type 'text/html' is not supported"));
-		assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+		assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-415-unsupported-media-type", problem.getString("type"));
 	}
 
 	// ==================== Test campi required Receipt ====================
@@ -815,7 +815,7 @@ class UC_7_RicevutaFailTest {
 		// Identificativi
 		receipt.setCreditorReferenceId("01234567890123456");
 		receipt.setReceiptId("0123456789012345678901234567890");
-		receipt.setObjectVersion(ReceiptVersion._230);
+		receipt.setObjectVersion(ReceiptVersion.SANP_230);
 
 		// Voci pagamento (items)
 		List<ReceiptItem> items = new ArrayList<>();

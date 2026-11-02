@@ -11,7 +11,9 @@
 	Rimosso PrototipoFopTest, che stampava con FOP i casi di riferimento
 	fuori dal repository per il confronto con Jasper: per rifare il
 	confronto si usa il commit b6d8bb3. Release notes della 2.0.1 con la
-	stampa FOP e i codici a norma. CLAUDE.md allineato a Spring Boot 4.1.
+	stampa FOP e i codici a norma. CLAUDE.md allineato a Spring Boot 4.1. Tolte
+	da .trivyignore.yaml le eccezioni di JasperReports (CVE-2025-10492,
+	CVE-2026-6009): la scansione dell'immagine e' a zero senza eccezioni.
 
 2026-10-30  Giuliano Pintori <pintori@link.it>
 

@@ -18,7 +18,10 @@ TZ=Europe/Rome
 RUN set -eux; \
 apk update; \
 apk upgrade; \
-apk add --no-cache bash curl tar unzip netcat-openbsd tzdata; \
+# Solo cio' che serve a runtime: bash per l'entrypoint, tzdata per il fuso
+# orario. tar, unzip, netcat e curl non sono usati dall'entrypoint, e ogni
+# pacchetto in piu' e' superficie esposta e segnalazioni della scansione.
+apk add --no-cache bash tzdata; \
 rm -rf /var/cache/apk/*; \
 echo "${TZ}" > /etc/timezone; \
 addgroup -S govpay ; \
@@ -42,9 +45,7 @@ RUN chown -R govpay:0 /usr/local/bin/entrypoint.sh ${GOVPAY_STAMPE_HOME} ${GOVPA
 USER govpay
 
 ENV STAMPE_TIME_ZONE=Europe/Rome \
-    LOGGING_FILE_NAME=${GOVPAY_STAMPE_LOGDIR}/govpay-stampe-api.log \
-    LOGGING_DIRECTORYPATH=${GOVPAY_STAMPE_LOGDIR} \
-    LOGGING_FILEPREFIX=govpay-stampe-api
+    LOGGING_FILE_NAME=${GOVPAY_STAMPE_LOGDIR}/govpay-stampe-api.log
 
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

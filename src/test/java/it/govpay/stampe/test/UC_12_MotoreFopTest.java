@@ -121,12 +121,12 @@ class UC_12_MotoreFopTest {
 
 	@Test
 	void UC_12_10_RicevutaConFop() throws Exception {
-		assertTrue(stampa(Costanti.RECEIPT_PATH, this.avvisiPagamentoFactory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 2, false)).contains(PRODUCER_FOP));
+		assertTrue(stampa(Costanti.RECEIPT_PATH, this.avvisiPagamentoFactory.creaReceipt(ReceiptVersion.SANP_230, ReceiptStatus.EXECUTED, 2, false)).contains(PRODUCER_FOP));
 	}
 
 	@Test
 	void UC_12_11_RicevutaSuPiuPagineConFop() throws Exception {
-		String pdf = stampa(Costanti.RECEIPT_PATH, this.avvisiPagamentoFactory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 30, true));
+		String pdf = stampa(Costanti.RECEIPT_PATH, this.avvisiPagamentoFactory.creaReceipt(ReceiptVersion.SANP_230, ReceiptStatus.EXECUTED, 30, true));
 		// come il caso di riferimento Jasper ricevuta-230-molte-voci-testi-lunghi: le voci vanno su tre pagine
 		assertTrue(pdf.contains(PRODUCER_FOP));
 		assertTrue(pdf.contains("/Count 3"));

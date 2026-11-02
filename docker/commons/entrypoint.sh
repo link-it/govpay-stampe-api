@@ -8,11 +8,6 @@
 
 set -e
 
-# Debug di esecuzione
-exec 6<> /tmp/entrypoint_debug.log
-exec 2>&6
-set -x
-
 # Funzioni di logging
 log_info() { echo -e "\033[0;32m[INFO]\033[0m $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
 log_warn() { echo -e "\033[1;33m[WARN]\033[0m $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
@@ -29,14 +24,6 @@ log_info "========================================"
 if [ -z "${SERVER_PORT}" ]; then
     SERVER_PORT="10003"
     export SERVER_PORT
-fi
-
-##############################################################################
-# Configurazione Timezone
-##############################################################################
-
-if [ -n "${STAMPE_TIME_ZONE}" ]; then
-    export STAMPE_TIME_ZONE="${STAMPE_TIME_ZONE}"
 fi
 
 ##############################################################################

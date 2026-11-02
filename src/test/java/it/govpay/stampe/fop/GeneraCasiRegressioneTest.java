@@ -162,10 +162,10 @@ class GeneraCasiRegressioneTest {
 			return v;
 		});
 		// ricevuta: versioni SANP, stati, voci su una e piu' pagine, testi lunghi
-		casi.put("ricevuta-230", () -> this.factory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 2, false));
-		casi.put("ricevuta-240-v2-non-eseguita", () -> this.factory.creaReceipt(ReceiptVersion._240_V2, ReceiptStatus.NOT_EXECUTED, 1, false));
-		casi.put("ricevuta-240-sei-voci", () -> this.factory.creaReceipt(ReceiptVersion._240, ReceiptStatus.EXECUTED, 6, false));
-		casi.put("ricevuta-230-molte-voci-testi-lunghi", () -> this.factory.creaReceipt(ReceiptVersion._230, ReceiptStatus.EXECUTED, 30, true));
+		casi.put("ricevuta-230", () -> this.factory.creaReceipt(ReceiptVersion.SANP_230, ReceiptStatus.EXECUTED, 2, false));
+		casi.put("ricevuta-240-v2-non-eseguita", () -> this.factory.creaReceipt(ReceiptVersion.SANP_240_V2, ReceiptStatus.NOT_EXECUTED, 1, false));
+		casi.put("ricevuta-240-sei-voci", () -> this.factory.creaReceipt(ReceiptVersion.SANP_240, ReceiptStatus.EXECUTED, 6, false));
+		casi.put("ricevuta-230-molte-voci-testi-lunghi", () -> this.factory.creaReceipt(ReceiptVersion.SANP_230, ReceiptStatus.EXECUTED, 30, true));
 		// avviso bilingue in tedesco e sloveno: rata unica, rate, soglie, bollettino, due loghi
 		casi.put("bilingue-unica-de", () -> bilingue(rate(0, true, false), Languages.DE));
 		casi.put("bilingue-doppia-sl", () -> bilingue(rate(2, false, false), Languages.SL));

@@ -13,6 +13,7 @@ import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.URIResolver;
@@ -54,6 +55,7 @@ public class MotoreFop {
 	private static final String BASE_XSL = "fop/";
 	private static final String CONFIGURAZIONE = "fop/fop.xconf";
 	private static final String[] LIMITI_XPATH = { "jdk.xml.xpathExprGrpLimit", "jdk.xml.xpathExprOpLimit", "jdk.xml.xpathTotalOpLimit" };
+	private static final String FUNZIONI_ESTENSIONE = "jdk.xml.enableExtensionFunctions";
 
 	private static final ErrorListener ERRORI_BLOCCANTI = new ErrorListener() {
 		@Override
@@ -93,6 +95,13 @@ public class MotoreFop {
 		// righe rimosse, posizioni) superano i limiti di default del JDK
 		for (String limite : LIMITI_XPATH) {
 			this.transformerFactory.setAttribute(limite, 0);
+		}
+		// i layout chiamano TestoFop come funzione di estensione (tj:): dal JDK 24 le funzioni di estensione sono
+		// disattivate di default e vanno abilitate; i fogli vengono solo dal classpath (ClasspathUriResolver)
+		try {
+			this.transformerFactory.setFeature(FUNZIONI_ESTENSIONE, true);
+		} catch (TransformerConfigurationException e) {
+			throw new IllegalStateException("Funzioni di estensione XSLT non abilitabili", e);
 		}
 		this.transformerFactory.setURIResolver(new ClasspathUriResolver());
 	}

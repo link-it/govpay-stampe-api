@@ -1,5 +1,12 @@
 2026-11-02  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] Stampa con JRE 25 (#37).
+	Dal JDK 24 le funzioni di estensione XSLT sono disattivate di default
+	e i layout non potevano chiamare TestoFop: con il runtime JRE 25
+	dell'immagine Docker ogni stampa falliva. MotoreFop le abilita sul
+	proprio TransformerFactory, che legge i fogli solo dal classpath.
+	Test e PDF identici con JDK 21 e JDK 25.
+
 	* [Stampe] Pulizia della migrazione a FOP (#37).
 	Rimosso PrototipoFopTest, che stampava con FOP i casi di riferimento
 	fuori dal repository per il confronto con Jasper: per rifare il

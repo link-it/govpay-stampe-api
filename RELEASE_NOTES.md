@@ -4,6 +4,28 @@
 
 Rilascio del 2026-07-15.
 
+### 🖨️ Stampa con Apache FOP
+
+- I PDF di avvisi semplici, postali e bilingui, violazioni del codice della strada
+  e ricevute sono generati con **Apache FOP** (XSLT + XSL-FO) al posto di
+  JasperReports (issue #37). L'API REST è invariata; la ricevuta accetta importi
+  pari a 0.
+- Aspetto delle stampe invariato, verificato su 71 casi di riferimento confrontati
+  con i PDF Jasper. I layout sono in `src/main/resources/fop` e si modificano a
+  mano; guida in `script/fop/README.md`, regressione con `RegressioneLayoutTest`.
+- **QR code e DataMatrix** a norma della specifica pagoPA 3.5 e del manuale Poste
+  per la stampa in proprio: QR versione 4 con correzione M, DataMatrix 52x52, entrambi
+  di 25 mm con almeno 3 mm di bianco attorno; DataMatrix a 13 mm dal bordo destro;
+  autorizzazione Poste in grigio al 70%. Contenuto dei codici invariato.
+- Rimossi JasperReports, dynamicreports e i template `.jrxml`/`.jasper`, con le
+  dipendenze collegate. FOP usa PDFBox per i font: `fontbox` e `pdfbox-io` sono
+  forzati alla 3.0.8.
+
+### 🔒 Sicurezza
+
+- Rimossa la suppression OWASP di **CVE-2026-6009** (JasperReports): la libreria
+  non è più tra le dipendenze.
+
 ### 🐳 Docker
 
 - Runtime delle immagini Docker portato a **JDK 25** (solo runtime; il target di

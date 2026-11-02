@@ -66,8 +66,8 @@ SHA-256 dell'area tree di FOP (la pagina impaginata: posizioni, testi, immagini)
 - Dopo una modifica voluta del layout, si aggiornano gli hash:
   `mvn test -Dtest=RegressioneLayoutTest -Dregressione.aggiorna=true`.
 
-Per i casi di riferimento fuori dal repository (sotto), `PrototipoFopTest` scrive PDF, documento XSL-FO e,
-con `-Dprototipo.areatree=true`, l'area tree di ogni caso in `target/prototipo-fop/`.
+Per i casi di riferimento fuori dal repository (sotto) PDF, documento XSL-FO e area tree li scriveva
+`PrototipoFopTest`, rimosso con la pulizia della migrazione.
 
 ## Geometria del testo
 
@@ -221,7 +221,7 @@ python3 script/fop/verifica_pdf.py jasper.pdf fop.pdf --fo layout.fo --xml input
   --classpath "$(mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout)" --escludi 480,250,100,22
 ```
 
-Il file FO (`layout.fo`) lo scrive `PrototipoFopTest` in `target/prototipo-fop/`, accanto al PDF di ogni
+Il file FO (`layout.fo`) lo scriveva `PrototipoFopTest` in `target/prototipo-fop/`, accanto al PDF di ogni
 caso, con il foglio indicato da `-Dprototipo.foglio`.
 
 ### Casi di riferimento
@@ -236,8 +236,10 @@ violazione CdS, ricevuta, bilingue in tedesco e sloveno) come il controller e sa
 mvn test -Dtest=GeneraRiferimentiJasperTest -Driferimenti.uscita=$PWD/pdf-riferimento/jasper-multirata
 ```
 
-`PrototipoFopTest` genera con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper. I
-casi restano fuori dal repository e si indicano da riga di comando:
+`PrototipoFopTest` generava con FOP i PDF dei casi di riferimento, cioè gli stessi XML passati a Jasper,
+con il PDF, il documento XSL-FO e, con `-Dprototipo.areatree=true`, l'area tree di ogni caso. Il test
+è stato rimosso a migrazione conclusa: per rifare il confronto si usa il commit `b6d8bb3`, l'ultimo con il
+test. I casi restano fuori dal repository e si indicano da riga di comando:
 
 ```bash
 mvn test -Dtest=PrototipoFopTest \

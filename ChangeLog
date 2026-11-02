@@ -1,3 +1,11 @@
+2026-11-02  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Pulizia della migrazione a FOP (#37).
+	Rimosso PrototipoFopTest, che stampava con FOP i casi di riferimento
+	fuori dal repository per il confronto con Jasper: per rifare il
+	confronto si usa il commit b6d8bb3. Release notes della 2.0.1 con la
+	stampa FOP e i codici a norma. CLAUDE.md allineato a Spring Boot 4.1.
+
 2026-10-30  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] QR code e DataMatrix secondo le specifiche pagoPA e Poste (#37).

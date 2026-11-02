@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GovPay Stampe API is a Spring Boot 3.2.5 / JDK 21 microservice that generates pagoPA payment notice PDFs. It exposes REST endpoints to create payment notices for Italian public administration payments, including standard notices, installment plans, postal notices, bilingual notices, and traffic violation notices.
+GovPay Stampe API is a Spring Boot 4.1 / Spring Framework 7 / Jackson 3 microservice (JDK 21, versions managed by govpay-bom; as a war it needs Tomcat 11) that generates pagoPA payment notice PDFs. It exposes REST endpoints to create payment notices for Italian public administration payments, including standard notices, installment plans, postal notices, bilingual notices, and traffic violation notices.
 
 ## Maven/BOM Rules
 - NEVER remove a dependency version from pom.xml unless you have verified that exact dependency (groupId + artifactId) is managed in the parent BOM

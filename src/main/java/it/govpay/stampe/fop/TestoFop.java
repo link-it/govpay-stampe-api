@@ -234,6 +234,7 @@ public final class TestoFop {
 	}
 
 	/** Arrotondamento al millesimo di punto, la precisione di FOP (millipunti), sul valore binario esatto. */
+	@SuppressWarnings("java:S2111") // voluto: BigDecimal.valueOf arrotonderebbe la rappresentazione decimale abbreviata
 	private static double millesimi(double v) {
 		return new BigDecimal(v).setScale(3, RoundingMode.HALF_EVEN).doubleValue();
 	}

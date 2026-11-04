@@ -14,7 +14,7 @@ API REST che genera in PDF gli avvisi di pagamento pagoPA e le ricevute di pagam
 
 ## Sommario
 
-Il servizio riceve in JSON i dati di un avviso o di una ricevuta e restituisce il PDF prodotto con i modelli JasperReports inclusi nel jar. Non ha base dati e non conserva nulla: ogni richiesta è indipendente.
+Il servizio riceve in JSON i dati di un avviso o di una ricevuta e restituisce il PDF prodotto con Apache FOP dai layout XSL-FO inclusi nel jar (`src/main/resources/fop`, guida in [script/fop/README.md](script/fop/README.md)). Non ha base dati e non conserva nulla: ogni richiesta è indipendente.
 
 Operazioni esposte (specifica in [src/main/resources/govpay-stampe.yaml](src/main/resources/govpay-stampe.yaml)):
 
@@ -67,7 +67,7 @@ Le proprietà si impostano in `application.properties`, da riga di comando (`-D<
 | `server.port` | `8080` (`10003` nel container) | Porta HTTP del servizio |
 | `spring.mvc.servlet.path` | `/` | Base path delle API |
 | `stampe.time-zone` | `Europe/Rome` | Fuso orario usato per le date nel JSON |
-| `stampe.debugInputJasper` | `false` | Scrive nel log, a livello `DEBUG`, l'XML passato ai modelli JasperReports: contiene i dati personali del debitore, da usare solo in diagnosi |
+| `stampe.debugInputJasper` | `false` | Scrive nel log, a livello `DEBUG`, l'XML passato ai layout XSL-FO (il nome viene dalla stampa con JasperReports, sostituita da Apache FOP): contiene i dati personali del debitore, da usare solo in diagnosi |
 | `spring.mvc.date-format` | `yyyy-MM-dd` | Formato delle date nei parametri |
 | `spring.mvc.datetime-format` | `yyyy-MM-dd'T'HH:mm:ssZZZ` | Formato di data e ora nei parametri |
 | `spring.mvc.throw-exception-if-no-handler-found` | `true` | Risponde con un errore applicativo sui path inesistenti |

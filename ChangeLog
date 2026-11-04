@@ -1,4 +1,162 @@
+2026-11-02  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Stampa con JRE 25 (#37).
+	Dal JDK 24 le funzioni di estensione XSLT sono disattivate di default
+	e i layout non potevano chiamare TestoFop: con il runtime JRE 25
+	dell'immagine Docker ogni stampa falliva. MotoreFop le abilita sul
+	proprio TransformerFactory, che legge i fogli solo dal classpath.
+	Test e PDF identici con JDK 21 e JDK 25.
+
+	* [Stampe] Pulizia della migrazione a FOP (#37).
+	Rimosso PrototipoFopTest, che stampava con FOP i casi di riferimento
+	fuori dal repository per il confronto con Jasper: per rifare il
+	confronto si usa il commit b6d8bb3. Release notes della 2.0.1 con la
+	stampa FOP e i codici a norma. CLAUDE.md allineato a Spring Boot 4.1. Tolte
+	da .trivyignore.yaml le eccezioni di JasperReports (CVE-2025-10492,
+	CVE-2026-6009): la scansione dell'immagine e' a zero senza eccezioni.
+	Tolto MotoreFop.fo, usato solo da PrototipoFopTest.
+
+2026-10-30  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] QR code e DataMatrix secondo le specifiche pagoPA e Poste (#37).
+	Il QR code e' in versione 4 (33x33 moduli) con correzione d'errore M,
+	il DataMatrix del bollettino postale e' 52x52, entrambi stampati a 25 mm
+	di lato; il DataMatrix sta a 13 mm dal bordo destro della pagina. Il
+	testo dell'autorizzazione Poste e' grigio al 70%. Prima il QR era in
+	versione 3 con correzione L e il DataMatrix 48x48 di 28-30 mm, come
+	con JasperReports. Per lasciare 3 mm di bianco attorno ai codici,
+	nelle rate a tre le righe sotto il QR scendono di 3 pt e nel
+	bollettino bilingue a rata unica il codice fiscale dell'ente e' piu'
+	stretto di 4 pt. Contenuto dei codici invariato; il resto delle stampe
+	e' identico.
+
+2026-10-29  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] fontbox e pdfbox-io 3.0.8 (#37).
+	Le librerie PDFBox usate da FOP passano dalla 3.0.3 alla 3.0.8, per
+	chiudere la segnalazione OWASP di CVE-2026-33929. La vulnerabilita'
+	riguarda solo l'esempio ExtractEmbeddedFiles di pdfbox-examples, che
+	il progetto non usa. PDF identici a quelli di prima nei 71 casi di
+	riferimento.
+
+	* [Stampe] Layout XSL-FO modificabili a mano (#37).
+	I layout in src/main/resources/fop sono il sorgente delle stampe:
+	rimossi i template Jasper .jrxml e il convertitore che ne ricavava gli
+	XSL. Interlinea, padding e allungamento dei testi sono calcolati dalle
+	funzioni di TestoFop (prima TestoJasper); testi a capo, loghi e
+	intestazione pagoPA sono template condivisi di comune.xsl; le icone
+	SVG sono file in fop/icone; le righe rimosse e gli allungamenti sono
+	variabili con nome. Fogli da 966 a 522 KB, PDF identici a quelli
+	di prima nei 71 casi di riferimento. Nuovo test RegressioneLayoutTest:
+	29 stampe di prova confrontate con l'area tree attesa di FOP.
+	JasperConfig rinominato JaxbConfig. Guida ai layout in
+	script/fop/README.md.
+
+2026-10-26  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Stampa con Apache FOP, rimosso JasperReports (#37).
+	Avvisi semplici, postali, bilingui, violazioni del codice della strada
+	e ricevute sono stampati solo con Apache FOP. Rimossi JasperReports,
+	DynamicReports e le librerie usate solo da Jasper (Groovy, Jaxen, Xalan,
+	barcode4j, barbecue, Ant, commons-beanutils), i template .jasper e le
+	eccezioni OWASP e OSV per le vulnerabilita' di JasperReports. Le
+	proprieta' stampe.motore.* non servono piu' e vanno tolte dalle
+	configurazioni. Verificati di nuovo i 71 casi di riferimento Jasper.
+
+2026-10-23  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso bilingue con FOP (#37).
+	Nuova proprieta' stampe.motore.avviso-bilingue (jasper di default): con fop
+	l'avviso bilingue, con e senza bollettino postale, e' stampato con Apache
+	FOP. I testi con italiano e traduzione in stili diversi vanno a capo come
+	in Jasper. Con soglie e bollettino e senza rata unica Jasper sovrappone la
+	seconda pagina alla prima; FOP stampa le pagine correttamente.
+	Accettati 12 casi di riferimento su 15, in tedesco e sloveno: due hanno
+	6 pixel di differenza nei bordi del testo grigio grande, a posizioni
+	identiche, e uno ha il riferimento Jasper sbagliato. Restano accettati i
+	56 precedenti.
+
+	* [Stampe] Etichetta tedesca del pagamento presso le poste (#37).
+	In de.paga_territorio_poste "Postämtern" era scritto con un carattere a
+	uso privato al posto della "ä", stampato da Jasper e da FOP.
+
+2026-10-22  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Ricevuta telematica con FOP (#37).
+	Nuova proprieta' stampe.motore.ricevuta (jasper di default): con fop la
+	ricevuta e' stampata con Apache FOP, anche su piu' pagine quando le voci
+	non stanno in una. Come in Jasper, i testi che si allungano (oggetto,
+	ente, voci) spostano in basso gli elementi sotto di loro, anche negli
+	avvisi gia' migrati. Verificati 8 casi di riferimento, piu' i 48
+	precedenti.
+
+2026-10-21  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso semplice e postale con FOP in tutti i layout (#37).
+	Migrati i layout con piu' rate, soglie e pagine multiple, con e senza
+	bollettino postale: con stampe.motore.avviso-semplice=fop e
+	stampe.motore.avviso-postale=fop tutti questi avvisi sono stampati con
+	Apache FOP. I testi variabili vanno a capo come in Jasper, con le sole
+	righe che stanno nel riquadro. Il motore usa il processore XSLT del JDK.
+	Verificati 44 casi di riferimento Jasper, generati anche per i layout
+	multi-rata che la testsuite del core non produce.
+
+	* [Stampe] Violazione del codice della strada con FOP (#37).
+	Nuova proprieta' stampe.motore.violazione-cds (jasper di default): con fop
+	la violazione senza bollettino e' stampata con Apache FOP (layout Sanzione).
+	Verificati 4 casi di riferimento, piu' i 44 precedenti.
+
+2026-10-16  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Motore di stampa FOP nel servizio (#37).
+	Nuove proprieta' stampe.motore.avviso-semplice e stampe.motore.avviso-postale
+	(jasper di default, oppure fop): con fop gli avvisi a rata unica, con e senza
+	bollettino postale, sono stampati con Apache FOP, gli altri layout restano
+	su JasperReports. Il motore riceve direttamente gli oggetti JAXB, senza XML
+	serializzato; configurazione, font e fogli XSLT sono letti una sola volta
+	dal classpath e funzionano anche dal jar eseguibile.
+
+2026-10-15  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso a rata unica con bollettino postale nel prototipo FOP (#37).
+	Nuovo layout RataUnicaPostale generato dal sorgente Jasper, con il DataMatrix
+	di Poste prodotto da zxing (stesso contenuto e dimensione di barcode4j) e i
+	bordi dei riquadri disegnati nella stessa posizione di Jasper. Verifica estesa
+	alla lettura del DataMatrix; accettati tutti i casi di riferimento.
+
+	* [Stampe] Posizione di testo e immagini come in Jasper nel prototipo FOP (#37).
+	Interlinea e posizione verticale del testo seguono un modello di Jasper e di
+	FOP misurato su report di taratura: in Jasper l'interlinea fissa dipende dal
+	numero di righe, e centrato e allineamento in basso usano l'altezza naturale
+	del font. Disattivati in FOP kerning ed elaborazione OpenType, che Jasper non
+	usa. Immagini SVG con tutto il riquadro come area di disegno, raster allineate
+	secondo hAlign/vAlign.
+	La posizione del testo e' tarata sull'inchiostro e non sulle caselle di
+	pdftotext, che dipendono da come ogni PDF descrive il font. Le immagini raster
+	sono posizionate come in Jasper, con lo spazio libero troncato a punti
+	interi: il renderer aggiunge all'XML le dimensioni in pixel dei loghi.
+	Aggiunto script/fop/verifica_pdf.py con i criteri di accettazione dei layout
+	migrati: testo e a capo, inchiostro per riga entro 0,25 pt, confronto raster
+	con tolleranza di 1 pixel, immagini entro 1 pt, QR letto.
+
 2026-10-14  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Prototipo di generazione degli avvisi con Apache FOP (#37).
+	Aggiunta la dipendenza org.apache.xmlgraphics:fop-core 2.11 (Apache 2.0),
+	allineata a batik 1.19 e xmlgraphics-commons 2.11 gia' presenti; escluso
+	xml-apis come per batik-dom. Il nuovo package it.govpay.stampe.fop genera il
+	PDF di un avviso dallo stesso XML oggi passato a Jasper: QR code calcolato con
+	zxing come nei template Jasper e passato al layout come SVG, fogli XSLT e
+	configurazione di FOP letti una sola volta. Il renderer non e' ancora
+	collegato ai servizi: gli avvisi continuano a essere generati con Jasper.
+	Migrato il solo layout della pagina singola dell'avviso semplice
+	(RataUnica), generato dal sorgente .jrxml con script/fop/jrxml2fo.py e
+	completato con le parti in script/fop/personalizzazioni/.
+	Gli a capo dei testi fissi sono calcolati come in Jasper (LineBreakMeasurer
+	con gli stessi font, script/fop/SpezzaRighe.java) e scritti esplicitamente:
+	FOP bilancerebbe le righe del paragrafo e andrebbe a capo in punti diversi.
+	Il grassetto su TitilliumWeb-Bold, che Jasper simula con un contorno, in FOP
+	resta sullo stesso font: meno marcato, ma nella stessa posizione.
 
 	* [Docker] Rimosso container/Dockerfile (base rockylinux:9.3.20231119).
 	Immagine non costruita dalla pipeline ne' distribuita: quelle pubblicate
@@ -7,6 +165,25 @@
 	Tenerlo avrebbe significato una seconda immagine da mantenere e da
 	includere nella scansione delle vulnerabilita' (issue #40), con una base
 	ferma al 2023.
+
+2026-10-13  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Sorgenti dei template JasperReports (#37).
+	Aggiunta la cartella src/main/jasper con i sorgenti .jrxml dei 28 template
+	usati a runtime, finora presenti solo come .jasper compilati. I 21 template
+	non bilingui sono i sorgenti originali; i 7 bilingui V2 sono ricostruiti dai
+	compilati con JRXmlWriter, perche' nell'archivio non c'e' un sorgente
+	corrispondente alla versione in produzione. Compilati con JasperReports
+	6.21.5, tutti producono report equivalenti ai .jasper in produzione. La
+	cartella non e' inclusa nel jar; il README ne riporta provenienza e
+	struttura dei sottoreport.
+
+	* [Stampe] Rimossi i template non usati (#37).
+	MonoBand.jasper, TriBand.jasper e TriBandV2.jasper non sono richiamati da
+	nessun template in uso; i 4 file in violazioneCDS/ duplicavano quelli nella
+	radice delle risorse e non erano caricati. AvvisoBilingueService passava
+	TriBandV2 come parametro, ignorato da AvvisoPagamentoV2: rimossi il campo,
+	il parametro e la costante TRIBAND_TEMPLATE_JASPER_V2.
 
 2026-09-24  Giuliano Pintori <pintori@link.it>
 

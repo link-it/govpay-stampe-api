@@ -1,3 +1,10 @@
+2026-11-05  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Grigio della seconda lingua nell'avviso bilingue (#46).
+	I testi della seconda lingua sono in #7C7C7B (K 50%), il grigio
+	indicato dalla specifica pagoPA 3.5, al posto di #999999. Impaginazione
+	invariata: cambia solo il colore.
+
 2026-11-04  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Swagger UI 5.34.1 (#51).

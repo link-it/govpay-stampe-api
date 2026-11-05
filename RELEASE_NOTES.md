@@ -21,6 +21,11 @@ Rilascio del 2026-07-15.
   dipendenze collegate. FOP usa PDFBox per i font: `fontbox` e `pdfbox-io` sono
   forzati alla 3.0.8.
 
+### 📝 Testi e grafica della specifica pagoPA 3.5
+
+- Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
+  grigio della specifica, al posto di `#999999` (issue #46).
+
 ### 🔒 Sicurezza
 
 - Rimossa la suppression OWASP di **CVE-2026-6009** (JasperReports): la libreria

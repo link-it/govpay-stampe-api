@@ -68,6 +68,19 @@ class PagamentoSitoEnteTest {
 	}
 
 	@Test
+	void avvisoPagabileDalSitoSenzaNomeEnte() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeFull();
+		avviso.getCreditor().setBusinessName(" ");
+		avviso.getCreditor().setPayOnWebsite(true);
+		assertNull(delTuoEnte(avviso));
+	}
+
+	@Test
+	void senzaEnteCreditore() {
+		assertNull(this.avvisoPagamentoMapper.mapDelTuoEnte(null));
+	}
+
+	@Test
 	void violazionePagabileDalSito() {
 		CdsViolation violazione = this.avvisiPagamentoFactory.creaCdsViolation();
 		violazione.getCreditor().setBusinessName("Comune di Test");

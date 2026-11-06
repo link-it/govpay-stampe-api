@@ -1,3 +1,40 @@
+2026-11-06  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] "oppure sul sito di <nome ente>" nei canali digitali (#47).
+	Nuovo campo opzionale creditor.pay_on_website (default false), per
+	avvisi e violazioni CdS: se true la sezione "Paga con l'app IO" riporta
+	"oppure sul sito di <business_name>, dal tuo Home Banking, ...",
+	altrimenti "oppure dal tuo Home Banking, ...", come nella specifica
+	pagoPA 3.5. Prima la frase compariva, con "del tuo Ente Creditore",
+	solo negli avvisi postali; senza sito mancava "oppure". Template
+	canali-digitali in comune.xsl: se con il nome dell'ente il testo
+	supererebbe 3 righe, stampa la variante senza sito.
+
+	* [Stampe] Disclaimer sull'importo nella violazione CdS (#45).
+	Come nel modello 3.5, il disclaimer con l'icona informazioni sta sopra
+	"Come si calcolano le scadenze?". "Cosa succede in caso di giacenza?"
+	usa il testo breve del modello (2 righe invece di 4); le rate scendono
+	di 13 pt ($spazio-disclaimer in Sanzione). Codici invariati: 25 mm,
+	5 mm di bianco.
+
+2026-11-05  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Disclaimer sull'importo della specifica pagoPA 3.5 (#45).
+	Il testo di default diventa "In fase di pagamento l'importo potrebbe
+	subire aumenti (per sanzioni, interessi, costi di notifica o altri
+	fattori) o riduzioni (per sgravi o note di credito).", a capo come nel
+	modello 3.5, negli avvisi semplici e postali (RataUnica,
+	RataUnicaPostale, DoppiaRata, TriplaRata). Nel bilingue nota_importo
+	ha i testi ufficiali in italiano, tedesco e sloveno; con le rate la
+	nota ha 6 righe invece di 5 (RataUnicaV2), altrimenti la traduzione
+	veniva troncata. L'informativa personalizzata (informativa_importo)
+	resta invariata.
+
+	* [Stampe] Grigio della seconda lingua nell'avviso bilingue (#46).
+	I testi della seconda lingua sono in #7C7C7B (K 50%), il grigio
+	indicato dalla specifica pagoPA 3.5, al posto di #999999. Impaginazione
+	invariata: cambia solo il colore.
+
 2026-11-04  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Swagger UI 5.34.1 (#51).

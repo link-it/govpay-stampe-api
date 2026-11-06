@@ -88,7 +88,7 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 	@Mapping(target = "indirizzoDestinatario1", source="cdsViolation.debtor.addressLine1")
 	@Mapping(target = "indirizzoDestinatario2", source="cdsViolation.debtor.addressLine2")
 	@Mapping(target = "diPoste", source="cdsViolation.postal", qualifiedByName = "mapPostale")
-	@Mapping(target = "delTuoEnte", source="cdsViolation.postal", qualifiedByName = "mapDelTuoEnte")
+	@Mapping(target = "delTuoEnte", source="cdsViolation.creditor", qualifiedByName = "mapDelTuoEnte")
 	public AvvisoPagamentoInput toViolazioneAvvisoPagamentoInputBase(CdsViolation cdsViolation);
 
 

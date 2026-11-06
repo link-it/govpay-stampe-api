@@ -377,7 +377,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	@Mapping(target = "indirizzoDestinatario1", source="paymentNotice.debtor.addressLine1")
 	@Mapping(target = "indirizzoDestinatario2", source="paymentNotice.debtor.addressLine2")
 	@Mapping(target = "diPoste", source="paymentNotice.postal", qualifiedByName = "mapPostale")
-	@Mapping(target = "delTuoEnte", source="paymentNotice.postal", qualifiedByName = "mapDelTuoEnte")
+	@Mapping(target = "delTuoEnte", source="paymentNotice.creditor", qualifiedByName = "mapDelTuoEnte")
 	public AvvisoPagamentoInput toPaymentNoticeAvvisoPagamentoInput(PaymentNotice paymentNotice);
 
 	@Mapping(target = "importo", source="amount")

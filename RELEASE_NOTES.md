@@ -21,6 +21,26 @@ Rilascio del 2026-07-15.
   dipendenze collegate. FOP usa PDFBox per i font: `fontbox` e `pdfbox-io` sono
   forzati alla 3.0.8.
 
+### 📝 Testi e grafica della specifica pagoPA 3.5
+
+- Disclaimer sull'importo con il testo della specifica 3.5: "In fase di
+  pagamento l'importo potrebbe subire aumenti (per sanzioni, interessi, costi
+  di notifica o altri fattori) o riduzioni (per sgravi o note di credito)."
+  Nel bilingue, traduzioni ufficiali in tedesco e sloveno. Il testo
+  personalizzato con `informativa_importo` resta invariato (issue #45).
+- Violazione del codice della strada: disclaimer sull'importo sopra le
+  scadenze, come nel modello 3.5; il testo sulla giacenza è quello breve del
+  modello (issue #45).
+- Canali digitali ("Paga con l'app IO"): nuovo campo opzionale
+  `creditor.pay_on_website` (default `false`). Se `true` la stampa riporta
+  "oppure sul sito di <business_name>, dal tuo Home Banking, ...", altrimenti
+  "oppure dal tuo Home Banking, ...", come nella specifica 3.5 (issue #47).
+  **Cambia il comportamento degli avvisi postali**, che finora riportavano
+  sempre "oppure sul sito del tuo Ente Creditore": senza `pay_on_website` la
+  frase sul sito non compare più.
+- Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
+  grigio della specifica, al posto di `#999999` (issue #46).
+
 ### 🔒 Sicurezza
 
 - Rimossa la suppression OWASP di **CVE-2026-6009** (JasperReports): la libreria

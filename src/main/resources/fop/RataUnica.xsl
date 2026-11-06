@@ -306,7 +306,7 @@
 		<!-- informativa sull'importo: testo di default se non personalizzata, altrimenti quella indicata -->
 		<xsl:if test="not(/AvvisoPagamentoInput/nascondi_informativa_importo_avviso = 'true') and not(normalize-space(/AvvisoPagamentoInput/informativa_importo_avviso))">
 			<fo:block-container absolute-position="absolute" left="54pt" top="{351 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="232pt" height="32pt">
-				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">In fase di pagamento, se previsto dall’ente, l'importo potrebbe essere <fo:block/>aggiornato automaticamente e subire variazioni in diminuzione<fo:block/>(per sgravi, note di credito) o in aumento (per sanzioni, interessi, ecc.).</fo:block>
+				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">In fase di pagamento l’importo potrebbe subire aumenti (per <fo:block/>sanzioni, interessi, costi di notifica o altri fattori) o riduzioni (per <fo:block/>sgravi o note di credito).</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="299pt" top="{349 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="213pt" height="20pt">
@@ -328,9 +328,9 @@
 		<fo:block-container absolute-position="absolute" left="401pt" top="{547 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="174pt" height="14pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" text-align="end" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. Fiscale Ente</fo:block>
 		</fo:block-container>
-		<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
+		<!-- canali digitali: "oppure sul sito di <ente>, " se l'avviso si paga dal sito dell'ente (template canali-digitali) -->
 		<fo:block-container absolute-position="absolute" left="299pt" top="{308 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="213pt" height="41pt">
-			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.636pt" padding-top="1.77pt"><xsl:if test="normalize-space(/AvvisoPagamentoInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /AvvisoPagamentoInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</fo:block>
+			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.636pt" padding-top="1.77pt"><xsl:call-template name="canali-digitali"><xsl:with-param name="del-tuo-ente" select="/AvvisoPagamentoInput/del_tuo_ente"/><xsl:with-param name="corpo" select="8"/><xsl:with-param name="larghezza" select="205"/></xsl:call-template></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="299pt" top="{368 + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="213pt" height="37pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">presso Banche e Sportelli ATM, negli Uffici Postali e Punti <fo:block/>Postali, nei Bar, Edicole, Ricevitorie, Supermercati, <fo:block/>Tabaccherie e altri Esercenti Convenzionati.</fo:block>

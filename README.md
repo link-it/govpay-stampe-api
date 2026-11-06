@@ -371,6 +371,7 @@ Per gli avvisi con bollettino postale si imposta `postal=true` e si indicano i d
 #### Altri campi dell'avviso standard
 
 - `informativa_importo`: sostituisce il testo standard della nota sull'importo; con stringa vuota la nota viene omessa. Per gli avvisi bilingue la traduzione va in `second_language.informativa_importo`.
+- `creditor.pay_on_website`: se `true`, l'avviso si può pagare anche dal sito dell'ente, e nella sezione "Dove pagare" la stampa riporta "oppure sul sito di <business_name>, ...". Il default è `false`: "oppure dal tuo Home Banking, ...". Vale anche per la violazione del Codice della Strada.
 - `reduced_payments`: importi in forma ridotta legati a una soglia temporale (`threshold_type` `ENTRO` o `OLTRE`, `threshold_days`), oltre ai campi di `full`.
 
 ### Violazione del Codice della Strada

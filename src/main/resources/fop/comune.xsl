@@ -69,6 +69,24 @@
 		Un logo arriva come URI data: completo oppure come solo contenuto base64:
 		nel secondo caso si assume PNG, come fa il template Jasper che decodifica la parte dopo la virgola.
 	-->
+	<!-- Canali digitali di "Paga con l'app IO" (specifica pagoPA 3.5, "Dove pagare", #47): "oppure sul sito di <ente>, ..." se
+	     l'avviso si paga anche dal sito dell'ente (del_tuo_ente = "di <nome dell'ente>"), altrimenti "oppure dal tuo Home Banking, ...".
+	     Se con il nome dell'ente il testo supera maxRighe nel riquadro (solo con nomi lunghi e di caratteri larghi), si stampa la
+	     variante senza sito: il testo resta quello della specifica e non invade il titolo sotto. -->
+	<xsl:template name="canali-digitali">
+		<xsl:param name="del-tuo-ente"/>
+		<xsl:param name="corpo"/>
+		<xsl:param name="larghezza"/>
+		<xsl:param name="maxRighe" select="3"/>
+		<xsl:variable name="altri-canali" select="'dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.'"/>
+		<xsl:variable name="con-sito" select="concat('oppure sul sito ', normalize-space($del-tuo-ente), ', ', $altri-canali)"/>
+		<xsl:variable name="righe" select="string(tj:righe($con-sito, 'TitilliumWeb', false(), false(), number($corpo), number($larghezza), 0, false()))"/>
+		<xsl:choose>
+			<xsl:when test="normalize-space($del-tuo-ente) and string-length($righe) - string-length(translate($righe, '&#10;', '')) &lt; $maxRighe"><xsl:value-of select="$con-sito"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="concat('oppure ', $altri-canali)"/></xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
 	<xsl:template name="data-uri">
 		<xsl:param name="valore"/>
 		<xsl:variable name="v" select="normalize-space($valore)"/>

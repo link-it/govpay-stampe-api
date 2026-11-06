@@ -503,9 +503,9 @@
 		<fo:block-container absolute-position="absolute" left="401pt" top="{547 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="174pt" height="14pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" text-align="end" line-height="12.168pt" padding-top="1.004pt" wrap-option="no-wrap">Cod. Fiscale Ente</fo:block>
 		</fo:block-container>
-		<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
+		<!-- canali digitali: "oppure sul sito di <ente>, " se l'avviso si paga dal sito dell'ente (template canali-digitali) -->
 		<fo:block-container absolute-position="absolute" left="299pt" top="{300 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="213pt" height="32pt">
-			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.636pt" padding-top="1.77pt"><xsl:if test="normalize-space(/AvvisoPagamentoInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /AvvisoPagamentoInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</fo:block>
+			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.636pt" padding-top="1.77pt"><xsl:call-template name="canali-digitali"><xsl:with-param name="del-tuo-ente" select="/AvvisoPagamentoInput/del_tuo_ente"/><xsl:with-param name="corpo" select="8"/><xsl:with-param name="larghezza" select="205"/></xsl:call-template></fo:block>
 		</fo:block-container>
 		<xsl:if test="normalize-space(/AvvisoPagamentoInput/di_poste)">
 			<fo:block-container absolute-position="absolute" left="20pt" top="{783 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="137pt" height="12pt">

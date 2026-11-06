@@ -17,7 +17,6 @@ public class Costanti {
 
 	public static final String AVVISO_PAGAMENTO_V2_DIR = "/avvisoPagamentoV2";
 
-	public static final String DEL_TUO_ENTE_CREDITORE = "del tuo Ente Creditore";
 	public static final String DI_POSTE = "di Poste Italiane";
 
 	public static final String FILLER_DATAMATRIX = "            ";

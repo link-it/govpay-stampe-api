@@ -395,9 +395,9 @@
 				<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="20pt" height="20pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="20pt" content-height="20pt" scaling="uniform" src="url(classpath:/fop/icone/informazioni.svg)"/></fo:block></fo:block-container></fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
+		<!-- canali digitali: "oppure sul sito di <ente>, " se l'avviso si paga dal sito dell'ente (template canali-digitali) -->
 		<fo:block-container absolute-position="absolute" left="299pt" top="{300 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="213pt" height="32pt">
-			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.636pt" padding-top="1.77pt"><xsl:if test="normalize-space(/AvvisoPagamentoInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /AvvisoPagamentoInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</fo:block>
+			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.636pt" padding-top="1.77pt"><xsl:call-template name="canali-digitali"><xsl:with-param name="del-tuo-ente" select="/AvvisoPagamentoInput/del_tuo_ente"/><xsl:with-param name="corpo" select="8"/><xsl:with-param name="larghezza" select="205"/></xsl:call-template></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="299pt" top="{354 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="213pt" height="33pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">presso Banche e Sportelli ATM, negli Uffici Postali e Punti <fo:block/>Postali, nei Bar, Edicole, Ricevitorie, Supermercati, <fo:block/>Tabaccherie e altri Esercenti Convenzionati.</fo:block>

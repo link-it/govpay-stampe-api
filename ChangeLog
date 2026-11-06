@@ -1,5 +1,15 @@
 2026-11-06  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] "oppure sul sito di <nome ente>" nei canali digitali (#47).
+	Nuovo campo opzionale creditor.pay_on_website (default false), per
+	avvisi e violazioni CdS: se true la sezione "Paga con l'app IO" riporta
+	"oppure sul sito di <business_name>, dal tuo Home Banking, ...",
+	altrimenti "oppure dal tuo Home Banking, ...", come nella specifica
+	pagoPA 3.5. Prima la frase compariva, con "del tuo Ente Creditore",
+	solo negli avvisi postali; senza sito mancava "oppure". Template
+	canali-digitali in comune.xsl: se con il nome dell'ente il testo
+	supererebbe 3 righe, stampa la variante senza sito.
+
 	* [Stampe] Disclaimer sull'importo nella violazione CdS (#45).
 	Come nel modello 3.5, il disclaimer con l'icona informazioni sta sopra
 	"Come si calcolano le scadenze?". "Cosa succede in caso di giacenza?"

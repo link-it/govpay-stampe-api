@@ -31,6 +31,13 @@ Rilascio del 2026-07-15.
 - Violazione del codice della strada: disclaimer sull'importo sopra le
   scadenze, come nel modello 3.5; il testo sulla giacenza è quello breve del
   modello (issue #45).
+- Canali digitali ("Paga con l'app IO"): nuovo campo opzionale
+  `creditor.pay_on_website` (default `false`). Se `true` la stampa riporta
+  "oppure sul sito di <business_name>, dal tuo Home Banking, ...", altrimenti
+  "oppure dal tuo Home Banking, ...", come nella specifica 3.5 (issue #47).
+  **Cambia il comportamento degli avvisi postali**, che finora riportavano
+  sempre "oppure sul sito del tuo Ente Creditore": senza `pay_on_website` la
+  frase sul sito non compare più.
 - Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
   grigio della specifica, al posto di `#999999` (issue #46).
 

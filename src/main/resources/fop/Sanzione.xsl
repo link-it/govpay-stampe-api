@@ -310,9 +310,9 @@
 			<fo:block font-family="TitilliumWeb-Bold" font-size="10pt" start-indent="8pt" end-indent="20pt" line-height="15.21pt" padding-top="2.65pt" wrap-option="no-wrap">DOVE PAGARE?</fo:block>
 		</fo:block-container>
 		<xsl:call-template name="intestazione-pagopa"/>
-		<!-- "oppure sul sito <del_tuo_ente>, " solo se valorizzato -->
+		<!-- canali digitali: "oppure sul sito di <ente>, " se l'avviso si paga dal sito dell'ente (template canali-digitali) -->
 		<fo:block-container absolute-position="absolute" left="298pt" top="{271 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="235pt" height="44pt">
-			<fo:block font-family="TitilliumWeb" font-size="9pt" start-indent="8pt" line-height="11.591pt" padding-top="2.179pt"><xsl:if test="normalize-space(/ViolazioneInput/del_tuo_ente)"><xsl:value-of select="concat('oppure sul sito ', /ViolazioneInput/del_tuo_ente, ', ')"/></xsl:if>dal tuo Home Banking, con la tua app di pagamento o con gli altri canali abilitati.</fo:block>
+			<fo:block font-family="TitilliumWeb" font-size="9pt" start-indent="8pt" line-height="11.591pt" padding-top="2.179pt"><xsl:call-template name="canali-digitali"><xsl:with-param name="del-tuo-ente" select="/ViolazioneInput/del_tuo_ente"/><xsl:with-param name="corpo" select="9"/><xsl:with-param name="larghezza" select="227"/></xsl:call-template></fo:block>
 		</fo:block-container>
 		<fo:block-container absolute-position="absolute" left="20pt" top="{413 - $senza-ente-creditore-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-destinatario-e-affiancati + $allungamento-ente-creditore-e-affiancati}pt" width="11pt" height="11pt">
 			<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="11pt" height="11pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="11pt" content-height="11pt" scaling="uniform" src="url(classpath:/fop/icone/nota.svg)"/></fo:block></fo:block-container></fo:block>

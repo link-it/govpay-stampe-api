@@ -75,8 +75,8 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 	}
 
 
-	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
-	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapLogo")
+	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapFirstLogo")
+	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapSecondLogo")
 	@Mapping(target = "oggettoDelPagamento", source="title")
 	@Mapping(target = "cfEnte", source="cdsViolation.creditor.fiscalCode")
 	@Mapping(target = "enteCreditore", source="cdsViolation.creditor.businessName")

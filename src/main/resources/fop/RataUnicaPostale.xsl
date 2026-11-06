@@ -481,7 +481,7 @@
 		<!-- informativa sull'importo: testo di default se non personalizzata, altrimenti quella indicata -->
 		<xsl:if test="not(/AvvisoPagamentoInput/nascondi_informativa_importo_avviso = 'true') and not(normalize-space(/AvvisoPagamentoInput/informativa_importo_avviso))">
 			<fo:block-container absolute-position="absolute" left="50pt" top="{363 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="244pt" height="32pt">
-				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">In fase di pagamento, se previsto dall’ente, l'importo potrebbe essere <fo:block/>aggiornato automaticamente e subire variazioni in diminuzione<fo:block/>(per sgravi, note di credito) o in aumento (per sanzioni, interessi, ecc.).</fo:block>
+				<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="0pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">In fase di pagamento l’importo potrebbe subire aumenti (per sanzioni, <fo:block/>interessi, costi di notifica o altri fattori) o riduzioni (per sgravi o note di <fo:block/>credito).</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<fo:block-container absolute-position="absolute" left="299pt" top="{335 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="213pt" height="20pt">

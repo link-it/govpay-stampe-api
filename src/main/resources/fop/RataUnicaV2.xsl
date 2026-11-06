@@ -988,8 +988,9 @@
 				<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="16pt" height="16pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="16pt" content-height="16pt" scaling="uniform" src="url(classpath:/fop/icone/informazioni-bilingue.svg)"/></fo:block></fo:block-container></fo:block>
 			</fo:block-container>
 		</xsl:if>
+		<!-- nota sull'importo con le rate: 6 righe, 3 per il disclaimer della specifica 3.5 e 3 per la traduzione; il blocco di nota_3 qui sotto non e' mai valorizzato dal mapper -->
 		<xsl:if test="(normalize-space(/AvvisoPagamentoInput/etichette/italiano/nota_1)) and (normalize-space(/AvvisoPagamentoInput/etichette/italiano/nota_2))">
-			<fo:block-container absolute-position="absolute" left="43pt" top="{331 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="250pt" height="65pt">
+			<fo:block-container absolute-position="absolute" left="43pt" top="{331 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="250pt" height="78pt">
 				<fo:block font-family="TitilliumWeb" font-size="9pt" linefeed-treatment="preserve" wrap-option="no-wrap">
 					<xsl:call-template name="testo-a-capo">
 						<xsl:with-param name="testo"><xsl:choose><xsl:when test="/AvvisoPagamentoInput/etichette/italiano/nota_2"><xsl:value-of select="/AvvisoPagamentoInput/etichette/italiano/nota_2"/></xsl:when><xsl:otherwise>null</xsl:otherwise></xsl:choose><xsl:text>&lt;br&gt;</xsl:text><xsl:choose><xsl:when test="not(normalize-space(/AvvisoPagamentoInput/etichette/traduzione/nota_2))"></xsl:when><xsl:otherwise><xsl:text>&lt;span style="color: #7C7C7B;"&gt;</xsl:text><xsl:choose><xsl:when test="/AvvisoPagamentoInput/etichette/traduzione/nota_2"><xsl:value-of select="/AvvisoPagamentoInput/etichette/traduzione/nota_2"/></xsl:when><xsl:otherwise>null</xsl:otherwise></xsl:choose><xsl:text>&lt;/span&gt;</xsl:text></xsl:otherwise></xsl:choose></xsl:with-param>
@@ -998,8 +999,8 @@
 						<xsl:with-param name="corpo" select="9"/>
 						<xsl:with-param name="interlinea" select="7"/>
 						<xsl:with-param name="larghezza" select="250"/>
-						<xsl:with-param name="altezza" select="65"/>
-						<xsl:with-param name="maxRighe" select="5"/>
+						<xsl:with-param name="altezza" select="78"/>
+						<xsl:with-param name="maxRighe" select="6"/>
 					</xsl:call-template>
 				</fo:block>
 			</fo:block-container>

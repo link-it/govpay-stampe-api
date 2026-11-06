@@ -285,6 +285,11 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 		RataAvviso rata = instalmentToRata(versamento);
 		rata.setImporto(calcolaImportoTotale(instalments));
+		// come nella pagina principale con un numero dispari di rate: senza, l'intestazione dei dati per il
+		// pagamento stampava "null" (#55)
+		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		if(labelLinguaSecondaria != null)
+			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 
 		pagina.setRata(rata);
 
@@ -559,13 +564,16 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 
 		if(rata.getNumeroRata() != null) {
-			rata.setNumeroRata(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NUMERO_RATA, rata.getNumeroRata()));
+			// il numero della rata, prima di sostituirlo con l'etichetta ("Rata 2"): le altre etichette
+			// e la traduzione lo usano come parametro, altrimenti stampano "Obrok Rata 2" (#55)
+			String numero = rata.getNumeroRata();
+			rata.setNumeroRata(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NUMERO_RATA, numero));
 			if(labelLinguaSecondaria != null)
-				rata.setNumeroRataTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NUMERO_RATA, rata.getNumeroRata()));
+				rata.setNumeroRataTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NUMERO_RATA, numero));
 
-			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, rata.getNumeroRata()));
+			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, numero));
 			if(labelLinguaSecondaria != null)
-				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, rata.getNumeroRata()));
+				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, numero));
 
 			rata.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 			if(labelLinguaSecondaria != null)

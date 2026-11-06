@@ -1,5 +1,13 @@
 2026-11-06  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] Etichette delle rate nell'avviso bilingue (#55).
+	Con un numero pari di rate la pagina principale stampava "null" nella
+	scadenza dei dati per il pagamento: ora "Rata 1 entro il", come con un
+	numero dispari. Il numero di rata tradotto usava l'etichetta italiana
+	("Obrok Rata 2", "Rata Rata 2 entro il"): ora "Obrok 2", "Rata 2 entro
+	il". Nei layout V2 i valori di riserva "null" ereditati da Jasper sono
+	vuoti.
+
 	* [Stampe] "oppure sul sito di <nome ente>" nei canali digitali (#47).
 	Nuovo campo opzionale creditor.pay_on_website (default false), per
 	avvisi e violazioni CdS: se true la sezione "Paga con l'app IO" riporta

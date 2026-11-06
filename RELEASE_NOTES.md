@@ -28,6 +28,9 @@ Rilascio del 2026-07-15.
   di notifica o altri fattori) o riduzioni (per sgravi o note di credito)."
   Nel bilingue, traduzioni ufficiali in tedesco e sloveno. Il testo
   personalizzato con `informativa_importo` resta invariato (issue #45).
+- Violazione del codice della strada: disclaimer sull'importo sopra le
+  scadenze, come nel modello 3.5; il testo sulla giacenza è quello breve del
+  modello (issue #45).
 - Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
   grigio della specifica, al posto di `#999999` (issue #46).
 

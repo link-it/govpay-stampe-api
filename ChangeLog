@@ -1,3 +1,12 @@
+2026-11-06  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Disclaimer sull'importo nella violazione CdS (#45).
+	Come nel modello 3.5, il disclaimer con l'icona informazioni sta sopra
+	"Come si calcolano le scadenze?". "Cosa succede in caso di giacenza?"
+	usa il testo breve del modello (2 righe invece di 4); le rate scendono
+	di 13 pt ($spazio-disclaimer in Sanzione). Codici invariati: 25 mm,
+	5 mm di bianco.
+
 2026-11-05  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Disclaimer sull'importo della specifica pagoPA 3.5 (#45).

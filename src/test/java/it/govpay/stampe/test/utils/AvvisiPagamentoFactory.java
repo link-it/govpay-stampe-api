@@ -2,6 +2,7 @@ package it.govpay.stampe.test.utils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 
@@ -34,6 +35,11 @@ public class AvvisiPagamentoFactory {
 	
 	@Value("${stampe.logoEnte}")
 	String logoEnte;
+
+	/** Byte dell'immagine di un logo indicato come URI data, come li manda il client (campi format: binary, issue #38). */
+	public static ByteArrayResource immagine(String dataUri) {
+		return new ByteArrayResource(Base64.getDecoder().decode(dataUri.substring(dataUri.indexOf(',') + 1)));
+	}
 
 	public static String extractFilename(String headerValue) {
         String[] parts = headerValue.split("; ");
@@ -282,8 +288,8 @@ public class AvvisiPagamentoFactory {
 	 */
 	public Receipt creaReceipt(ReceiptVersion versione, ReceiptStatus stato, int voci, boolean testiLunghi) {
 		Receipt r = new Receipt();
-		r.setCreditorLogo(this.logoEnte);
-		r.setPagopaLogo(this.logoEnte);
+		r.setCreditorLogo(immagine(this.logoEnte));
+		r.setPagopaLogo(immagine(this.logoEnte));
 		ReceiptOrganization ente = new ReceiptOrganization();
 		ente.setFiscalCode("01234567890");
 		ente.setBusinessName(testiLunghi ? "UNIONE DEI COMUNI DELLA VALLE DEL FIUME E DELLE COLLINE CIRCOSTANTI" : "Comune di Test");

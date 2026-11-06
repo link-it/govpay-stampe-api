@@ -505,8 +505,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		risolviEImpostaNotaImporto(paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, rataUnica != null);
 	}
 
-	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
-	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapLogo")
+	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapFirstLogo")
+	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapSecondLogo")
 	@Mapping(target = "cfEnte", source="paymentNotice.creditor.fiscalCode")
 	@Mapping(target = "enteCreditore", source="paymentNotice.creditor.businessName")
 	@Mapping(target = "settoreEnte", source="paymentNotice.creditor.departmentName")

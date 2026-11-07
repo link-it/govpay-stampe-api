@@ -1,5 +1,13 @@
 2026-11-07  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] Loghi come byte dell'immagine (#38).
+	I loghi di avviso e ricevuta sono campi binari con i byte
+	dell'immagine; il tipo (PNG, JPEG, GIF, SVG) e' riconosciuto dal
+	contenuto (LogoUtils) e un contenuto diverso risponde 400. Ricevuta:
+	creditor_logo e pagopa_logo passano da stringa con la URI data a
+	format: binary (modifica incompatibile). Avviso: accettata anche la
+	URI data codificata in base64, usata finora dai client.
+
 	* [Stampe] Bilingue a rate pari: importo della rata 1 nella banda di
 	pagamento (#59).
 	La pagina principale stampava il totale del piano rateale accanto a QR

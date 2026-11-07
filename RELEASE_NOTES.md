@@ -21,6 +21,18 @@ Rilascio del 2026-07-15.
   dipendenze collegate. FOP usa PDFBox per i font: `fontbox` e `pdfbox-io` sono
   forzati alla 3.0.8.
 
+### ⚠️ Loghi come byte dell'immagine (modifica incompatibile)
+
+- I loghi di avviso e ricevuta sono campi binari: il JSON porta il base64 dei byte
+  dell'immagine (PNG, JPEG, GIF o SVG), e il servizio ne riconosce il tipo dal
+  contenuto. Un logo che non è una di queste immagini risponde `400` (issue #38).
+- **Ricevuta:** `creditor_logo` e `pagopa_logo` passano da stringa con la URI data
+  (`data:image/png;base64,...`) a `format: binary`. I client devono mandare il
+  base64 dell'immagine senza il prefisso `data:`: la forma precedente risponde
+  `400`.
+- **Avviso:** `first_logo` e `second_logo` accettano i byte dell'immagine e, per
+  compatibilità, anche la forma usata finora (la URI data codificata in base64).
+
 ### 📝 Testi e grafica della specifica pagoPA 3.5
 
 - Disclaimer sull'importo con il testo della specifica 3.5: "In fase di

@@ -37,6 +37,7 @@ import it.govpay.stampe.beans.ReceiptStatus;
 import it.govpay.stampe.beans.ReceiptVersion;
 import it.govpay.stampe.test.costanti.Costanti;
 import it.govpay.stampe.test.serializer.ObjectMapperUtils;
+import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -785,8 +786,8 @@ class UC_7_RicevutaFailTest {
 		Receipt receipt = new Receipt();
 
 		// Loghi
-		receipt.setCreditorLogo(this.logoEnte);
-		receipt.setPagopaLogo(this.logoEnte);
+		receipt.setCreditorLogo(AvvisiPagamentoFactory.immagine(this.logoEnte));
+		receipt.setPagopaLogo(AvvisiPagamentoFactory.immagine(this.logoEnte));
 
 		// Dati ente (organization)
 		ReceiptOrganization organization = new ReceiptOrganization();

@@ -54,5 +54,38 @@
 				</font>
 			</fonts>
 		</renderer>
+		<!--
+			Area tree (MIME_FOP_AREA_TREE), usata da RegressioneLayoutTest per confrontare le pagine: stessi font del
+			PDF, altrimenti FOP impagina con il font di riserva (#61). L'elenco va tenuto uguale a quello qui sopra.
+		-->
+		<renderer mime="application/X-fop-areatree">
+			<fonts>
+				<font embed-url="classpath:/fonts/TitilliumWeb-Regular.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="normal" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-SemiBold.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="normal" weight="bold"/></font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-Italic.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="italic" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-SemiBoldItalic.ttf" kerning="no"><font-triplet name="TitilliumWeb" style="italic" weight="bold"/></font>
+
+				<font embed-url="classpath:/fonts/TitilliumWeb-Bold.ttf" kerning="no">
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="normal"/>
+					<font-triplet name="TitilliumWeb-Bold" style="normal" weight="bold"/>
+				</font>
+				<font embed-url="classpath:/fonts/TitilliumWeb-Black.ttf" kerning="no">
+					<font-triplet name="TitilliumWeb-Black" style="normal" weight="normal"/>
+					<font-triplet name="TitilliumWeb-Black" style="normal" weight="bold"/>
+				</font>
+
+				<font embed-url="classpath:/fonts/RobotoMono-Regular.ttf" kerning="no"><font-triplet name="RobotoMono" style="normal" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/RobotoMono-Bold.ttf" kerning="no"><font-triplet name="RobotoMono" style="normal" weight="bold"/></font>
+				<font embed-url="classpath:/fonts/RobotoMono-Italic.ttf" kerning="no"><font-triplet name="RobotoMono" style="italic" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/RobotoMono-BoldItalic.ttf" kerning="no"><font-triplet name="RobotoMono" style="italic" weight="bold"/></font>
+
+				<font embed-url="classpath:/fonts/Roboto-Regular.ttf" kerning="no"><font-triplet name="Roboto" style="normal" weight="normal"/></font>
+				<font embed-url="classpath:/fonts/Roboto-Bold.ttf" kerning="no">
+					<font-triplet name="Roboto" style="normal" weight="bold"/>
+					<font-triplet name="Roboto-Bold" style="normal" weight="normal"/>
+					<font-triplet name="Roboto-Bold" style="normal" weight="bold"/>
+				</font>
+			</fonts>
+		</renderer>
 	</renderers>
 </fop>

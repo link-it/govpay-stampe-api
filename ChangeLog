@@ -1,3 +1,14 @@
+2026-11-07  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Bilingue a rate pari: importo della rata 1 nella banda di
+	pagamento (#59).
+	La pagina principale stampava il totale del piano rateale accanto a QR
+	code e codice avviso della rata 1, e con il bollettino un bollettino
+	senza conto ne' DataMatrix. Ora la rata della pagina principale e' la
+	rata 1, completa come le altre: banda e bollettino ne riportano
+	l'importo, coerente con QR code e DataMatrix. Il totale resta in
+	"Quanto e quando pagare" (nuovo campo importo_totale del modello v2).
+
 2026-11-06  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Etichette delle rate nell'avviso bilingue (#55).

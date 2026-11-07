@@ -264,7 +264,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		if(instalments.size() % 2 == 0) {
 			// numero di versamenti pari devo creare la pagina principale con i dati della prima rata
 			logger.debug("Numero di versamenti con rate e' pari, riporto i dati della prima rata anche nella pagina principale.");
-			creaPaginaPrincipaleConImportoTotale(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
+			creaPaginaPrincipaleConImportoTotale(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
 		} else {
 			// versamenti dispari la prima pagina e la prima rata coincidono
 			logger.debug("Numero di versamenti con rate e' dispari, la prima pagina coincide con la prima rata.");
@@ -272,8 +272,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		}
 	}
 
-	public default void creaPaginaPrincipaleConImportoTotale(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale,
-			Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
+	public default void creaPaginaPrincipaleConImportoTotale(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
 		PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 		Instalment versamento = instalments.get(0); // leggo alcuni dati dalla prima rata
 
@@ -283,10 +283,12 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 		}
 
-		RataAvviso rata = instalmentToRata(versamento);
-		rata.setImporto(calcolaImportoTotale(instalments));
-		// come nella pagina principale con un numero dispari di rate: senza, l'intestazione dei dati per il
-		// pagamento stampava "null" (#55)
+		// la rata 1, completa come le altre (etichette e, con il bollettino, i dati postali): la banda di pagamento
+		// e il bollettino riportano il suo importo, coerente con il suo QR code e il suo DataMatrix; il totale del
+		// piano rateale va solo in "Quanto e quando pagare" (#59). Prima la rata aveva il totale, nessuna scadenza
+		// e, con il bollettino, nessun conto ne' DataMatrix
+		RataAvviso rata = instalmentToRataWithLabels(logger, versamento, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		rata.setImportoTotale(calcolaImportoTotale(instalments));
 		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 		if(labelLinguaSecondaria != null)
 			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));

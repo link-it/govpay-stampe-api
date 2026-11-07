@@ -90,10 +90,11 @@
 				</fo:block>
 			</fo:block-container>
 		</xsl:if>
+		<!-- importo di "Quanto e quando pagare": il totale del piano rateale se c'e' (importo_totale, #59), altrimenti quello della rata -->
 		<fo:block-container absolute-position="absolute" left="20pt" top="{266 - $senza-nome-cognome-destinatario-e-altri - $senza-settore-ente-e-altri - $senza-info-ente + $allungamento-cf-ente-e-affiancati + $allungamento-nome-cognome-destinatario-e-affiancati}pt" width="115pt" height="24pt">
 			<fo:block font-family="TitilliumWeb" font-size="15pt" linefeed-treatment="preserve" wrap-option="no-wrap">
 				<xsl:call-template name="testo-a-capo">
-					<xsl:with-param name="testo"><xsl:value-of select="format-number(number(rata/importo), '#.##0,00', 'it')"/><xsl:text> Euro</xsl:text></xsl:with-param>
+					<xsl:with-param name="testo"><xsl:value-of select="format-number(number(rata/importo_totale | rata/importo[not(../importo_totale)]), '#.##0,00', 'it')"/><xsl:text> Euro</xsl:text></xsl:with-param>
 					<xsl:with-param name="markup" select="'styled'"/>
 					<xsl:with-param name="font" select="'TitilliumWeb-Bold'"/>
 					<xsl:with-param name="corpo" select="15"/>

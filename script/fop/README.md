@@ -58,7 +58,8 @@ Dopo una modifica:
 `RegressioneLayoutTest` protegge i layout da modifiche non volute. Per ogni caso in
 `src/test/resources/regressione-layout/<foglio>/` stampa l'XML con `<foglio>.xsl` e confronta l'hash
 SHA-256 dell'area tree di FOP (la pagina impaginata: posizioni, testi, immagini) con quello in
-`attesi.properties`. Se l'hash cambia, area tree e PDF del caso vanno in `target/regressione-layout/`.
+`attesi.properties`. L'area tree usa gli stessi font del PDF: in `fop.xconf` l'elenco dei font
+c'è sia per `application/pdf` sia per `application/X-fop-areatree`, e va tenuto uguale. Se l'hash cambia, area tree e PDF del caso vanno in `target/regressione-layout/`.
 
 - Gli XML vengono da `GeneraCasiRegressioneTest` (factory e mapper, come il controller), con i loghi
   sostituiti da `@logo`; si rigenerano solo su richiesta, perché la factory usa codici avviso casuali:

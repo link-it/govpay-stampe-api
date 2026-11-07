@@ -50,6 +50,14 @@ Rilascio del 2026-07-15.
   **Cambia il comportamento degli avvisi postali**, che finora riportavano
   sempre "oppure sul sito del tuo Ente Creditore": senza `pay_on_website` la
   frase sul sito non compare più.
+- Avviso bilingue a rate: niente più "null" nella scadenza della pagina
+  principale e numero di rata tradotto corretto ("Obrok 2" invece di "Obrok
+  Rata 2") (issue #55).
+- Avviso bilingue con un numero pari di rate: la banda di pagamento della prima
+  pagina riporta l'importo della rata 1, coerente con il suo QR code (prima
+  riportava il totale del piano rateale); con il bollettino, il bollettino della
+  prima pagina ha ora conto e DataMatrix. Il totale resta in "Quanto e quando
+  pagare" (issue #59).
 - Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
   grigio della specifica, al posto di `#999999` (issue #46).
 

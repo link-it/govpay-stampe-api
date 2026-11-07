@@ -1,4 +1,4 @@
-2026-11-06  Giuliano Pintori <pintori@link.it>
+2026-11-07  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Loghi come byte dell'immagine (#38).
 	I loghi di avviso e ricevuta sono campi binari con i byte
@@ -8,7 +8,31 @@
 	format: binary (modifica incompatibile). Avviso: accettata anche la
 	URI data codificata in base64, usata finora dai client.
 
+	* [Stampe] Bilingue a rate pari: importo della rata 1 nella banda di
+	pagamento (#59).
+	La pagina principale stampava il totale del piano rateale accanto a QR
+	code e codice avviso della rata 1, e con il bollettino un bollettino
+	senza conto ne' DataMatrix. Ora la rata della pagina principale e' la
+	rata 1, completa come le altre: banda e bollettino ne riportano
+	l'importo, coerente con QR code e DataMatrix. Il totale resta in
+	"Quanto e quando pagare" (nuovo campo importo_totale del modello v2).
+
+	* [Stampe] RegressioneLayoutTest con i font dei layout (#61).
+	L'area tree su cui il test calcola gli hash era impaginata con il font
+	di riserva di FOP: in fop.xconf i font erano configurati solo per il
+	renderer PDF. Ora lo stesso elenco c'e' anche per l'area tree; hash dei
+	29 casi aggiornati. Stampe del servizio invariate (71 casi di
+	riferimento identici).
+
 2026-11-06  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Etichette delle rate nell'avviso bilingue (#55).
+	Con un numero pari di rate la pagina principale stampava "null" nella
+	scadenza dei dati per il pagamento: ora "Rata 1 entro il", come con un
+	numero dispari. Il numero di rata tradotto usava l'etichetta italiana
+	("Obrok Rata 2", "Rata Rata 2 entro il"): ora "Obrok 2", "Rata 2 entro
+	il". Nei layout V2 i valori di riserva "null" ereditati da Jasper sono
+	vuoti.
 
 	* [Stampe] "oppure sul sito di <nome ente>" nei canali digitali (#47).
 	Nuovo campo opzionale creditor.pay_on_website (default false), per

@@ -264,7 +264,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		if(instalments.size() % 2 == 0) {
 			// numero di versamenti pari devo creare la pagina principale con i dati della prima rata
 			logger.debug("Numero di versamenti con rate e' pari, riporto i dati della prima rata anche nella pagina principale.");
-			creaPaginaPrincipaleConImportoTotale(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
+			creaPaginaPrincipaleConImportoTotale(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
 		} else {
 			// versamenti dispari la prima pagina e la prima rata coincidono
 			logger.debug("Numero di versamenti con rate e' dispari, la prima pagina coincide con la prima rata.");
@@ -272,8 +272,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		}
 	}
 
-	public default void creaPaginaPrincipaleConImportoTotale(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale,
-			Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
+	public default void creaPaginaPrincipaleConImportoTotale(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
 		PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 		Instalment versamento = instalments.get(0); // leggo alcuni dati dalla prima rata
 
@@ -283,8 +283,15 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 		}
 
-		RataAvviso rata = instalmentToRata(versamento);
-		rata.setImporto(calcolaImportoTotale(instalments));
+		// la rata 1, completa come le altre (etichette e, con il bollettino, i dati postali): la banda di pagamento
+		// e il bollettino riportano il suo importo, coerente con il suo QR code e il suo DataMatrix; il totale del
+		// piano rateale va solo in "Quanto e quando pagare" (#59). Prima la rata aveva il totale, nessuna scadenza
+		// e, con il bollettino, nessun conto ne' DataMatrix
+		RataAvviso rata = instalmentToRataWithLabels(logger, versamento, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		rata.setImportoTotale(calcolaImportoTotale(instalments));
+		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		if(labelLinguaSecondaria != null)
+			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 
 		pagina.setRata(rata);
 
@@ -559,13 +566,16 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 
 		if(rata.getNumeroRata() != null) {
-			rata.setNumeroRata(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NUMERO_RATA, rata.getNumeroRata()));
+			// il numero della rata, prima di sostituirlo con l'etichetta ("Rata 2"): le altre etichette
+			// e la traduzione lo usano come parametro, altrimenti stampano "Obrok Rata 2" (#55)
+			String numero = rata.getNumeroRata();
+			rata.setNumeroRata(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NUMERO_RATA, numero));
 			if(labelLinguaSecondaria != null)
-				rata.setNumeroRataTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NUMERO_RATA, rata.getNumeroRata()));
+				rata.setNumeroRataTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NUMERO_RATA, numero));
 
-			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, rata.getNumeroRata()));
+			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, numero));
 			if(labelLinguaSecondaria != null)
-				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, rata.getNumeroRata()));
+				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, numero));
 
 			rata.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 			if(labelLinguaSecondaria != null)

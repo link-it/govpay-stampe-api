@@ -25,9 +25,10 @@ import it.govpay.stampe.model.v2.RataAvviso;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
- * Etichette delle rate nell'avviso bilingue (issue #55): la rata della pagina principale ha la scadenza
- * (senza, l'intestazione dei dati per il pagamento stampava "null") e la traduzione del numero di rata usa il
- * numero e non l'etichetta italiana ("Obrok 2", non "Obrok Rata 2").
+ * Rate nell'avviso bilingue: la rata della pagina principale ha la scadenza (issue #55; senza, l'intestazione dei
+ * dati per il pagamento stampava "null") e, con un numero pari di rate, l'importo della rata del suo QR code, con il
+ * totale a parte (issue #59); la traduzione del numero di rata usa il numero e non l'etichetta italiana ("Obrok 2",
+ * non "Obrok Rata 2").
  */
 @SpringBootTest(classes = Application.class)
 @DisplayName("Test Etichette delle rate nell'avviso bilingue")
@@ -69,6 +70,30 @@ class EtichetteRateBilingueTest {
 		List<RataAvviso> rate = rate(bilingueSloveno(2));
 		assertEquals("Rata 1 entro il", rate.get(0).getScadenza());
 		assertEquals("Obrok 1 do", rate.get(0).getScadenzaTra());
+	}
+
+	@Test
+	void importiDellaPaginaPrincipaleConUnNumeroPariDiRate() {
+		// la banda di pagamento ha l'importo della rata del QR code, il totale va in "Quanto e quando pagare" (#59)
+		PaymentNotice avviso = bilingueSloveno(2);
+		double primaRata = avviso.getInstalments().get(0).getAmount();
+		double totale = avviso.getInstalments().stream().mapToDouble(r -> r.getAmount()).sum();
+		RataAvviso principale = rate(avviso).get(0);
+		assertEquals(primaRata, principale.getImporto());
+		assertEquals(totale, principale.getImportoTotale(), 0.001);
+	}
+
+	@Test
+	void bollettinoDellaPaginaPrincipaleConUnNumeroPariDiRate() {
+		// con il bollettino la rata della pagina principale ha il conto e il DataMatrix della rata 1, come la sua pagina
+		PaymentNotice avviso = bilingueSloveno(2);
+		avviso.setPostal(true);
+		List<RataAvviso> rate = rate(avviso);
+		RataAvviso principale = rate.get(0);
+		RataAvviso primaRata = rate.get(1);
+		assertEquals(primaRata.getNumeroCcPostale(), principale.getNumeroCcPostale());
+		assertEquals(primaRata.getDataMatrix(), principale.getDataMatrix());
+		assertEquals(primaRata.getImporto(), principale.getImporto());
 	}
 
 	@Test

@@ -38,6 +38,9 @@ Rilascio del 2026-07-15.
   **Cambia il comportamento degli avvisi postali**, che finora riportavano
   sempre "oppure sul sito del tuo Ente Creditore": senza `pay_on_website` la
   frase sul sito non compare più.
+- Avviso bilingue a rate: niente più "null" nella scadenza della pagina
+  principale e numero di rata tradotto corretto ("Obrok 2" invece di "Obrok
+  Rata 2") (issue #55).
 - Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
   grigio della specifica, al posto di `#999999` (issue #46).
 

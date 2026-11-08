@@ -151,13 +151,13 @@ class UC_12_AvvisoOpzioniPagamentoFailTest {
 		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
 				.content(body)
 				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isUnprocessableEntity())
 				.andReturn();
 
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
 		JsonObject problem = reader.readObject();
-		assertEquals(400, problem.getInt("status"));
-		assertTrue(problem.getString("detail").contains("size must be between 2"));
+		assertEquals(422, problem.getInt("status"));
+		assertTrue(problem.getString("detail").contains("almeno due opzioni"));
 	}
 
 	@Test

@@ -118,7 +118,9 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	public default void creaPagineOpzioni(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput) {
 		boolean postale = Boolean.TRUE.equals(paymentNotice.getPostal());
 
+		List<Object> pagine = avvisoPagamentoInput.getPagine().getSingolaOrDoppiaOrTripla();
 		for (PaymentNoticeOption opzione : paymentNotice.getOptions()) {
+			int primaPagina = pagine.size();
 			PaymentNotice notificaOpzione = new PaymentNotice();
 			notificaOpzione.setPostal(paymentNotice.getPostal());
 			notificaOpzione.setCreditor(paymentNotice.getCreditor());
@@ -139,6 +141,32 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 				creaRatePerAvvisoPostale(logger, notificaOpzione, avvisoPagamentoInput);
 			} else {
 				creaRatePerAvvisoSemplice(logger, notificaOpzione, avvisoPagamentoInput);
+			}
+
+			if(postale) {
+				impostaRateOpzione(pagine.subList(primaPagina, pagine.size()));
+			}
+		}
+	}
+
+	/**
+	 * Nell'avviso postale la pagina singola riporta "Puoi pagare per intero oppure in N rate": con le opzioni N
+	 * sono gli importi della sola opzione oltre al primo, non quelli dell'intero documento.
+	 */
+	private static void impostaRateOpzione(List<Object> pagineOpzione) {
+		int importi = 0;
+		for (Object pagina : pagineOpzione) {
+			if(pagina instanceof PaginaAvvisoDoppia doppia) {
+				importi += doppia.getRata().size();
+			} else if(pagina instanceof PaginaAvvisoTripla tripla) {
+				importi += tripla.getRata().size();
+			} else {
+				importi++;
+			}
+		}
+		for (Object pagina : pagineOpzione) {
+			if(pagina instanceof PaginaAvvisoSingola singola) {
+				singola.setRateOpzione(BigInteger.valueOf(importi - 1L));
 			}
 		}
 	}

@@ -98,6 +98,10 @@ public class SemanticValidator {
 			throw new UnprocessableEntityException("Non e' possibile indicare sia 'options' che 'full'/'instalments'/'reducedPayments' a livello di documento");
 		}
 
+		if(options.size() < 2) {
+			throw new UnprocessableEntityException("'options' deve contenere almeno due opzioni di pagamento: per una sola opzione usare 'full'/'instalments'/'reducedPayments' a livello di documento");
+		}
+
 		for (PaymentNoticeOption option : options) {
 			if(option == null) {
 				throw new UnprocessableEntityException("Un elemento di 'options' non puo' essere null");
@@ -175,7 +179,7 @@ public class SemanticValidator {
 	 * importo processato, mai un dato per pagina/rata): con piu' pagine che risolvono IBAN con
 	 * intestatari diversi, le pagine precedenti mostrerebbero in stampa l'intestatario
 	 * dell'ultima pagina processata, non il proprio. Soluzione temporanea (non il dato per
-	 * pagina/rata, che richiederebbe toccare il modello/template Jasper): rifiutare
+	 * pagina/rata, che richiederebbe toccare l'XSD e i layout FOP): rifiutare
 	 * esplicitamente intestatari diversi tra le pagine, invece di stampare in silenzio quello
 	 * sbagliato. Si applica sia a {@code options} (un IBAN per opzione) sia a
 	 * {@code reducedPayments} a livello di documento (un IBAN per soglia): in entrambi i casi

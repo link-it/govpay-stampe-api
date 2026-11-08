@@ -33,6 +33,7 @@ import it.govpay.stampe.beans.PaymentNoticeOption;
 import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.mapper.AvvisoPagamentoMapper;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
+import it.govpay.stampe.model.v1.PaginaAvvisoDoppia;
 import it.govpay.stampe.model.v1.PaginaAvvisoSingola;
 import it.govpay.stampe.model.v1.PaginaAvvisoTripla;
 import it.govpay.stampe.test.costanti.Costanti;
@@ -187,5 +188,34 @@ class UC_13_AvvisoOpzioniPagamentoTest {
 		String rataFull = ((PaginaAvvisoSingola) pagine.get(0)).getRata().getCodiceAvviso();
 		String rataUnica = ((PaginaAvvisoSingola) pagine.get(1)).getRata().getCodiceAvviso();
 		assertNotEquals(rataFull, rataUnica);
+	}
+
+	@Test
+	@DisplayName("postale: la nota sulle rate della pagina singola conta solo le rate della sua opzione")
+	void UC_13_08_PostaleRateDellOpzione() {
+		PaymentNoticeOption opzioneConRate = this.avvisiPagamentoFactory.creaOpzioneFull();
+		opzioneConRate.setInstalments(this.avvisiPagamentoFactory.creaOpzioneConRate(2).getInstalments());
+
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(opzioneConRate,
+				this.avvisiPagamentoFactory.creaOpzioneFull());
+		avviso.setPostal(true);
+
+		List<Object> pagine = this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(log, avviso,
+				this.labelAvvisiProperties).getPagine().getSingolaOrDoppiaOrTripla();
+
+		// opzione 1: rata unica e pagina doppia con 2 rate; opzione 2: solo la rata unica, senza nota
+		assertEquals(3, pagine.size());
+		assertEquals(2, ((PaginaAvvisoSingola) pagine.get(0)).getRateOpzione().intValue());
+		assertInstanceOf(PaginaAvvisoDoppia.class, pagine.get(1));
+		assertEquals(0, ((PaginaAvvisoSingola) pagine.get(2)).getRateOpzione().intValue());
+
+		// senza bollettino la nota non c'e', e l'attributo resta assente
+		avviso.setPostal(false);
+		for (Object pagina : this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(log, avviso,
+				this.labelAvvisiProperties).getPagine().getSingolaOrDoppiaOrTripla()) {
+			if (pagina instanceof PaginaAvvisoSingola singola) {
+				assertNull(singola.getRateOpzione());
+			}
+		}
 	}
 }

@@ -148,6 +148,17 @@ class GeneraCasiRegressioneTest {
 		casi.put("postale-2", () -> rate(2, false, true));
 		casi.put("postale-3-unica", () -> rate(3, true, true));
 		casi.put("postale-5", () -> rate(5, false, true));
+		// opzioni di pagamento alternative (PaymentNotice.options): rata unica e piano a rate, ognuna sulle sue pagine
+		casi.put("opzioni-unica-3", () -> opzioni(false));
+		casi.put("opzioni-postale-unica-2", () -> opzioni(true));
+		casi.put("opzioni-postale-unica-unica", () -> {
+			// due opzioni a rata unica: nessuna nota sulle rate
+			PaymentNotice p = opzioni(true);
+			p.getOptions().get(1).setInstalments(null);
+			p.getOptions().get(1).setFull(this.factory.creaOpzioneFull().getFull());
+			p.getOptions().get(1).getFull().setDueDate(LocalDate.of(2026, 12, 31));
+			return p;
+		});
 		// violazione del codice della strada: importo ridotto e scontato, con e senza bollettino
 		casi.put("cds", this.factory::creaCdsViolation);
 		casi.put("cds-due-loghi-oggetto-lungo", () -> {
@@ -202,6 +213,21 @@ class GeneraCasiRegressioneTest {
 	}
 
 	/** Avviso con N rate di importi e scadenze diversi, con o senza rata unica. */
+	private PaymentNotice opzioni(boolean postale) {
+		PaymentNotice p = this.factory.creaPaymentNoticeConOpzioni(this.factory.creaOpzioneFull(), this.factory.creaOpzioneConRate(postale ? 2 : 3));
+		p.setPostal(postale);
+		if (postale) {
+			p.getCreditor().setPostalAuthMessage("Autorizzazione n. 0000 del 00/00/0000");
+		}
+		LocalDate inizio = LocalDate.of(2026, 11, 30);
+		p.getOptions().get(0).getFull().setDueDate(inizio);
+		int i = 0;
+		for (Instalment rata : p.getOptions().get(1).getInstalments()) {
+			rata.setDueDate(inizio.plusMonths(i++));
+		}
+		return p;
+	}
+
 	private PaymentNotice rate(int numero, boolean rataUnica, boolean postale) {
 		PaymentNotice p = this.factory.creaPaymentNoticeConRate(numero, rataUnica);
 		p.setPostal(postale);

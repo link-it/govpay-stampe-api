@@ -527,15 +527,22 @@
 		<fo:block-container absolute-position="absolute" left="299pt" top="{354 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="213pt" height="33pt">
 			<fo:block font-family="TitilliumWeb" font-size="8pt" start-indent="8pt" line-height="10.125pt" padding-top="2.025pt" wrap-option="no-wrap">presso Banche e Sportelli ATM, negli Uffici Postali e Punti <fo:block/>Postali, nei Bar, Edicole, Ricevitorie, Supermercati, <fo:block/>Tabaccherie e altri Esercenti Convenzionati.</fo:block>
 		</fo:block-container>
-		<!-- numero di rate, count(//rata) del documento: icona e testo solo se le rate sono piu' di una -->
-		<xsl:if test="count(/AvvisoPagamentoInput/pagine//rata) &gt; 1">
+		<!-- numero di rate: count(//rata) del documento meno uno, o quelle dell'opzione della pagina (@rate_opzione);
+		     icona e testo solo se ce n'e' almeno una -->
+		<xsl:variable name="numero-rate">
+			<xsl:choose>
+				<xsl:when test="@rate_opzione"><xsl:value-of select="@rate_opzione"/></xsl:when>
+				<xsl:otherwise><xsl:value-of select="count(/AvvisoPagamentoInput/pagine//rata) - 1"/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:if test="$numero-rate &gt; 0">
 			<fo:block-container absolute-position="absolute" left="20pt" top="{339 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="20pt" height="20pt">
 				<fo:block font-size="0pt" line-height="0pt"><fo:block-container absolute-position="absolute" left="0pt" top="0pt" width="20pt" height="20pt"><fo:block font-size="0pt" line-height="0pt"><fo:external-graphic content-width="20pt" content-height="20pt" scaling="uniform" src="url(classpath:/fop/icone/informazioni.svg)"/></fo:block></fo:block-container></fo:block>
 			</fo:block-container>
 		</xsl:if>
-		<xsl:if test="count(/AvvisoPagamentoInput/pagine//rata) &gt; 1">
+		<xsl:if test="$numero-rate &gt; 0">
 			<fo:block-container absolute-position="absolute" left="50pt" top="{343 + $allungamento-cf-ente-e-affiancati + $allungamento-ente-creditore}pt" width="244pt" height="14pt">
-				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.004pt">Puoi pagare per intero oppure in <xsl:value-of select="count(/AvvisoPagamentoInput/pagine//rata) - 1"/> rate.</fo:block>
+				<fo:block font-family="TitilliumWeb" font-size="8pt" line-height="12.168pt" padding-top="1.004pt">Puoi pagare per intero oppure in <xsl:value-of select="$numero-rate"/> rate.</fo:block>
 			</fo:block-container>
 		</xsl:if>
 		<!-- informativa personalizzata -->

@@ -375,6 +375,8 @@ Per gli avvisi con bollettino postale si imposta `postal=true` e si indicano i d
 - `informativa_importo`: sostituisce il testo standard della nota sull'importo; con stringa vuota la nota viene omessa. Per gli avvisi bilingue la traduzione va in `second_language.informativa_importo`.
 - `creditor.pay_on_website`: se `true`, l'avviso si può pagare anche dal sito dell'ente, e nella sezione "Dove pagare" la stampa riporta "oppure sul sito di <business_name>, ...". Il default è `false`: "oppure dal tuo Home Banking, ...". Vale anche per la violazione del Codice della Strada.
 - `reduced_payments`: importi in forma ridotta legati a una soglia temporale (`threshold_type` `ENTRO` o `OLTRE`, `threshold_days`), oltre ai campi di `full`.
+- `options`: due o più modi alternativi di pagare la stessa posizione (per esempio tutto subito oppure a rate), stampati nello stesso PDF. Ogni elemento ha `full`, `instalments` o `reduced_payments` e va sulle sue pagine; creditore, debitore, oggetto e bollettino sono quelli del documento. Non si può usare insieme a `full`, `instalments` o `reduced_payments` del documento, né con `second_language`: la richiesta risponde 422, come con una sola opzione. Una lista vuota equivale all'assenza del campo. Nell'avviso postale la nota "Puoi pagare per intero oppure in N rate" conta solo le rate della stessa opzione.
+- Avviso postale con più pagine (`options`, `reduced_payments`, violazione del Codice della Strada): tutti gli IBAN devono avere lo stesso intestatario (`owner_business_name`, o `creditor.business_name` se manca), perché l'intestatario del bollettino è unico per il documento. Altrimenti la richiesta risponde 422.
 
 ### Violazione del Codice della Strada
 

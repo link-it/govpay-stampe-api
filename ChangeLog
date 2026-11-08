@@ -1,5 +1,18 @@
 2026-11-08  Giuliano Pintori <pintori@link.it>
 
+	* [Stampe] Opzioni di pagamento alternative nell'avviso standard
+	(PR #44).
+	govpay-stampe.yaml: PaymentNotice.options, due o piu' opzioni
+	(PaymentNoticeOption con full, instalments o reduced_payments), ognuna
+	sulle sue pagine. SemanticValidator: 422 con una sola opzione, con
+	options insieme a full/instalments/reduced_payments del documento o con
+	second_language; lista vuota come campo assente. Avviso postale con piu'
+	pagine (opzioni, soglie, violazione CdS): 422 se gli IBAN hanno
+	intestatari diversi, perche' l'intestatario del bollettino e' unico.
+	Avviso postale con opzioni: la nota "Puoi pagare per intero oppure in
+	N rate" conta le rate dell'opzione della pagina (attributo rate_opzione
+	della pagina singola nell'XSD), non quelle di tutto il documento.
+
 	* [Stampe] Avviso bilingue secondo il modello 3.5 "Avviso con seconda
 	lingua" (#56).
 	avvisi.properties: titoli, canali digitali e sul territorio, nota del

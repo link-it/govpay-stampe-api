@@ -1002,4 +1002,28 @@ class UC_1_ViolazioneCdsFailTest {
         assertTrue(problem.getString("detail").contains("size must be between 0 and 70"));
 	    assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 	}
+
+	@Test
+	void UC_1_41_ViolazioneCds_PostaleIntestatariDiversi() throws Exception {
+	    CdsViolation cdsViolation = this.avvisiPagamentoFactory.creaCdsViolation();
+	    cdsViolation.setPostal(true);
+	    cdsViolation.getDiscountedAmount().getIban().setOwnerBusinessName("Altro Intestatario");
+
+	    String body = mapper.writeValueAsString(cdsViolation);
+
+	    MvcResult result = this.mockMvc.perform(post(Costanti.CDS_VIOLATION_PATH)
+	            .content(body)
+	            .contentType(MediaType.APPLICATION_JSON))
+	            .andExpect(status().isUnprocessableEntity())
+	            .andReturn();
+
+	    JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+	    JsonObject problem = reader.readObject();
+	    assertNotNull(problem.getString("type"));
+	    assertNotNull(problem.getString("title"));
+	    assertNotNull(problem.getString("detail"));
+	    assertEquals(422, problem.getInt("status"));
+	    assertEquals("Unprocessable Entity", problem.getString("title"));
+	    assertTrue(problem.getString("detail").contains("tutti gli IBAN"));
+	}
 }

@@ -33,6 +33,18 @@ Rilascio del 2026-07-15.
 - **Avviso:** `first_logo` e `second_logo` accettano i byte dell'immagine e, per
   compatibilità, anche la forma usata finora (la URI data codificata in base64).
 
+### 💳 Opzioni di pagamento alternative
+
+- Nuovo campo `options` dell'avviso standard: due o più modi alternativi di pagare la
+  stessa posizione (per esempio tutto subito oppure a rate) nello stesso PDF, ognuno
+  sulle sue pagine. Non si può usare con `full`, `instalments` o `reduced_payments`
+  del documento, né con l'avviso bilingue: in questi casi, e con una sola opzione, la
+  richiesta risponde `422` (PR #44).
+- **Avviso postale con più pagine** (opzioni, soglie, violazione del Codice della
+  Strada): gli IBAN devono avere tutti lo stesso intestatario, perché la stampa ne usa
+  uno solo per il documento. Prima l'avviso veniva stampato con l'intestatario
+  dell'ultimo IBAN su tutte le pagine; ora la richiesta risponde `422`.
+
 ### 📝 Testi e grafica della specifica pagoPA 3.5
 
 - Disclaimer sull'importo con il testo della specifica 3.5: "In fase di

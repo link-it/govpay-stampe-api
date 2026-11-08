@@ -64,6 +64,9 @@
 		<xsd:sequence>
 			<xsd:element name="rata" type="RataAvviso"/>
 		</xsd:sequence>
+		<!-- Avviso con opzioni di pagamento (PaymentNotice.options): importi dell'opzione della pagina oltre al primo,
+		     per la nota "Puoi pagare per intero oppure in N rate" dell'avviso postale. Senza, la nota conta tutto il documento. -->
+		<xsd:attribute name="rate_opzione" use="optional" type="xsd:integer"/>
 	</xsd:complexType>
 	
 	<xsd:complexType name="PaginaAvvisoMultipla">

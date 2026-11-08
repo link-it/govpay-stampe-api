@@ -244,4 +244,27 @@ class UC_12_AvvisoOpzioniPagamentoFailTest {
 		assertEquals(422, problem.getInt("status"));
 		assertTrue(problem.getString("detail").contains("devono risolvere allo stesso intestatario"));
 	}
+
+	@Test
+	void UC_12_10_Opzioni_MutuaEsclusivitaConRateESoglie() throws Exception {
+		PaymentNotice conRate = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(
+				this.avvisiPagamentoFactory.creaOpzioneFull(), this.avvisiPagamentoFactory.creaOpzioneConRate(2));
+		conRate.setInstalments(this.avvisiPagamentoFactory.creaOpzioneConRate(2).getInstalments());
+
+		PaymentNotice conSoglie = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(
+				this.avvisiPagamentoFactory.creaOpzioneFull(), this.avvisiPagamentoFactory.creaOpzioneConRate(2));
+		conSoglie.setReducedPayments(this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(2, false, false, false).getReducedPayments());
+
+		for (PaymentNotice avviso : new PaymentNotice[] { conRate, conSoglie }) {
+			MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+					.content(mapper.writeValueAsString(avviso))
+					.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isUnprocessableEntity())
+					.andReturn();
+
+			JsonObject problem = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray())).readObject();
+			assertTrue(problem.getString("detail")
+					.contains("Non e' possibile indicare sia 'options' che 'full'/'instalments'/'reducedPayments'"));
+		}
+	}
 }

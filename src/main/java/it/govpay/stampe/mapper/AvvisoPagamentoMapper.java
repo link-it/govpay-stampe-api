@@ -156,13 +156,11 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	private static void impostaRateOpzione(List<Object> pagineOpzione) {
 		int importi = 0;
 		for (Object pagina : pagineOpzione) {
-			if(pagina instanceof PaginaAvvisoDoppia doppia) {
-				importi += doppia.getRata().size();
-			} else if(pagina instanceof PaginaAvvisoTripla tripla) {
-				importi += tripla.getRata().size();
-			} else {
-				importi++;
-			}
+			importi += switch (pagina) {
+				case PaginaAvvisoDoppia doppia -> doppia.getRata().size();
+				case PaginaAvvisoTripla tripla -> tripla.getRata().size();
+				default -> 1;
+			};
 		}
 		for (Object pagina : pagineOpzione) {
 			if(pagina instanceof PaginaAvvisoSingola singola) {

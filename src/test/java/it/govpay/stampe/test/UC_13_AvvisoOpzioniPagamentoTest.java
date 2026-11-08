@@ -209,13 +209,72 @@ class UC_13_AvvisoOpzioniPagamentoTest {
 		assertInstanceOf(PaginaAvvisoDoppia.class, pagine.get(1));
 		assertEquals(0, ((PaginaAvvisoSingola) pagine.get(2)).getRateOpzione().intValue());
 
-		// senza bollettino la nota non c'e', e l'attributo resta assente
-		avviso.setPostal(false);
+		// senza bollettino la nota non c'e', e l'attributo resta assente (richiesta nuova: il mapper consuma le rate)
+		opzioneConRate = this.avvisiPagamentoFactory.creaOpzioneFull();
+		opzioneConRate.setInstalments(this.avvisiPagamentoFactory.creaOpzioneConRate(2).getInstalments());
+		avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(opzioneConRate, this.avvisiPagamentoFactory.creaOpzioneFull());
 		for (Object pagina : this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(log, avviso,
 				this.labelAvvisiProperties).getPagine().getSingolaOrDoppiaOrTripla()) {
 			if (pagina instanceof PaginaAvvisoSingola singola) {
 				assertNull(singola.getRateOpzione());
 			}
 		}
+	}
+
+	private PaymentNoticeOption opzioneConSoglie(int soglie, boolean postale) {
+		PaymentNoticeOption opzione = new PaymentNoticeOption();
+		opzione.setReducedPayments(this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(soglie, false, postale, false).getReducedPayments());
+		return opzione;
+	}
+
+	private void stampa(PaymentNotice avviso) throws Exception {
+		MvcResult result = this.mockMvc.perform(post(Costanti.STANDARD_PATH)
+				.content(mapper.writeValueAsString(avviso))
+				.contentType(MediaType.APPLICATION_JSON))
+				.andReturn();
+		assertEquals(201, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+		assertEquals(this.avvisoPagamentoMapper.nomePdf(avviso), AvvisiPagamentoFactory
+				.extractFilename(result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION)));
+	}
+
+	@Test
+	@DisplayName("201, opzione con soglie e opzione con rate; il nome del PDF usa la prima soglia")
+	void UC_13_09_OpzioneConSoglieOk() throws Exception {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(opzioneConSoglie(2, false),
+				this.avvisiPagamentoFactory.creaOpzioneConRate(3));
+
+		assertTrue(this.avvisoPagamentoMapper.nomePdf(avviso).contains(avviso.getOptions().get(0).getReducedPayments().get(0).getNoticeNumber()));
+		stampa(avviso);
+	}
+
+	@Test
+	@DisplayName("201, postale con soglie e tre rate: le pagine singole delle soglie contano solo la loro opzione")
+	void UC_13_10_PostaleSoglieETreRateOk() throws Exception {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(opzioneConSoglie(2, true),
+				this.avvisiPagamentoFactory.creaOpzioneConRate(3));
+		avviso.setPostal(true);
+
+		List<Object> pagine = this.avvisoPagamentoMapper.toPaymentNoticeAvvisoPagamentoInput(log, avviso,
+				this.labelAvvisiProperties).getPagine().getSingolaOrDoppiaOrTripla();
+		// opzione 1: una pagina singola per soglia; opzione 2: una pagina tripla
+		assertEquals(3, pagine.size());
+		assertEquals(1, ((PaginaAvvisoSingola) pagine.get(0)).getRateOpzione().intValue());
+		assertEquals(1, ((PaginaAvvisoSingola) pagine.get(1)).getRateOpzione().intValue());
+		assertInstanceOf(PaginaAvvisoTripla.class, pagine.get(2));
+
+		// il mapper consuma le rate della richiesta: per la stampa una richiesta nuova
+		PaymentNotice daStampare = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(opzioneConSoglie(2, true),
+				this.avvisiPagamentoFactory.creaOpzioneConRate(3));
+		daStampare.setPostal(true);
+		stampa(daStampare);
+	}
+
+	@Test
+	@DisplayName("nome del PDF dalla prima rata quando la prima opzione e' a rate")
+	void UC_13_11_NomePdf_PrimaOpzioneARate() {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConOpzioni(
+				this.avvisiPagamentoFactory.creaOpzioneConRate(2), this.avvisiPagamentoFactory.creaOpzioneFull());
+
+		assertTrue(this.avvisoPagamentoMapper.nomePdf(avviso).contains(avviso.getOptions().get(0).getInstalments().get(0).getNoticeNumber()));
 	}
 }

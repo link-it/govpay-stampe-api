@@ -268,6 +268,8 @@ Le rate si definiscono valorizzando la lista `instalments`; per ogni rata va ind
 
 Per creare un avviso bilingue si valorizza l'elemento `second_language` con la seconda lingua (`de` o `sl`, vedi [Lingue](#lingue)) e il titolo tradotto. Il campo obbligatorio `bilinguism` è ignorato: con `second_language` l'avviso è sempre bilingue.
 
+L'avviso segue il modello "Avviso con seconda lingua" della specifica pagoPA 3.5: italiano in nero, traduzione in grigio, con i testi ufficiali in tedesco e sloveno. Nella sezione "Dove pagare" i canali digitali usano la variante della specifica tradotta in entrambe le lingue: "Paga online" con il tedesco, "Paga con l'app IO" con lo sloveno. Con `creditor.pay_on_website` il testo nomina il sito dell'ente.
+
 ``` json
 {
   "language": "it",

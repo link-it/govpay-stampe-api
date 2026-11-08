@@ -58,6 +58,12 @@ Rilascio del 2026-07-15.
   riportava il totale del piano rateale); con il bollettino, il bollettino della
   prima pagina ha ora conto e DataMatrix. Il totale resta in "Quanto e quando
   pagare" (issue #59).
+- Avviso bilingue secondo il modello 3.5 "Avviso con seconda lingua": titoli
+  ("Dove pagare?", "Dati per il pagamento"), canali digitali e sul territorio, nota
+  del QR code, note sulle rate e etichette dei dati con le stringhe ufficiali in
+  tedesco e sloveno; `creditor.pay_on_website` anche nel bilingue. La sezione
+  "Dove pagare" ha una riga in più e la parte sotto della prima pagina scende di
+  12 pt (issue #56).
 - Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
   grigio della specifica, al posto di `#999999` (issue #46).
 

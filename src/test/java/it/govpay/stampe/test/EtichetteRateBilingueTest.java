@@ -69,7 +69,7 @@ class EtichetteRateBilingueTest {
 	void paginaPrincipaleConUnNumeroPariDiRate() {
 		List<RataAvviso> rate = rate(bilingueSloveno(2));
 		assertEquals("Rata 1 entro il", rate.get(0).getScadenza());
-		assertEquals("Obrok 1 do", rate.get(0).getScadenzaTra());
+		assertEquals("Obrok št. 1 do", rate.get(0).getScadenzaTra());
 	}
 
 	@Test
@@ -101,8 +101,8 @@ class EtichetteRateBilingueTest {
 		List<RataAvviso> rate = rate(bilingueSloveno(2));
 		RataAvviso seconda = rate.get(rate.size() - 1);
 		assertEquals("Rata 2", seconda.getNumeroRata());
-		assertEquals("Obrok 2", seconda.getNumeroRataTra());
+		assertEquals("Obrok št. 2", seconda.getNumeroRataTra());
 		assertEquals("Rata 2 entro il", seconda.getScadenza());
-		assertEquals("Obrok 2 do", seconda.getScadenzaTra());
+		assertEquals("Obrok št. 2 do", seconda.getScadenzaTra());
 	}
 }

@@ -1,3 +1,19 @@
+2026-11-08  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso bilingue secondo il modello 3.5 "Avviso con seconda
+	lingua" (#56).
+	avvisi.properties: titoli, canali digitali e sul territorio, nota del
+	QR code, note sulle rate, scadenze ed etichette dei dati con le
+	stringhe ufficiali it/de/sl; tolte le varianti "Poste" dei canali.
+	Restano le traduzioni precedenti per sl ente_creditore e
+	codice_fiscale_ente (la specifica ha "Plačnik", pagatore) e per de
+	codice_avviso (non sta nel riquadro). AvvisoPagamentoBilingueMapper:
+	canali digitali nella variante tradotta in entrambe le lingue
+	("Paga online" con il tedesco, "Paga con l'app IO" con lo sloveno),
+	sito dell'ente con creditor.pay_on_website, nota "Puoi pagare per
+	intero o in N rate" con la rata unica. RataUnicaV2: "sul territorio"
+	fino a 7 righe, la parte sotto della prima pagina scende di 12 pt.
+
 2026-11-07  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Loghi come byte dell'immagine (#38).

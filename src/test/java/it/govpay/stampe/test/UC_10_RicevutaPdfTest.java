@@ -105,8 +105,8 @@ class UC_10_RicevutaPdfTest {
 		Receipt receipt = new Receipt();
 
 		// Loghi
-		receipt.setCreditorLogo(this.logoEnte);
-		receipt.setPagopaLogo(this.logoEnte);
+		receipt.setCreditorLogo(AvvisiPagamentoFactory.immagine(this.logoEnte));
+		receipt.setPagopaLogo(AvvisiPagamentoFactory.immagine(this.logoEnte));
 
 		// Dati ente (organization)
 		ReceiptOrganization organization = new ReceiptOrganization();
@@ -135,7 +135,7 @@ class UC_10_RicevutaPdfTest {
 		// Identificativi
 		receipt.setCreditorReferenceId("01234567890123456");
 		receipt.setReceiptId("0123456789012345678901234567890");
-		receipt.setObjectVersion(ReceiptVersion._230);
+		receipt.setObjectVersion(ReceiptVersion.SANP_230);
 
 		// Voci pagamento (items)
 		List<ReceiptItem> items = new ArrayList<>();

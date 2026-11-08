@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GovPay Stampe API is a Spring Boot 3.2.5 / JDK 21 microservice that generates pagoPA payment notice PDFs. It exposes REST endpoints to create payment notices for Italian public administration payments, including standard notices, installment plans, postal notices, bilingual notices, and traffic violation notices.
+GovPay Stampe API is a Spring Boot 4.1 / Spring Framework 7 / Jackson 3 microservice (JDK 21, versions managed by govpay-bom; as a war it needs Tomcat 11) that generates pagoPA payment notice PDFs. It exposes REST endpoints to create payment notices for Italian public administration payments, including standard notices, installment plans, postal notices, bilingual notices, and traffic violation notices.
 
 ## Maven/BOM Rules
 - NEVER remove a dependency version from pom.xml unless you have verified that exact dependency (groupId + artifactId) is managed in the parent BOM
@@ -43,19 +43,21 @@ mvn test -Dtest=UC_4_AvvisoStandardTest#UC_4_01_AvvisoSempliceRataUnicaOk
 
 ### API Layer
 - **OpenAPI spec**: `src/main/resources/govpay-stampe.yaml` defines the REST API
-- **Generated interfaces**: OpenAPI Generator creates `it.govpay.stampe.api.DefaultApi` at build time
-- **Controller**: `StampeController` implements `DefaultApi` with two endpoints:
-  - `POST /standard` - Standard payment notices (single/installment)
-  - `POST /cds_violation` - Traffic violation notices
+- **Generated interfaces**: OpenAPI Generator creates `it.govpay.stampe.api.PaymentNoticeApi` and `ReceiptApi` at build time
+- **Controllers** (endpoints at the context root, no servlet path):
+  - `PaymentNoticeController` implements `PaymentNoticeApi`:
+    - `POST /standard` - Standard payment notices (single/installment, postal, bilingual)
+    - `POST /cds_violation` - Traffic violation notices
+  - `ReceiptController` implements `ReceiptApi`: `POST /receipt` - Payment receipts
 
 ### Request Processing Flow
-1. `StampeController` receives JSON request
+1. `PaymentNoticeController` / `ReceiptController` receive the JSON request
 2. `SemanticValidator` validates business rules
 3. MapStruct mappers (`AvvisoPagamentoMapper`, `ViolazioneCdsMapper`, `AvvisoPagamentoBilingueMapper`) convert API beans to JAXB model objects
-4. Service layer generates PDF using JasperReports
+4. Service layer generates PDF using Apache FOP (XSLT + XSL-FO)
 
 ### Service Layer
-Base class `AvvisoPagamentoService` handles JasperReports PDF generation. Concrete services:
+Base class `AvvisoPagamentoService` handles PDF generation through `MotoreFop`. Concrete services:
 - `AvvisoSempliceService` - Standard notices without postal slip
 - `AvvisoPostaleService` - Notices with postal payment slip (bollettino postale)
 - `AvvisoBilingueService` - Bilingual notices (IT + second language)
@@ -67,17 +69,16 @@ Two JAXB model versions generated from XSD schemas:
 - `it.govpay.stampe.model.v2` from `xsd/avvisiPagamento_v2.xsd` - Bilingual notices
 
 ### PDF Templates
-JasperReports `.jasper` files in `src/main/resources/`:
-- `AvvisoPagamento*.jasper` - Main templates
-- `RataUnica*.jasper`, `DoppiaRata*.jasper`, `TriplaRata*.jasper` - Layout variants by installment count
-- `*Postale.jasper` - Postal slip variants
-- `*V2.jasper` - Bilingual variants
-- `ViolazioneCDS.jasper` - Traffic violation template
+XSL-FO layouts in `src/main/resources/fop/`, rendered by `MotoreFop` (Apache FOP, JDK XSLT processor):
+- `avviso-semplice.xsl`, `avviso-postale.xsl`, `violazione-cds.xsl`, `ricevuta.xsl`, `avviso-bilingue.xsl` - Main sheets, one per print type
+- `RataUnica*.xsl`, `DoppiaRata*.xsl`, `TriplaRata*.xsl`, `*Postale.xsl`, `*V2.xsl` - Layout variants
+- `comune.xsl` - Shared templates (`testo-a-capo`, `logo`, ...); `icone/*.svg` - Icons; `TestoFop` - XSLT extension functions (`tj:`) for line breaks and text geometry
+- The layouts were derived from the former Jasper templates and are now edited by hand; see `script/fop/README.md` for how to edit and verify them (`RegressioneLayoutTest`)
 
 ### Key Technologies
 - **MapStruct**: Bean mapping with custom qualifiers in `BaseAvvisoMapper`
 - **Lombok**: Used for boilerplate reduction
-- **JasperReports + DynamicReports**: PDF generation engine
+- **Apache FOP**: PDF generation engine (JasperReports removed, issue #37)
 - **ZXing**: QR code and DataMatrix barcode generation
 
 ## Test Structure
@@ -103,7 +104,6 @@ Tests use Spring Boot Test with MockMvc. Test classes follow `UC_N_*` naming con
 ## Configuration
 
 Key properties in `application.properties`:
-- `server.port` - Default 10003
-- `spring.mvc.servlet.path` - API base path (default `/api/v1`)
+- No `server.port` or servlet path: standalone on 8080, endpoints at the root (`/standard`); as a war, under the context (e.g. `/govpay-stampe-api/standard`)
 - `stampe.time-zone` - Timezone for date formatting (default `Europe/Rome`)
 - Actuator health endpoints at `/actuator`

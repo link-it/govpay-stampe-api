@@ -51,7 +51,9 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.OK, "https://www.rfc-editor.org/rfc/rfc9110.html#name-200-ok"),
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.UNAUTHORIZED, "https://www.rfc-editor.org/rfc/rfc9110.html#name-401-unauthorized"),
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.FORBIDDEN, "https://www.rfc-editor.org/rfc/rfc9110.html#name-403-forbidden"),
+			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.METHOD_NOT_ALLOWED, "https://www.rfc-editor.org/rfc/rfc9110.html#name-405-method-not-allowed"),
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.NOT_ACCEPTABLE, "https://www.rfc-editor.org/rfc/rfc9110.html#name-406-not-acceptable"),
+			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "https://www.rfc-editor.org/rfc/rfc9110.html#name-415-unsupported-media-type"),
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.BAD_GATEWAY, "https://www.rfc-editor.org/rfc/rfc9110.html#name-502-bad-gateway"),
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.SERVICE_UNAVAILABLE, "https://www.rfc-editor.org/rfc/rfc9110.html#name-503-service-unavailable"),
 			new AbstractMap.SimpleEntry<HttpStatus, String>(HttpStatus.TOO_MANY_REQUESTS, "https://www.rfc-editor.org/rfc/rfc6585#section-4")
@@ -72,10 +74,13 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 		Problem ret = new Problem();
 		ret.setStatus(status.value());
 		ret.setTitle(title);
-		try {
-			ret.setType(new URI(problemTypes.get(status)));
-		} catch (URISyntaxException e) {
-			restLogger.error("Errore nell'impostare la URI del problem", e);
+		String type = problemTypes.get(status);
+		if (type != null) {
+			try {
+				ret.setType(new URI(type));
+			} catch (URISyntaxException e) {
+				restLogger.error("Errore nell'impostare la URI del problem", e);
+			}
 		}
 		ret.setDetail(detail);
 		
@@ -122,7 +127,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
 			HttpMediaTypeNotSupportedException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
+		return 	buildResponseProblem(HttpStatus.UNSUPPORTED_MEDIA_TYPE,ex.getLocalizedMessage());
 	}
 
 	
@@ -145,14 +150,26 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 	
 	
+	/**
+	 * Eccezioni di Spring MVC non gestite dai metodi sopra (path inesistente, metodo non
+	 * supportato, ...): risponde con lo stato scelto da Spring (404, 405, ...) in formato
+	 * problem+json, mantenendo gli header previsti (es. Allow per il 405).
+	 */
 	@Override
 	protected ResponseEntity<Object> handleExceptionInternal(
 			Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
 
-		if (HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.ordinal()).equals(statusCode)) {
+		if (statusCode.is5xxServerError()) {
 			request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, ex, RequestAttributes.SCOPE_REQUEST);
 		}
-		return 	buildResponseProblem(HttpStatus.INTERNAL_SERVER_ERROR,ex.getLocalizedMessage());
+		HttpStatus status = HttpStatus.resolve(statusCode.value());
+		if (status == null) {
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
+		}
+		return ResponseEntity.status(status)
+				.headers(headers)
+				.contentType(MediaType.APPLICATION_PROBLEM_JSON)
+				.body(buildProblem(status, status.getReasonPhrase(), ex.getLocalizedMessage()));
 	}
 	
 	/**

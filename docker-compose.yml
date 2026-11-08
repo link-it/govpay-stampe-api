@@ -1,10 +1,12 @@
-version: '1'
+# Avvio in locale dell'immagine costruita dal jar della build:
+#   mvn clean package -P jar
+#   (cd docker && ./build_image.sh -l ../target/govpay-stampe-api.jar -t govpay-stampe-api:local)
+#   docker compose up -d
 services:
   govpay-stampe-api:
     container_name: govpay-stampe-api
     image: govpay-stampe-api:local
     ports:
-        - 8380:8080
+      - "${STAMPE_HTTP_PORT:-10003}:10003"
     environment:
-        - management.endpoints.web.exposure.include=*
-        - LOGGING_LEVEL_IT_GOVPAY=DEBUG
+      - LOGGING_LEVEL_IT_GOVPAY=DEBUG

@@ -5,6 +5,7 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.springframework.core.io.Resource;
 
 import it.govpay.stampe.beans.Receipt;
 import it.govpay.stampe.beans.ReceiptItem;
@@ -12,6 +13,7 @@ import it.govpay.stampe.beans.ReceiptItemStatus;
 import it.govpay.stampe.beans.ReceiptStatus;
 import it.govpay.stampe.beans.ReceiptVersion;
 import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
+import it.govpay.stampe.utils.LogoUtils;
 
 @Mapper(componentModel = "spring")
 public interface RicevutaMapper {
@@ -20,8 +22,8 @@ public interface RicevutaMapper {
 		return receipt.getOrganization().getFiscalCode() + "_" + receipt.getCreditorReferenceId() + "_ricevuta.pdf";
 	}
 
-	@Mapping(target = "logoEnte", source = "creditorLogo")
-	@Mapping(target = "logoPagopa", source = "pagopaLogo")
+	@Mapping(target = "logoEnte", source = "creditorLogo", qualifiedByName = "mapCreditorLogo")
+	@Mapping(target = "logoPagopa", source = "pagopaLogo", qualifiedByName = "mapPagopaLogo")
 	@Mapping(target = "oggettoDelPagamento", source = "paymentSubject")
 	@Mapping(target = "enteDenominazione", source = "organization.businessName")
 	@Mapping(target = "indirizzoEnte", source = "organization.address")
@@ -82,6 +84,16 @@ public interface RicevutaMapper {
 			case EXECUTED -> "Eseguito";
 			case NOT_EXECUTED -> "Non eseguito";
 		};
+	}
+
+	@Named("mapCreditorLogo")
+	default String mapCreditorLogo(Resource logo) {
+		return LogoUtils.dataUri(logo, "creditor_logo");
+	}
+
+	@Named("mapPagopaLogo")
+	default String mapPagopaLogo(Resource logo) {
+		return LogoUtils.dataUri(logo, "pagopa_logo");
 	}
 
 	@Named("receiptVersionToString")

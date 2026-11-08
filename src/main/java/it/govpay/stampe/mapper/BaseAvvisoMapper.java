@@ -1,12 +1,10 @@
 package it.govpay.stampe.mapper;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -24,6 +22,7 @@ import it.govpay.stampe.exception.CodificaInesistenteException;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
 import it.govpay.stampe.model.v1.RataAvviso;
 import it.govpay.stampe.utils.AvvisoPagamentoUtils;
+import it.govpay.stampe.utils.LogoUtils;
 
 public interface BaseAvvisoMapper {
 
@@ -109,17 +108,14 @@ public interface BaseAvvisoMapper {
 		return labelLingua;
 	}
 	
-	@Named("mapLogo")
-	public default String mapLogo(org.springframework.core.io.Resource logo) {
-		if(logo == null) return null;
-		
-		try {
-	        byte[] logoBytes = IOUtils.toByteArray(logo.getInputStream());
-	        return new String(logoBytes);
-	    } catch (IOException e) {
-	        logger.error("Errore durante la lettura del logo", e);
-	        return null;
-	    }
+	@Named("mapFirstLogo")
+	public default String mapFirstLogo(org.springframework.core.io.Resource logo) {
+		return LogoUtils.dataUri(logo, "first_logo");
+	}
+
+	@Named("mapSecondLogo")
+	public default String mapSecondLogo(org.springframework.core.io.Resource logo) {
+		return LogoUtils.dataUri(logo, "second_logo");
 	}
 
 	// Nella vecchia versione non c'era la distinzione tra le due linee ma venivano concatenate e mandate a capo con <BR/>
@@ -154,10 +150,15 @@ public interface BaseAvvisoMapper {
 		return null;
 	}
 
+	/**
+	 * Testo dopo "oppure sul sito " nei canali digitali: "di &lt;nome dell'ente&gt;" se l'avviso si puo' pagare dal sito
+	 * dell'ente ({@code pay_on_website}), come nella specifica pagoPA; altrimenti assente e la stampa riporta
+	 * "oppure dal tuo Home Banking, ...".
+	 */
 	@Named("mapDelTuoEnte")
-	public default String mapDelTuoEnte(Boolean postal) {
-		if(Boolean.TRUE.equals(postal)) {
-			return Costanti.DEL_TUO_ENTE_CREDITORE;
+	public default String mapDelTuoEnte(Creditor creditor) {
+		if(creditor != null && Boolean.TRUE.equals(creditor.getPayOnWebsite()) && StringUtils.isNotBlank(creditor.getBusinessName())) {
+			return "di " + creditor.getBusinessName().trim();
 		}
 
 		return null;

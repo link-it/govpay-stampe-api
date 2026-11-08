@@ -68,7 +68,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		Etichette etichetteLinguaSecondaria = creaEtichetteLinguaSecondaria(paymentNotice, labelLinguaSecondaria);
 
 		// informazioni postali
-		impostaLabelsCanaliDiPagamento(paymentNotice.getPostal(), etichette, labelLinguaPrincipale, etichetteLinguaSecondaria, labelLinguaSecondaria);
+		impostaLabelsCanaliDiPagamento(paymentNotice.getCreditor(), etichette, labelLinguaPrincipale, etichetteLinguaSecondaria, labelLinguaSecondaria);
 
 		// come in AvvisoPagamentoV2Utils (v1): 'poste' si valorizza a true solo per l'avviso
 		// postale, altrimenti resta assente (letto da tutti i template V2 per decidere se
@@ -116,26 +116,34 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 	}
 
 	/***
-	 * Imposta le label dei canali di pagamento: per l'avviso postale si spengono le label del
-	 * pagamento standard, negli altri casi si spengono quelle del pagamento presso le poste.
+	 * Imposta le label dei canali di pagamento ("Dove pagare"), con i testi della specifica pagoPA 3.5 (#56).
+	 * Canali digitali: la variante "Paga con l'app IO" ("oppure dal tuo Home Banking, ...") se la seconda lingua
+	 * ne ha la traduzione (sloveno), altrimenti "Paga online" ("con l'app IO, dal tuo Home Banking, ..."), l'unica
+	 * tradotta in tedesco: italiano e traduzione dicono cosi' la stessa cosa. Con {@code pay_on_website} il testo
+	 * nomina il sito dell'ente. Il testo sul territorio e' uno solo, con o senza bollettino.
 	 *
 	 */
-	public default void impostaLabelsCanaliDiPagamento(Boolean postale, Etichette etichette, Map<String, String> labelLinguaPrincipale,
+	public default void impostaLabelsCanaliDiPagamento(Creditor creditor, Etichette etichette, Map<String, String> labelLinguaPrincipale,
 			Etichette etichetteLinguaSecondaria, Map<String, String> labelLinguaSecondaria) {
-		String labelPagaTerritorio = LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_STANDARD;
-		String labelPagaApp = LabelAvvisiCostanti.LABEL_PAGA_APP_STANDARD;
-
-		if(Boolean.TRUE.equals(postale)) {
-			labelPagaTerritorio = LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_POSTE;
-			labelPagaApp = LabelAvvisiCostanti.LABEL_PAGA_APP_POSTE;
+		boolean app = labelLinguaSecondaria == null || labelLinguaSecondaria.containsKey(LabelAvvisiCostanti.LABEL_PAGA_APP_TESTO);
+		String sito = creditor != null && Boolean.TRUE.equals(creditor.getPayOnWebsite()) && StringUtils.isNotBlank(creditor.getBusinessName())
+				? creditor.getBusinessName().trim() : null;
+		String titolo = app ? LabelAvvisiCostanti.LABEL_PAGA_APP : LabelAvvisiCostanti.LABEL_PAGA_ONLINE;
+		String testo;
+		if (app) {
+			testo = sito != null ? LabelAvvisiCostanti.LABEL_PAGA_APP_TESTO_SITO : LabelAvvisiCostanti.LABEL_PAGA_APP_TESTO;
+		} else {
+			testo = sito != null ? LabelAvvisiCostanti.LABEL_PAGA_ONLINE_TESTO_SITO : LabelAvvisiCostanti.LABEL_PAGA_ONLINE_TESTO;
 		}
 
-		etichette.setPagaTerritorio2(getLabel(labelLinguaPrincipale, labelPagaTerritorio));
-		etichette.setPagaApp2(getLabel(labelLinguaPrincipale, labelPagaApp));
+		etichette.setPagaApp(getLabel(labelLinguaPrincipale, titolo));
+		etichette.setPagaApp2(sito != null ? getLabel(labelLinguaPrincipale, testo, sito) : getLabel(labelLinguaPrincipale, testo));
+		etichette.setPagaTerritorio2(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_TESTO));
 
 		if(etichetteLinguaSecondaria != null) {
-			etichetteLinguaSecondaria.setPagaTerritorio2(getLabel(labelLinguaSecondaria, labelPagaTerritorio));
-			etichetteLinguaSecondaria.setPagaApp2(getLabel(labelLinguaSecondaria, labelPagaApp));
+			etichetteLinguaSecondaria.setPagaApp(getLabel(labelLinguaSecondaria, titolo));
+			etichetteLinguaSecondaria.setPagaApp2(sito != null ? getLabel(labelLinguaSecondaria, testo, sito) : getLabel(labelLinguaSecondaria, testo));
+			etichetteLinguaSecondaria.setPagaTerritorio2(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PAGA_TERRITORIO_TESTO));
 		}
 	}
 
@@ -161,7 +169,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			}
 
 			if(numeroRate > 0) {
-				impostaNotaPrimaRata(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, numeroRate);
+				impostaNotaPrimaRata(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, numeroRate, rataUnica != null);
 				addNota1 = false;
 			}
 
@@ -264,7 +272,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		if(instalments.size() % 2 == 0) {
 			// numero di versamenti pari devo creare la pagina principale con i dati della prima rata
 			logger.debug("Numero di versamenti con rate e' pari, riporto i dati della prima rata anche nella pagina principale.");
-			creaPaginaPrincipaleConImportoTotale(avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
+			creaPaginaPrincipaleConImportoTotale(logger, paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, instalments);
 		} else {
 			// versamenti dispari la prima pagina e la prima rata coincidono
 			logger.debug("Numero di versamenti con rate e' dispari, la prima pagina coincide con la prima rata.");
@@ -272,8 +280,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		}
 	}
 
-	public default void creaPaginaPrincipaleConImportoTotale(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale,
-			Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
+	public default void creaPaginaPrincipaleConImportoTotale(Logger logger, PaymentNotice paymentNotice, AvvisoPagamentoInput avvisoPagamentoInput,
+			Map<String, String> labelLinguaPrincipale, Map<String, String> labelLinguaSecondaria, List<Instalment> instalments) {
 		PaginaAvvisoSingola pagina = new PaginaAvvisoSingola();
 		Instalment versamento = instalments.get(0); // leggo alcuni dati dalla prima rata
 
@@ -283,8 +291,15 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 		}
 
-		RataAvviso rata = instalmentToRata(versamento);
-		rata.setImporto(calcolaImportoTotale(instalments));
+		// la rata 1, completa come le altre (etichette e, con il bollettino, i dati postali): la banda di pagamento
+		// e il bollettino riportano il suo importo, coerente con il suo QR code e il suo DataMatrix; il totale del
+		// piano rateale va solo in "Quanto e quando pagare" (#59). Prima la rata aveva il totale, nessuna scadenza
+		// e, con il bollettino, nessun conto ne' DataMatrix
+		RataAvviso rata = instalmentToRataWithLabels(logger, versamento, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		rata.setImportoTotale(calcolaImportoTotale(instalments));
+		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		if(labelLinguaSecondaria != null)
+			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
 
 		pagina.setRata(rata);
 
@@ -326,12 +341,18 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		avvisoPagamentoInput.getPagine().getSingolaOrDoppia().add(pagina);
 	}
 
+	/***
+	 * Nota sulle rate (specifica 3.5): "Puoi pagare in N rate", oppure "Puoi pagare per intero o in N rate" se c'e'
+	 * anche la rata unica (#56).
+	 *
+	 */
 	public default void impostaNotaPrimaRata(AvvisoPagamentoInput avvisoPagamentoInput, Map<String, String> labelLinguaPrincipale,
-			Map<String, String> labelLinguaSecondaria, int numeroRate) {
-		avvisoPagamentoInput.getEtichette().getItaliano().setNota1(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA, numeroRate));
+			Map<String, String> labelLinguaSecondaria, int numeroRate, boolean conRataUnica) {
+		String nota = conRataUnica ? LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA_CON_UNICA : LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA;
+		avvisoPagamentoInput.getEtichette().getItaliano().setNota1(getLabel(labelLinguaPrincipale, nota, numeroRate));
 
 		if(labelLinguaSecondaria != null ) {
-			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NOTA_PRIMA_RATA, numeroRate));
+			avvisoPagamentoInput.getEtichette().getTraduzione().setNota1(getLabel(labelLinguaSecondaria, nota, numeroRate));
 		}
 	}
 
@@ -505,8 +526,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		risolviEImpostaNotaImporto(paymentNotice, avvisoPagamentoInput, labelLinguaPrincipale, labelLinguaSecondaria, rataUnica != null);
 	}
 
-	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
-	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapLogo")
+	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapFirstLogo")
+	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapSecondLogo")
 	@Mapping(target = "cfEnte", source="paymentNotice.creditor.fiscalCode")
 	@Mapping(target = "enteCreditore", source="paymentNotice.creditor.businessName")
 	@Mapping(target = "settoreEnte", source="paymentNotice.creditor.departmentName")
@@ -559,13 +580,16 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 
 		if(rata.getNumeroRata() != null) {
-			rata.setNumeroRata(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NUMERO_RATA, rata.getNumeroRata()));
+			// il numero della rata, prima di sostituirlo con l'etichetta ("Rata 2"): le altre etichette
+			// e la traduzione lo usano come parametro, altrimenti stampano "Obrok Rata 2" (#55)
+			String numero = rata.getNumeroRata();
+			rata.setNumeroRata(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_NUMERO_RATA, numero));
 			if(labelLinguaSecondaria != null)
-				rata.setNumeroRataTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NUMERO_RATA, rata.getNumeroRata()));
+				rata.setNumeroRataTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_NUMERO_RATA, numero));
 
-			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, rata.getNumeroRata()));
+			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, numero));
 			if(labelLinguaSecondaria != null)
-				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, rata.getNumeroRata()));
+				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_ENTRO_IL, numero));
 
 			rata.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 			if(labelLinguaSecondaria != null)

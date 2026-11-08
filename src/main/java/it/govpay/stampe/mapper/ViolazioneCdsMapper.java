@@ -75,8 +75,8 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 	}
 
 
-	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
-	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapLogo")
+	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapFirstLogo")
+	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapSecondLogo")
 	@Mapping(target = "oggettoDelPagamento", source="title")
 	@Mapping(target = "cfEnte", source="cdsViolation.creditor.fiscalCode")
 	@Mapping(target = "enteCreditore", source="cdsViolation.creditor.businessName")
@@ -88,7 +88,7 @@ public interface ViolazioneCdsMapper extends BaseAvvisoMapper{
 	@Mapping(target = "indirizzoDestinatario1", source="cdsViolation.debtor.addressLine1")
 	@Mapping(target = "indirizzoDestinatario2", source="cdsViolation.debtor.addressLine2")
 	@Mapping(target = "diPoste", source="cdsViolation.postal", qualifiedByName = "mapPostale")
-	@Mapping(target = "delTuoEnte", source="cdsViolation.postal", qualifiedByName = "mapDelTuoEnte")
+	@Mapping(target = "delTuoEnte", source="cdsViolation.creditor", qualifiedByName = "mapDelTuoEnte")
 	public AvvisoPagamentoInput toViolazioneAvvisoPagamentoInputBase(CdsViolation cdsViolation);
 
 

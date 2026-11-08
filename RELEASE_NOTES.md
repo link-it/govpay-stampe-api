@@ -4,6 +4,74 @@
 
 Rilascio del 2026-07-15.
 
+### 🖨️ Stampa con Apache FOP
+
+- I PDF di avvisi semplici, postali e bilingui, violazioni del codice della strada
+  e ricevute sono generati con **Apache FOP** (XSLT + XSL-FO) al posto di
+  JasperReports (issue #37). L'API REST è invariata; la ricevuta accetta importi
+  pari a 0.
+- Aspetto delle stampe invariato, verificato su 71 casi di riferimento confrontati
+  con i PDF Jasper. I layout sono in `src/main/resources/fop` e si modificano a
+  mano; guida in `script/fop/README.md`, regressione con `RegressioneLayoutTest`.
+- **QR code e DataMatrix** a norma della specifica pagoPA 3.5 e del manuale Poste
+  per la stampa in proprio: QR versione 4 con correzione M, DataMatrix 52x52, entrambi
+  di 25 mm con almeno 3 mm di bianco attorno; DataMatrix a 13 mm dal bordo destro;
+  autorizzazione Poste in grigio al 70%. Contenuto dei codici invariato.
+- Rimossi JasperReports, dynamicreports e i template `.jrxml`/`.jasper`, con le
+  dipendenze collegate. FOP usa PDFBox per i font: `fontbox` e `pdfbox-io` sono
+  forzati alla 3.0.8.
+
+### ⚠️ Loghi come byte dell'immagine (modifica incompatibile)
+
+- I loghi di avviso e ricevuta sono campi binari: il JSON porta il base64 dei byte
+  dell'immagine (PNG, JPEG, GIF o SVG), e il servizio ne riconosce il tipo dal
+  contenuto. Un logo che non è una di queste immagini risponde `400` (issue #38).
+- **Ricevuta:** `creditor_logo` e `pagopa_logo` passano da stringa con la URI data
+  (`data:image/png;base64,...`) a `format: binary`. I client devono mandare il
+  base64 dell'immagine senza il prefisso `data:`: la forma precedente risponde
+  `400`.
+- **Avviso:** `first_logo` e `second_logo` accettano i byte dell'immagine e, per
+  compatibilità, anche la forma usata finora (la URI data codificata in base64).
+
+### 📝 Testi e grafica della specifica pagoPA 3.5
+
+- Disclaimer sull'importo con il testo della specifica 3.5: "In fase di
+  pagamento l'importo potrebbe subire aumenti (per sanzioni, interessi, costi
+  di notifica o altri fattori) o riduzioni (per sgravi o note di credito)."
+  Nel bilingue, traduzioni ufficiali in tedesco e sloveno. Il testo
+  personalizzato con `informativa_importo` resta invariato (issue #45).
+- Violazione del codice della strada: disclaimer sull'importo sopra le
+  scadenze, come nel modello 3.5; il testo sulla giacenza è quello breve del
+  modello (issue #45).
+- Canali digitali ("Paga con l'app IO"): nuovo campo opzionale
+  `creditor.pay_on_website` (default `false`). Se `true` la stampa riporta
+  "oppure sul sito di <business_name>, dal tuo Home Banking, ...", altrimenti
+  "oppure dal tuo Home Banking, ...", come nella specifica 3.5 (issue #47).
+  **Cambia il comportamento degli avvisi postali**, che finora riportavano
+  sempre "oppure sul sito del tuo Ente Creditore": senza `pay_on_website` la
+  frase sul sito non compare più.
+- Avviso bilingue a rate: niente più "null" nella scadenza della pagina
+  principale e numero di rata tradotto corretto ("Obrok 2" invece di "Obrok
+  Rata 2") (issue #55).
+- Avviso bilingue con un numero pari di rate: la banda di pagamento della prima
+  pagina riporta l'importo della rata 1, coerente con il suo QR code (prima
+  riportava il totale del piano rateale); con il bollettino, il bollettino della
+  prima pagina ha ora conto e DataMatrix. Il totale resta in "Quanto e quando
+  pagare" (issue #59).
+- Avviso bilingue secondo il modello 3.5 "Avviso con seconda lingua": titoli
+  ("Dove pagare?", "Dati per il pagamento"), canali digitali e sul territorio, nota
+  del QR code, note sulle rate e etichette dei dati con le stringhe ufficiali in
+  tedesco e sloveno; `creditor.pay_on_website` anche nel bilingue. La sezione
+  "Dove pagare" ha una riga in più e la parte sotto della prima pagina scende di
+  12 pt (issue #56).
+- Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
+  grigio della specifica, al posto di `#999999` (issue #46).
+
+### 🔒 Sicurezza
+
+- Rimossa la suppression OWASP di **CVE-2026-6009** (JasperReports): la libreria
+  non è più tra le dipendenze.
+
 ### 🐳 Docker
 
 - Runtime delle immagini Docker portato a **JDK 25** (solo runtime; il target di

@@ -428,8 +428,8 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 		}
 	}
 
-	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapLogo")
-	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapLogo")
+	@Mapping(target = "logoEnte", source="firstLogo", qualifiedByName = "mapFirstLogo")
+	@Mapping(target = "logoEnteSecondario", source="secondLogo", qualifiedByName = "mapSecondLogo")
 	@Mapping(target = "oggettoDelPagamento", source="title")
 	@Mapping(target = "cfEnte", source="paymentNotice.creditor.fiscalCode")
 	@Mapping(target = "enteCreditore", source="paymentNotice.creditor.businessName")
@@ -441,7 +441,7 @@ public interface AvvisoPagamentoMapper extends BaseAvvisoMapper {
 	@Mapping(target = "indirizzoDestinatario1", source="paymentNotice.debtor.addressLine1")
 	@Mapping(target = "indirizzoDestinatario2", source="paymentNotice.debtor.addressLine2")
 	@Mapping(target = "diPoste", source="paymentNotice.postal", qualifiedByName = "mapPostale")
-	@Mapping(target = "delTuoEnte", source="paymentNotice.postal", qualifiedByName = "mapDelTuoEnte")
+	@Mapping(target = "delTuoEnte", source="paymentNotice.creditor", qualifiedByName = "mapDelTuoEnte")
 	public AvvisoPagamentoInput toPaymentNoticeAvvisoPagamentoInput(PaymentNotice paymentNotice);
 
 	@Mapping(target = "importo", source="amount")

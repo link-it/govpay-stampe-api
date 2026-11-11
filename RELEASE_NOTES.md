@@ -76,6 +76,10 @@ Rilascio del 2026-07-15.
   tedesco e sloveno; `creditor.pay_on_website` anche nel bilingue. La sezione
   "Dove pagare" ha una riga in più e la parte sotto della prima pagina scende di
   12 pt (issue #56).
+- Avviso bilingue con soglie in giorni (senza `due_date`): scadenze tradotte
+  correttamente, "Innerhalb von 30 Tagen" / "Nach 60 Tagen" in tedesco (prima
+  "Innerhalb von 30 tagen" / "Über 60 tage") e "v 30 dneh" / "po 60 dneh" in
+  sloveno (prima "v 30 dnevi" / "po 60 dnevi") (issue #66).
 - Avviso bilingue: i testi della seconda lingua sono in grigio `#7C7C7B`, il
   grigio della specifica, al posto di `#999999` (issue #46).
 

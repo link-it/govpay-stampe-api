@@ -10,6 +10,20 @@
 	gia' stampato dal template. Nuova etichetta rata_unica in
 	avvisi.properties (it, sl, de). Gli avvisi con la data non cambiano.
 	Stesso difetto corretto nel core con link-it/govpay#918.
+2026-11-11  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso bilingue: traduzioni delle soglie in giorni (#66).
+	avvisi.properties: de.entro "Innerhalb von {0} Tagen" e de.oltre
+	"Nach {0} Tagen" (prima "tagen" e "Über {0} tage", cioe' "piu' di"),
+	sl.entro "v {0} dneh" e sl.oltre "po {0} dneh" (prima "dnevi"), come
+	nelle stringhe ufficiali della specifica 3.5 ("innerhalb von 10 Tagen",
+	"v 10 dneh"). Corrette anche soluzione_unica_entro/oltre_giorni, che
+	finiscono in scadenza_unica dell'XML ma non sono stampate: in tedesco
+	erano in italiano, in sloveno "Posamezna raztopina" (soluzione chimica).
+	Tolte rata_unica_entro_giorni e prima_rata_entro_giorni, mai usate.
+	Verifica: avvisi bilingui de e sl con due soglie a 5 giorni senza
+	due_date, normali e postali: scadenze nuove nelle schede e nei
+	bollettini, nei margini; hash di RegressioneLayoutTest invariati.
 2026-11-09  Giuliano Pintori <pintori@link.it>
 
 	* [Release] Ramo 3.11.x: versione 2.1.0-SNAPSHOT

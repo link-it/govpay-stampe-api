@@ -20,12 +20,14 @@ import it.govpay.stampe.config.LabelAvvisiConfiguration.LabelAvvisiProperties;
 import it.govpay.stampe.mapper.AvvisoPagamentoBilingueMapper;
 import it.govpay.stampe.model.v2.AvvisoPagamentoInput;
 import it.govpay.stampe.model.v2.Etichette;
+import it.govpay.stampe.model.v2.PaginaAvvisoDoppia;
+import it.govpay.stampe.model.v2.RataAvviso;
 import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
 
 /**
  * Testi della specifica pagoPA 3.5 nell'avviso bilingue, variante "Avviso con seconda lingua" (issue #56):
  * "Dove pagare" con la variante dei canali digitali comune alla coppia di lingue, sito dell'ente con
- * {@code pay_on_website}, nota sulle rate con o senza rata unica.
+ * {@code pay_on_website}, nota sulle rate con o senza rata unica, soglie in giorni (issue #66).
  */
 @SpringBootTest(classes = Application.class)
 @DisplayName("Test Dove pagare nell'avviso bilingue")
@@ -130,5 +132,32 @@ class DovePagareBilingueTest {
 				}
 			}
 		}
+	}
+
+	private RataAvviso[] soglie(Languages lingua) {
+		PaymentNotice avviso = this.avvisiPagamentoFactory.creaPaymentNoticeConSoglie(2, false, false, true);
+		avviso.getSecondLanguage().setLanguage(lingua);
+		PaginaAvvisoDoppia pagina = mappa(avviso).getPagine().getSingolaOrDoppia().stream()
+				.filter(PaginaAvvisoDoppia.class::isInstance).map(PaginaAvvisoDoppia.class::cast)
+				.findFirst().orElseThrow();
+		return pagina.getRata().toArray(new RataAvviso[0]);
+	}
+
+	@Test
+	void soglieInGiorni() {
+		// il factory crea una soglia ENTRO 30 giorni e una OLTRE 60 giorni
+		RataAvviso[] de = soglie(Languages.DE);
+		assertEquals("Entro 30 giorni", de[0].getScadenza());
+		assertEquals("Innerhalb von 30 Tagen", de[0].getScadenzaTra());
+		assertEquals("Einzige Rate innerhalb von 30 Tagen", de[0].getScadenzaUnicaTra());
+		assertEquals("Oltre 60 giorni", de[1].getScadenza());
+		assertEquals("Nach 60 Tagen", de[1].getScadenzaTra());
+		assertEquals("Einzige Rate nach 60 Tagen", de[1].getScadenzaUnicaTra());
+
+		RataAvviso[] sl = soglie(Languages.SL);
+		assertEquals("v 30 dneh", sl[0].getScadenzaTra());
+		assertEquals("Enkratni obrok v 30 dneh", sl[0].getScadenzaUnicaTra());
+		assertEquals("po 60 dneh", sl[1].getScadenzaTra());
+		assertEquals("Enkratni obrok po 60 dneh", sl[1].getScadenzaUnicaTra());
 	}
 }

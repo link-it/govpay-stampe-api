@@ -24,8 +24,15 @@ Rilascio del 2026-07-15.
 ### ⚠️ Loghi come byte dell'immagine (modifica incompatibile)
 
 - I loghi di avviso e ricevuta sono campi binari: il JSON porta il base64 dei byte
-  dell'immagine (PNG, JPEG, GIF o SVG), e il servizio ne riconosce il tipo dal
-  contenuto. Un logo che non è una di queste immagini risponde `400` (issue #38).
+  dell'immagine (PNG, JPEG, GIF, SVG, BMP o TIFF), e il servizio ne riconosce il
+  tipo dal contenuto (issue #38).
+- Un logo che non si può stampare non blocca più il documento, che esce senza quel
+  logo e con un `WARN` nel log (campo, codice fiscale dell'ente, causa): formato
+  non riconosciuto, immagine troncata o danneggiata, SVG malformato o con risorse
+  esterne, che per sicurezza non vengono caricate. Prima un formato non
+  riconosciuto rispondeva `400` e un PNG troncato `503`; gli SVG rotti uscivano
+  già senza logo, ma con l'errore di FOP nel log, URI data compresa (issue #67,
+  come link-it/govpay#902 nel core).
 - **Ricevuta:** `creditor_logo` e `pagopa_logo` passano da stringa con la URI data
   (`data:image/png;base64,...`) a `format: binary`. I client devono mandare il
   base64 dell'immagine senza il prefisso `data:`: la forma precedente risponde

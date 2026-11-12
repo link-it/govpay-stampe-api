@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
 import it.govpay.stampe.costanti.Costanti;
+import it.govpay.stampe.fop.LoghiDocumento;
 import it.govpay.stampe.fop.MotoreFop;
 
 public abstract class AvvisoPagamentoService {
@@ -28,9 +29,10 @@ public abstract class AvvisoPagamentoService {
 
 	/**
 	 * Stampa con FOP: l'oggetto JAXB e' passato direttamente alla trasformazione XSLT, senza
-	 * serializzarlo. Con il debug attivo l'XML di input viene scritto nel log.
+	 * serializzarlo. Con il debug attivo l'XML di input viene scritto nel log. Un logo che non si stampa
+	 * viene tolto dal documento (issue #67).
 	 */
-	protected byte[] creaAvvisoFop(MotoreFop motoreFop, String foglio, JAXBElement<?> jaxbElement, boolean debug) throws JAXBException {
+	protected byte[] creaAvvisoFop(MotoreFop motoreFop, String foglio, JAXBElement<?> jaxbElement, boolean debug, LoghiDocumento loghi) throws JAXBException {
 		if(debug) {
 			try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 				jaxb2Marshaller.createMarshaller().marshal(jaxbElement, baos);
@@ -39,6 +41,6 @@ public abstract class AvvisoPagamentoService {
 				// ByteArrayOutputStream non lancia eccezioni in chiusura
 			}
 		}
-		return motoreFop.genera(foglio, jaxb2Marshaller.getJaxbContext(), jaxbElement);
+		return motoreFop.genera(foglio, jaxb2Marshaller.getJaxbContext(), jaxbElement, loghi);
 	}
 }

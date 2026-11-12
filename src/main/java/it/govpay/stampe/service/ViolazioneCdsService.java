@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneAvvisoException;
+import it.govpay.stampe.fop.LoghiDocumento;
 import it.govpay.stampe.fop.MotoreFop;
 import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v1.AvvisoPagamentoInput;
@@ -43,7 +44,7 @@ public class ViolazioneCdsService extends AvvisoPagamentoService {
 		try {
 			PreparazioneAvviso.completa(input);
 			JAXBElement<AvvisoPagamentoInput> jaxbElement = new JAXBElement<>(new QName("", this.getXmlRootName()), AvvisoPagamentoInput.class, null, input);
-			return creaAvvisoFop(this.motoreFop, FOGLIO_FOP, jaxbElement, this.debugInputJasper);
+			return creaAvvisoFop(this.motoreFop, FOGLIO_FOP, jaxbElement, this.debugInputJasper, LoghiDocumento.di("avviso di violazione del codice della strada", input));
 		} catch (JAXBException | IllegalStateException e) {
 			throw new GenerazioneAvvisoException(e);
 		}

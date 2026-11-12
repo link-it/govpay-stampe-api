@@ -174,7 +174,11 @@ Il servizio produce le seguenti categorie di [avvisi pagoPA](https://developer.p
 
 ### Logo dell'ente
 
-I campi dei loghi (`first_logo`, `second_logo`, e nelle ricevute `creditor_logo`, `pagopa_logo`) sono di tipo binario: il valore JSON è la codifica base64 dei byte dell'immagine (PNG, JPEG, GIF o SVG), per esempio `iVBORw0KGg...` per un PNG. Il servizio riconosce il tipo dell'immagine dal contenuto; un contenuto che non è una di queste immagini risponde `400`. Per compatibilità, nei loghi dell'avviso è accettata anche la forma precedente, cioè la stringa della URI data (`data:image/png;base64,iVBORw0KGg...`) codificata in base64. Negli esempi che seguono il valore è abbreviato in `base64encodedimage`.
+I campi dei loghi (`first_logo`, `second_logo`, e nelle ricevute `creditor_logo`, `pagopa_logo`) sono di tipo binario: il valore JSON è la codifica base64 dei byte dell'immagine (PNG, JPEG, GIF, SVG, BMP o TIFF), per esempio `iVBORw0KGg...` per un PNG. Il servizio riconosce il tipo dell'immagine dal contenuto.
+
+Un logo che non si può stampare non blocca il documento, che viene prodotto senza quel logo, con un `WARN` nel log che indica il campo, il codice fiscale dell'ente e la causa. Succede con un formato non riconosciuto (per esempio WebP), un'immagine troncata o danneggiata, un SVG malformato o che fa riferimento a risorse esterne (immagini remote, `@import` CSS), che per sicurezza non vengono caricate. Un SVG con un'immagine PNG o JPEG incorporata come URI data si stampa.
+
+Per compatibilità, nei loghi dell'avviso è accettata anche la forma precedente, cioè la stringa della URI data (`data:image/png;base64,iVBORw0KGg...`) codificata in base64. Negli esempi che seguono il valore è abbreviato in `base64encodedimage`.
 
 ### Lingue
 

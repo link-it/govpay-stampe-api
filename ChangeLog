@@ -1,3 +1,24 @@
+2026-11-12  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Loghi non stampabili: il documento esce senza il logo (#67).
+	MotoreFop raccoglie gli eventi di FOP di severita' ERROR o FATAL; se la
+	stampa fallisce o ne segnala uno, verifica ogni logo del documento con
+	una pagina minima, toglie quelli che non si stampano (LoghiDocumento,
+	con le dimensioni _px), scrive un WARN con campo, codice fiscale
+	dell'ente e causa (senza la URI data) e ristampa una volta. Se tutti i
+	loghi si stampano l'errore resta quello di prima. Come
+	LogoEnte.usaLogoDiDefault del core (govpay#902).
+	LogoUtils: riconosce anche BMP e TIFF; un contenuto non riconosciuto
+	diventa una URI data application/octet-stream invece del 400.
+	batik-codec non si aggiunge: arriva gia' da fop-core, e gli SVG con PNG
+	o JPEG incorporato si stampavano gia'.
+	Verifica: i 59 loghi di LoghiDiProva del core (byte e URI data) su
+	avviso e ricevuta: 201 in tutti i casi, logo presente nei PDF solo per
+	quelli stampabili (stessa classificazione del core), WARN solo per gli
+	altri; prima BMP, TIFF, WebP e byte casuali davano 400 e il PNG
+	troncato 503. Un caso per postale, bilingue, violazione CdS e
+	pagopa_logo.
+
 2026-11-11  Giuliano Pintori <pintori@link.it>
 
 	* [Stampe] Avviso bilingue: traduzioni delle soglie in giorni (#66).

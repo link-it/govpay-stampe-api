@@ -12,7 +12,10 @@ import it.govpay.stampe.exception.BadRequestException;
 
 /**
  * Loghi di avviso e ricevuta (issue #38): il JSON porta i byte dell'immagine (campi {@code format: binary}),
- * il layout vuole una URI data. Il tipo dell'immagine e' riconosciuto dal contenuto: PNG, JPEG, GIF e SVG.
+ * il layout vuole una URI data. Il tipo dell'immagine e' riconosciuto dal contenuto: PNG, JPEG, GIF, SVG, BMP e TIFF.
+ * Un contenuto non riconosciuto non e' un errore della richiesta (issue #67): diventa una URI data
+ * {@code application/octet-stream}, che FOP non sa stampare, e il documento viene prodotto senza quel logo
+ * (vedi {@code MotoreFop}).
  * <p>
  * Per gli avvisi sono ancora accettate le forme precedenti, che i client mandano oggi: i byte di una URI data
  * ({@code data:image/png;base64,...}) e i byte del solo base64 dell'immagine, senza prefisso.
@@ -22,6 +25,10 @@ public class LogoUtils {
 	private static final byte[] PNG = { (byte) 0x89, 'P', 'N', 'G' };
 	private static final byte[] JPEG = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF };
 	private static final byte[] GIF = { 'G', 'I', 'F', '8' };
+	private static final byte[] BMP = { 'B', 'M' };
+	private static final byte[] TIFF_II = { 'I', 'I', 42, 0 };
+	private static final byte[] TIFF_MM = { 'M', 'M', 0, 42 };
+	private static final String SCONOSCIUTO = "application/octet-stream";
 	private static final Pattern BASE64 = Pattern.compile("[A-Za-z0-9+/=\\s]+");
 
 	private LogoUtils() {}
@@ -31,20 +38,20 @@ public class LogoUtils {
 	 *
 	 * @param logo contenuto del campo binario
 	 * @param campo nome del campo nel JSON, per il messaggio d'errore
-	 * @throws BadRequestException se il contenuto non e' un'immagine PNG, JPEG, GIF o SVG
+	 * @throws BadRequestException se il contenuto del campo non si puo' leggere
 	 */
 	public static String dataUri(Resource logo, String campo) {
 		if (logo == null) {
 			return null;
 		}
 		try {
-			return dataUri(logo.getContentAsByteArray(), campo);
+			return dataUri(logo.getContentAsByteArray());
 		} catch (IOException e) {
 			throw new BadRequestException("Logo non leggibile: " + campo);
 		}
 	}
 
-	public static String dataUri(byte[] dati, String campo) {
+	public static String dataUri(byte[] dati) {
 		if (dati == null || dati.length == 0) {
 			return null;
 		}
@@ -71,10 +78,10 @@ public class LogoUtils {
 				// non e' base64: formato non supportato
 			}
 		}
-		throw new BadRequestException("Formato del logo non supportato (attesi PNG, JPEG, GIF o SVG): " + campo);
+		return "data:" + SCONOSCIUTO + ";base64," + Base64.getEncoder().encodeToString(dati);
 	}
 
-	/** Tipo MIME dell'immagine dal contenuto, {@code null} se non e' PNG, JPEG, GIF o SVG. */
+	/** Tipo MIME dell'immagine dal contenuto, {@code null} se non e' PNG, JPEG, GIF, SVG, BMP o TIFF. */
 	static String tipo(byte[] dati) {
 		if (inizia(dati, PNG)) {
 			return "image/png";
@@ -84,6 +91,12 @@ public class LogoUtils {
 		}
 		if (inizia(dati, GIF)) {
 			return "image/gif";
+		}
+		if (inizia(dati, TIFF_II) || inizia(dati, TIFF_MM)) {
+			return "image/tiff";
+		}
+		if (inizia(dati, BMP)) {
+			return "image/bmp";
 		}
 		// SVG: testo XML con l'elemento svg, eventualmente preceduto da BOM, dichiarazione XML o commenti
 		String inizio = new String(dati, 0, Math.min(dati.length, 1024), StandardCharsets.UTF_8).replace("﻿", "").trim();

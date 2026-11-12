@@ -286,14 +286,18 @@ components:
           type: string
           format: binary
           description: >-
-            Byte dell'immagine (PNG, JPEG, GIF o SVG), in JSON codificati in base64. Per compatibilita'
-            sono accettati anche i byte di una URI data (data:image/png;base64,...).
+            Byte dell'immagine (PNG, JPEG, GIF, SVG, BMP o TIFF), in JSON codificati in base64. Per compatibilita'
+            sono accettati anche i byte di una URI data (data:image/png;base64,...). Un logo che non si puo'
+            stampare (formato non riconosciuto, immagine danneggiata, SVG con risorse esterne) non blocca la
+            stampa: il documento esce senza il logo.
         second_logo:
           type: string
           format: binary
           description: >-
-            Byte dell'immagine (PNG, JPEG, GIF o SVG), in JSON codificati in base64. Per compatibilita'
-            sono accettati anche i byte di una URI data (data:image/png;base64,...).
+            Byte dell'immagine (PNG, JPEG, GIF, SVG, BMP o TIFF), in JSON codificati in base64. Per compatibilita'
+            sono accettati anche i byte di una URI data (data:image/png;base64,...). Un logo che non si puo'
+            stampare (formato non riconosciuto, immagine danneggiata, SVG con risorse esterne) non blocca la
+            stampa: il documento esce senza il logo.
         title:
           type: string
           example: "Avviso di pagamento"
@@ -545,13 +549,15 @@ components:
           type: string
           format: binary
           description: >-
-            Logo dell'ente creditore: byte dell'immagine (PNG, JPEG, GIF o SVG), in JSON codificati in base64.
+            Logo dell'ente creditore: byte dell'immagine (PNG, JPEG, GIF, SVG, BMP o TIFF), in JSON codificati in base64.
+            Un logo che non si puo' stampare non blocca la stampa: la ricevuta esce senza il logo.
           example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         pagopa_logo:
           type: string
           format: binary
           description: >-
-            Logo di pagoPA: byte dell'immagine (PNG, JPEG, GIF o SVG), in JSON codificati in base64.
+            Logo di pagoPA: byte dell'immagine (PNG, JPEG, GIF, SVG, BMP o TIFF), in JSON codificati in base64.
+            Un logo che non si puo' stampare non blocca la stampa: la ricevuta esce senza il logo.
           example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         payment_subject:
           type: string

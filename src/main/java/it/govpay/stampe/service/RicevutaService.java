@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import it.govpay.stampe.costanti.Costanti;
 import it.govpay.stampe.exception.GenerazioneRicevutaException;
+import it.govpay.stampe.fop.LoghiDocumento;
 import it.govpay.stampe.fop.MotoreFop;
 import it.govpay.stampe.fop.PreparazioneAvviso;
 import it.govpay.stampe.model.v1.RicevutaTelematicaInput;
@@ -59,7 +60,7 @@ public class RicevutaService {
 					logger.debug(Costanti.LOG_MSG_AVVISO_PAGAMENTO_INPUT, baos.toString(StandardCharsets.UTF_8));
 				}
 			}
-			return this.motoreFop.genera(FOGLIO_FOP, jaxb2Marshaller.getJaxbContext(), jaxbElement);
+			return this.motoreFop.genera(FOGLIO_FOP, jaxb2Marshaller.getJaxbContext(), jaxbElement, LoghiDocumento.di("ricevuta di pagamento", input));
 		} catch (JAXBException | IOException | IllegalStateException e) {
 			throw new GenerazioneRicevutaException(e);
 		}

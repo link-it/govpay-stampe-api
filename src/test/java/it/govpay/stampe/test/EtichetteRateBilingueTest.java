@@ -1,6 +1,7 @@
 package it.govpay.stampe.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ import it.govpay.stampe.test.utils.AvvisiPagamentoFactory;
  * Rate nell'avviso bilingue: la rata della pagina principale ha la scadenza (issue #55; senza, l'intestazione dei
  * dati per il pagamento stampava "null") e, con un numero pari di rate, l'importo della rata del suo QR code, con il
  * totale a parte (issue #59); la traduzione del numero di rata usa il numero e non l'etichetta italiana ("Obrok 2",
- * non "Obrok Rata 2").
+ * non "Obrok Rata 2"). Senza due_date si stampa solo il nome della rata, senza le etichette "... entro il" (issue #71).
  */
 @SpringBootTest(classes = Application.class)
 @DisplayName("Test Etichette delle rate nell'avviso bilingue")
@@ -104,5 +105,43 @@ class EtichetteRateBilingueTest {
 		assertEquals("Obrok št. 2", seconda.getNumeroRataTra());
 		assertEquals("Rata 2 entro il", seconda.getScadenza());
 		assertEquals("Obrok št. 2 do", seconda.getScadenzaTra());
+	}
+
+	private PaymentNotice senzaData(PaymentNotice avviso) {
+		if (avviso.getFull() != null)
+			avviso.getFull().setDueDate(null);
+		avviso.getInstalments().forEach(r -> r.setDueDate(null));
+		return avviso;
+	}
+
+	@Test
+	void rateSenzaDataConUnNumeroDispariDiRate() {
+		List<RataAvviso> rate = rate(senzaData(bilingueSloveno(3)));
+		assertEquals("Rata 1", rate.get(0).getScadenza());
+		assertEquals("Obrok št. 1", rate.get(0).getScadenzaTra());
+		for (RataAvviso rata : rate.subList(1, rate.size())) {
+			assertNull(rata.getScadenza());
+			assertNull(rata.getScadenzaTra());
+		}
+	}
+
+	@Test
+	void rateSenzaDataConUnNumeroPariDiRate() {
+		List<RataAvviso> rate = rate(senzaData(bilingueSloveno(2)));
+		assertEquals("Rata 1", rate.get(0).getScadenza());
+		assertEquals("Obrok št. 1", rate.get(0).getScadenzaTra());
+		for (RataAvviso rata : rate.subList(1, rate.size())) {
+			assertNull(rata.getScadenza());
+			assertNull(rata.getScadenzaTra());
+		}
+	}
+
+	@Test
+	void rataUnicaSenzaData() {
+		PaymentNotice avviso = senzaData(this.avvisiPagamentoFactory.creaPaymentNoticeConRate(0, true));
+		avviso.getSecondLanguage().setLanguage(Languages.SL);
+		RataAvviso rata = rate(avviso).get(0);
+		assertEquals("Rata unica", rata.getScadenza());
+		assertEquals("Enkratni obrok", rata.getScadenzaTra());
 	}
 }

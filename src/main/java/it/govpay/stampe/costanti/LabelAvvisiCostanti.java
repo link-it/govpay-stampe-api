@@ -24,6 +24,7 @@ public class LabelAvvisiCostanti {
 	public static final String LABEL_NOTA_PRIMA_RATA_CON_UNICA = "nota_prima_rata_con_unica";
 	public static final String LABEL_NOTA_RATA_UNICA = "nota_rata_unica";
 	public static final String LABEL_RATA_UNICA_ENTRO_IL = "rata_unica_entro_il";
+	public static final String LABEL_RATA_UNICA = "rata_unica";
 	public static final String LABEL_RATA_UNICA_ENTRO_GIORNI = "rata_unica_entro_giorni";
 	public static final String LABEL_RATA_ENTRO_IL = "rata_entro_il";
 	public static final String LABEL_PRIMA_RATA = "prima_rata";

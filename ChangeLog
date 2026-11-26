@@ -1,3 +1,15 @@
+2026-11-26  Giuliano Pintori <pintori@link.it>
+
+	* [Stampe] Avviso bilingue senza due_date (issue #71).
+	Quando una rata o la rata unica non ha due_date restavano le etichette
+	pensate per precedere la data ("Rata 1 entro il · Obrok st. 1 do",
+	"Rata unica entro il") e nel bollettino postale il numero della rata
+	compariva due volte. Ora si stampa solo il nome della rata ("Rata 1 ·
+	Obrok st. 1", "Rata unica · Enkratni obrok"), come nell'avviso solo
+	italiano; nella pagina con due rate e nel bollettino resta il numero
+	gia' stampato dal template. Nuova etichetta rata_unica in
+	avvisi.properties (it, sl, de). Gli avvisi con la data non cambiano.
+	Stesso difetto corretto nel core con link-it/govpay#918.
 2026-11-09  Giuliano Pintori <pintori@link.it>
 
 	* [Release] Ramo 3.11.x: versione 2.1.0-SNAPSHOT

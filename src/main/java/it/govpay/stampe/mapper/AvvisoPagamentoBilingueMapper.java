@@ -297,9 +297,12 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		// e, con il bollettino, nessun conto ne' DataMatrix
 		RataAvviso rata = instalmentToRataWithLabels(logger, versamento, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 		rata.setImportoTotale(calcolaImportoTotale(instalments));
-		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
-		if(labelLinguaSecondaria != null)
-			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		// senza data resta il nome della rata impostato da impostaLabelsNellaRataAvviso (#71)
+		if(rata.getData() != null) {
+			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+			if(labelLinguaSecondaria != null)
+				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		}
 
 		pagina.setRata(rata);
 
@@ -327,9 +330,12 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 
 		RataAvviso rata = instalmentToRataWithLabels(logger, instalment, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 
-		rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
-		if(labelLinguaSecondaria != null)
-			rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		// senza data resta il nome della rata impostato da impostaLabelsNellaRataAvviso (#71)
+		if(rata.getData() != null) {
+			rata.setScadenza(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+			if(labelLinguaSecondaria != null)
+				rata.setScadenzaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_PRIMA_RATA));
+		}
 
 		avvisoPagamentoInput.getEtichette().getItaliano().setEntro(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_ENTRO_IL));
 
@@ -386,6 +392,8 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
 		RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
 		RataAvviso rataDx = instalmentToRataWithLabels(logger, v2, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		rimuoviLabelsScadenzaSenzaData(rataSx);
+		rimuoviLabelsScadenzaSenzaData(rataDx);
 
 		if(v1.getInstalmentNumber() != null && v2.getInstalmentNumber() != null) {
 			// Titolo della pagina con 2 Rate
@@ -409,6 +417,7 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 		Instalment v1 = paymentNotice.getInstalments().remove(0);
 		PaginaAvvisoDoppia pagina = new PaginaAvvisoDoppia();
 		RataAvviso rataSx = instalmentToRataWithLabels(logger, v1, paymentNotice.getPostal(), labelLinguaPrincipale, labelLinguaSecondaria, avvisoPagamentoInput, paymentNotice.getCreditor());
+		rimuoviLabelsScadenzaSenzaData(rataSx);
 
 		if(v1.getInstalmentNumber() != null) {
 			// Titolo della pagina con 1 Rata
@@ -594,6 +603,34 @@ public interface AvvisoPagamentoBilingueMapper extends BaseAvvisoMapper{
 			rata.setScadenzaUnica(getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
 			if(labelLinguaSecondaria != null)
 				rata.setScadenzaUnicaTra(getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_UNICA_ENTRO_IL));
+		}
+
+		// senza data le etichette "... entro il" resterebbero sospese: si stampa solo il nome
+		// della rata, come nell'avviso solo italiano (#71)
+		if(rata.getData() == null) {
+			String rataUnica = getLabel(labelLinguaPrincipale, LabelAvvisiCostanti.LABEL_RATA_UNICA);
+			String rataUnicaTra = labelLinguaSecondaria != null ? getLabel(labelLinguaSecondaria, LabelAvvisiCostanti.LABEL_RATA_UNICA) : null;
+
+			if(rata.getNumeroRata() != null) {
+				rata.setScadenza(rata.getNumeroRata());
+				rata.setScadenzaTra(rata.getNumeroRataTra());
+				rata.setScadenzaUnica(rataUnica);
+				rata.setScadenzaUnicaTra(rataUnicaTra);
+			} else {
+				rata.setScadenza(rataUnica);
+				rata.setScadenzaTra(rataUnicaTra);
+			}
+		}
+	}
+
+	/***
+	 * Nella pagina con due rate il template stampa gia' il numero della rata:
+	 * senza data l'etichetta della scadenza resta vuota (#71).
+	 */
+	public default void rimuoviLabelsScadenzaSenzaData(RataAvviso rata) {
+		if(rata.getData() == null) {
+			rata.setScadenza(null);
+			rata.setScadenzaTra(null);
 		}
 	}
 
